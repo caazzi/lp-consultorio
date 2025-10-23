@@ -1,0 +1,34 @@
+# Arquivo de configuração do Netlify (netlify.toml)
+# Coloque este arquivo na raiz do seu projeto
+
+# Configurações de Cabeçalhos HTTP
+[[headers]]
+  # Aplica a todas as páginas
+  for = "/*"
+  [headers.values]
+    # Proteção contra Clickjacking
+    X-Frame-Options = "DENY"
+
+    # Política de Segurança de Conteúdo (CSP) - Exemplo básico
+    # AJUSTE CONFORME NECESSÁRIO! Esta é uma política bem restritiva.
+    # Permite apenas conteúdo do próprio site ('self'), fontes do Google,
+    # Tailwind CDN, Google Tag Manager e Google Ads.
+    # Pode precisar de ajustes para WhatsApp ou outras integrações.
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://www.google-analytics.com https://stats.g.doubleclick.net https://googleads.g.doubleclick.net; img-src 'self' data: https://www.google.com https://www.google.com.br; frame-src 'self' https://www.googletagmanager.com;"
+
+    # Força HTTPS (HSTS) - Use com cuidado, comece com max-age baixo se não tiver certeza
+    # Strict-Transport-Security = "max-age=63072000; includeSubDomains; preload"
+    # Exemplo com max-age menor para teste:
+    Strict-Transport-Security = "max-age=300; includeSubDomains" # 5 minutos para teste
+
+    # Política de Abertura Cross-Origin (COOP)
+    Cross-Origin-Opener-Policy = "same-origin"
+
+    # Permissões (Permissions Policy) - Exemplo básico, ajuste conforme necessário
+    Permissions-Policy = "geolocation=(), microphone=(), camera=()"
+
+    # Evita que o navegador adivinhe o tipo MIME
+    X-Content-Type-Options = "nosniff"
+
+    # Controle de Referrer
+    Referrer-Policy = "strict-origin-when-cross-origin"

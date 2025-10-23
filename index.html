@@ -6,17 +6,28 @@
     <title>Dr. Gilberto Salustiano - Infectologista em Maceió</title>
     <meta name="description" content="Atendimento especializado com Infectologista em Maceió (+40 anos de experiência). Agende sua consulta por WhatsApp.">
 
-    <!-- Preconnect hints for faster connections --><link rel="preconnect" href="https://fonts.googleapis.com">
+    <!-- Preconnect hints (Remover se auto-hospedar fontes) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preconnect" href="https://cdn.tailwindcss.com">
+    <!-- Não é mais necessário preconnectar o CDN do Tailwind, pois o script está no head -->
 
-    <!-- Google Fonts - Inter (Loaded asynchronously) --><link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet"></noscript>
+    <!-- Google Fonts - Inter -->
+    <!-- Mudado para display=optional para priorizar a redução de CLS. -->
+    <!-- A fonte Inter só será usada se carregar muito rápido, senão a fallback será mantida. -->
+    <!-- Para garantir a fonte Inter e evitar CLS, a melhor solução é auto-hospedar a fonte e usar @font-face. -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=optional" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=optional" rel="stylesheet"></noscript>
 
-    <!-- Global site tag (gtag.js) - Google Ads --><!--
-      IMPORTANTE: Substitua 'AW-SEU_ID_DE_CONVERSAO' pelo seu ID do Google Ads.
-      Exemplo: AW-123456789
-    --><script async defer src="https://www.googletagmanager.com/gtag/js?id=AW-SEU_ID_DE_CONVERSAO"></script>
+    <!-- Tailwind CSS CDN -->
+    <!-- Movido para o <head> para reduzir FOUC e CLS. -->
+    <!-- RECOMENDAÇÃO: Para melhor performance, use um processo de build (ex: npm, Tailwind CLI, PostCSS) -->
+    <!-- para gerar um arquivo CSS otimizado contendo apenas as classes usadas e inclua-o via <link rel="stylesheet">. -->
+    <!-- Isso removerá CSS e JS não utilizados e diminuirá o tamanho do download. -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Global site tag (gtag.js) - Google Ads -->
+    <!-- IMPORTANTE: Substitua 'AW-SEU_ID_DE_CONVERSAO' pelo seu ID do Google Ads. -->
+    <script async defer src="https://www.googletagmanager.com/gtag/js?id=AW-SEU_ID_DE_CONVERSAO"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
@@ -24,13 +35,13 @@
       gtag('config', 'AW-SEU_ID_DE_CONVERSAO');
     </script>
 
-    <!-- Script de rastreamento de clique no CTA --><script>
+    <!-- Script de rastreamento de clique no CTA -->
+    <script>
       function trackWhatsAppClick() {
         console.log('Clique no WhatsApp rastreado!');
 
         // IMPORTANTE: Substitua 'AW-SEU_ID_DE_CONVERSAO/SEU_ROTULO_DE_CONVERSAO'
         // pelo seu ID de conversão e rótulo de conversão do Google Ads.
-        // Exemplo: AW-123456789/AbCdEfGhIjKlMnOp
         const conversionLabel = 'AW-SEU_ID_DE_CONVERSAO/SEU_ROTULO_DE_CONVERSAO'; // Substitua aqui
 
         if (typeof gtag === 'function' && conversionLabel !== 'AW-SEU_ID_DE_CONVERSAO/SEU_ROTULO_DE_CONVERSAO') {
@@ -50,7 +61,7 @@
     </script>
 
     <style>
-      /* Define a fonte Inter como padrão */
+      /* Define a fonte Inter como padrão (será usada se carregar rápido com display=optional) */
       body {
         font-family: 'Inter', sans-serif;
         scroll-behavior: smooth; /* Rolagem suave */
@@ -73,27 +84,31 @@
       }
 
       /* Garante que o conteúdo principal não seja sobreposto pelo header fixo */
+      /* Ajuste a altura conforme necessário se o header mudar */
       main {
-        padding-top: 80px; /* Ajuste conforme a altura do seu header */
+        padding-top: 80px;
       }
       @media (min-width: 768px) {
          main {
-            padding-top: 100px; /* Ajuste para telas maiores se necessário */
+            padding-top: 100px;
          }
       }
     </style>
 </head>
 <body class="bg-gray-50">
 
-    <!-- Cabeçalho Fixo --><header class="fixed top-0 left-0 right-0 z-50 py-3 px-4 bg-white shadow-md flex items-center justify-between">
+    <!-- Cabeçalho Fixo -->
+    <header class="fixed top-0 left-0 right-0 z-50 py-3 px-4 bg-white shadow-md flex items-center justify-between">
         <div class="flex items-center">
             <div>
-                <!-- Nível de Título Ajustado (embora h2 no header não seja ideal semanticamente, evita pular níveis) --><h2 class="text-lg sm:text-xl font-bold text-blue-900">Dr. Gilberto Salustiano</h2>
+                <!-- Título -->
+                <h2 class="text-lg sm:text-xl font-bold text-blue-900">Dr. Gilberto Salustiano</h2>
                 <p class="text-sm text-gray-600">Médico Infectologista</p>
                 <p class="text-xs text-gray-500">CRM/AL 2023</p>
             </div>
         </div>
-        <!-- Botão CTA Menor no Header (visível em telas maiores) --><a
+        <!-- Botão CTA Menor no Header -->
+        <a
           href="https://api.whatsapp.com/send?phone=5582999900844&text=Ol%C3%A1%2C%20vim%20pelo%20site%20e%20gostaria%20de%20agendar%20uma%20consulta."
           target="_blank"
           rel="noopener"
@@ -104,15 +119,19 @@
         </a>
     </header>
 
-    <!-- Seção Principal (Hero) --><main class="max-w-xl mx-auto px-6 pb-12">
-        <section class="text-center pt-8"> <!-- Adicionado padding-top --><!-- H1 Principal --><h1 class="text-3xl md:text-4xl font-bold text-gray-800">
+    <!-- Seção Principal (Hero) -->
+    <main class="max-w-xl mx-auto px-6 pb-12">
+        <section class="text-center pt-8">
+            <!-- H1 Principal -->
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-800">
                 Infectologista em Maceió
             </h1>
             <p class="text-lg text-gray-600 mt-4">
                 Atendimento humanizado e especializado com <span class="font-semibold">+40 anos de experiência</span> no diagnóstico e tratamento de doenças infecciosas.
             </p>
 
-            <!-- CTA Principal (WhatsApp) - Cor ajustada --><div class="mt-10 mb-12">
+            <!-- CTA Principal (WhatsApp) -->
+            <div class="mt-10 mb-12">
                 <a
                   href="https://api.whatsapp.com/send?phone=5582999900844&text=Ol%C3%A1%2C%20vim%20pelo%20site%20e%20gostaria%20de%20agendar%20uma%20consulta."
                   target="_blank"
@@ -120,7 +139,8 @@
                   onclick="return trackWhatsAppClick();"
                   class="inline-block bg-green-600 text-white font-bold text-xl py-4 px-8 sm:px-10 rounded-lg shadow-lg hover:bg-green-700 transition-transform duration-200 transform hover:scale-105 animate-pulse-slow w-full sm:w-auto"
                 >
-                    <!-- Ícone do WhatsApp --><svg xmlns="http://www.w3.org/2000/svg" class="inline-block h-6 w-6 mr-2 -mt-1" viewBox="0 0 24 24" fill="currentColor">
+                    <!-- Ícone do WhatsApp -->
+                    <svg xmlns="http://www.w3.org/2000/svg" class="inline-block h-6 w-6 mr-2 -mt-1" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
                     </svg>
                     Agendar Consulta por WhatsApp
@@ -128,8 +148,10 @@
             </div>
         </section>
 
-        <!-- Seção Sobre --><section class="bg-white p-6 rounded-lg shadow-md mb-10">
-              <!-- Título h2 --><h2 class="text-2xl font-bold text-gray-800 mb-4 text-center">Sobre o Dr. Gilberto Salustiano</h2>
+        <!-- Seção Sobre -->
+        <section class="bg-white p-6 rounded-lg shadow-md mb-10">
+              <!-- Título h2 -->
+             <h2 class="text-2xl font-bold text-gray-800 mb-4 text-center">Sobre o Dr. Gilberto Salustiano</h2>
              <ul class="space-y-3 text-gray-700 list-disc list-inside">
                  <li>Médico Infectologista com <span class="font-semibold">+40 anos de experiência</span> em Alagoas.</li>
                  <li>Graduado em Medicina pela <span class="font-semibold">Universidade Federal de Alagoas (UFAL)</span>.</li>
@@ -140,8 +162,10 @@
              </ul>
          </section>
 
-         <!-- Seção Benefícios --><section class="mb-10 text-center">
-             <!-- Título h2 --><h2 class="text-2xl font-bold text-gray-800 mb-5">Por que agendar sua consulta?</h2>
+         <!-- Seção Benefícios -->
+         <section class="mb-10 text-center">
+             <!-- Título h2 -->
+             <h2 class="text-2xl font-bold text-gray-800 mb-5">Por que agendar sua consulta?</h2>
              <div class="space-y-4 text-gray-600">
                 <p>✅ Diagnóstico preciso e tratamento atualizado.</p>
                 <p>✅ Foco na prevenção e na sua qualidade de vida.</p>
@@ -152,14 +176,15 @@
 
     </main>
 
-    <!-- Rodapé --><footer class="bg-gray-800 text-gray-300 text-center py-6 px-4">
+    <!-- Rodapé -->
+    <footer class="bg-gray-800 text-gray-300 text-center py-6 px-4">
         <p class="font-semibold">Dr. Gilberto Salustiano</p>
         <p class="text-sm">Médico Infectologista - CRM/AL 2023</p>
         <p class="text-sm mt-2">📍 Av. da Paz, 1388, Sala 107, Centro, Maceió-AL</p>
         <p class="text-xs mt-4 opacity-70">© 2025 - Todos os direitos reservados.</p>
     </footer>
 
-    <!-- Tailwind CSS CDN (movido para o final do body) --><script src="https://cdn.tailwindcss.com"></script>
+    <!-- Script removido daqui -->
 
 </body>
 </html>
