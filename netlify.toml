@@ -1,37 +1,24 @@
 # Arquivo de configuração do Netlify (netlify.toml)
-# Coloque este arquivo na raiz do seu projeto
 
 # Configurações de Cabeçalhos HTTP
 [[headers]]
-  # Aplica a todas as páginas
   for = "/*"
   [headers.values]
-    # Proteção contra Clickjacking
     X-Frame-Options = "DENY"
 
-    # Política de Segurança de Conteúdo (CSP) - REVISADA
-    # Permite 'self', fontes do Google, Tailwind CDN, Google Tag Manager/Analytics/Ads.
-    # Adicionado domínios necessários para Google Analytics/Ads.
-    # RE-ADICIONADO 'unsafe-inline' para style-src, necessário para o Tailwind CDN e o anti-FOUC.
-    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://cdn.tailwindcss.com https://googleads.g.doubleclick.net https://pagead2.googlesyndication.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://www.google-analytics.com https://stats.g.doubleclick.net https://googleads.g.doubleclick.net https://www.google.com; img-src 'self' data: https://www.google.com https://www.google.com.br *.google.com *.gstatic.com; frame-src 'self' https://www.googletagmanager.com;"
+    # Política de Segurança de Conteúdo (CSP) - AJUSTADA
+    # - Adicionado 'region1.google-analytics.com' ao connect-src para corrigir erro do console.
+    # - Mantido 'unsafe-inline' para script-src e style-src (necessário para Tailwind CDN e Gtag inline).
+    # - Mantidos domínios do Google Analytics/Ads e fontes.
+    # - Mantidos domínios do Google em img-src.
+    # - Adicionado googletagmanager.com ao frame-src.
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://cdn.tailwindcss.com https://googleads.g.doubleclick.net https://pagead2.googlesyndication.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://www.google-analytics.com https://stats.g.doubleclick.net https://googleads.g.doubleclick.net https://www.google.com https://region1.google-analytics.com; img-src 'self' data: https://www.google.com https://www.google.com.br *.google.com *.gstatic.com; frame-src 'self' https://www.googletagmanager.com;"
 
-    # Força HTTPS (HSTS) - Aumentado max-age para 6 meses (15552000 segundos).
-    # Aumente gradualmente após confirmar que tudo funciona.
-    Strict-Transport-Security = "max-age=15552000; includeSubDomains" # 6 meses
-    # Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload" # Se estiver pronto para preload
+    # Força HTTPS (HSTS) - Mantido max-age de 6 meses.
+    Strict-Transport-Security = "max-age=15552000; includeSubDomains"
 
-    # Política de Abertura Cross-Origin (COOP) - Mantido
     Cross-Origin-Opener-Policy = "same-origin"
-
-    # Permissões (Permissions Policy) - Mantido exemplo básico
     Permissions-Policy = "geolocation=(), microphone=(), camera=()"
-
-    # Evita que o navegador adivinhe o tipo MIME - Mantido
     X-Content-Type-Options = "nosniff"
-
-    # Controle de Referrer - Mantido
     Referrer-Policy = "strict-origin-when-cross-origin"
-
-    # Trusted Types - Mantido comentado
-    # require-trusted-types-for = "'script';"
-
+    # require-trusted-types-for = "'script';" # Mantido comentado

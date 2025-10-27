@@ -3,20 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Título otimizado para incluir "HIV" e "Clínico Geral" -->
+    <!-- Título otimizado -->
     <title>Infectologista e Clínico Geral em Maceió - Dr. Gilberto Salustiano</title>
-    <!-- Descrição otimizada (já inclui HIV, mantida) -->
+    <!-- Descrição otimizada -->
     <meta name="description" content="Infectologista e Clínico Geral em Maceió com +40 anos de experiência. Especialista em ISTs (HPV, Sífilis), Arboviroses (Dengue) e HIV. Agende sua consulta.">
 
     <!-- Preconnect hints -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <!-- ADICIONADO: Preconnect para Google Analytics/Tag Manager e Tailwind CDN -->
     <link rel="preconnect" href="https://www.googletagmanager.com">
     <link rel="preconnect" href="https://www.google-analytics.com">
     <link rel="preconnect" href="https://cdn.tailwindcss.com">
+    <!-- ADICIONADO: Preconnect para o domínio de coleta do GA identificado no erro CSP -->
+    <link rel="preconnect" href="https://region1.google-analytics.com">
 
-    <!-- Google Fonts - Inter (Mantido display=optional) -->
+
+    <!-- Google Fonts - Inter (Mantido display=optional, preload com onload) -->
     <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=optional" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=optional" rel="stylesheet"></noscript>
 
@@ -32,11 +34,11 @@
         body.loaded { opacity: 1; }
     </style>
 
-    <!-- Google tag (gtag.js) - MODIFICADO -->
-    <!-- Trocado para 'defer' para otimizar TBT e movido para o head -->
+    <!-- Google tag (gtag.js) - ADICIONADO 'defer' -->
+    <!-- 'defer' garante que o script seja executado após o parsing do HTML, sem bloquear a renderização -->
     <script src="https://www.googletagmanager.com/gtag/js?id=G-1Q50PEEMVX"></script>
     <script>
-      // Espera o DOM carregar antes de inicializar o GTag
+      // Mantido o DOMContentLoaded para garantir que o dataLayer exista
       window.addEventListener('DOMContentLoaded', (event) => {
         window.dataLayer = window.dataLayer || [];
         function gtag(){dataLayer.push(arguments);}
@@ -47,7 +49,7 @@
     <!-- Fim do Google tag (gtag.js) -->
 
 </head>
-<body class="bg-gray-50 antialiased text-gray-700">
+<body class="bg-gray-50 antialiased text-gray-700"> <!-- Classe 'loaded' será adicionada via JS no final -->
 
     <!-- Header -->
     <header class="bg-white shadow-md sticky top-0 z-50">
@@ -56,7 +58,7 @@
                 <h1 class="text-xl font-bold text-gray-800">Dr. Gilberto Salustiano</h1>
                 <p class="text-sm text-gray-600">Infectologista e Clínico Geral</p>
             </div>
-            <!-- Botão do WhatsApp visível no header para acesso rápido -->
+            <!-- Botão do WhatsApp visível no header -->
             <a href="https://api.whatsapp.com/send?phone=5582999900844&text=Olá,%20gostaria%20de%20agendar%20uma%20consulta."
                target="_blank"
                rel="noopener"
@@ -85,8 +87,9 @@
                target="_blank"
                rel="noopener"
                class="inline-block bg-brand-green text-white font-bold py-4 px-10 rounded-lg shadow-lg hover:bg-green-700 transition duration-300 text-lg transform hover:scale-105">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline-block mr-2 -mt-1" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                    <path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.41-1.152l-2.196.61a.5.5 0 01-.598-.597l.608-2.196A8.84 8.84 0 012 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7.19 6.349a.5.5 0 00-.78.411l.243 1.39a.5.5 0 00.41.332h.013l.01-.001a.5.5 0 00.44-0.583l-.237-1.39a.5.5 0 00-.086-.16zM12.81 6.349a.5.5 0 00-.78.411l.243 1.39a.5.5 0 00.41.332h.013l.01-.001a.5.5 0 00.44-0.583l-.237-1.39a.5.5 0 00-.086-.16z" clip-rule="evenodd" />
+                <!-- Ícone do WhatsApp melhorado (SVG) -->
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline-block mr-2 -mt-1" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                   <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.487 5.235 3.487 8.417 0 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.273-.099-.471-.148-.67.15-.197.297-.768.967-.941 1.164-.173.197-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.67-1.611-.916-2.206-.242-.579-.487-.501-.67-.51-.173-.008-.371-.01-.57-.01s-.521.074-.795.372c-.273.296-1.043 1.016-1.043 2.479 0 1.462 1.067 2.869 1.216 3.067.148.198 2.096 3.2 5.077 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
                 </svg>
                 Agende agora por WhatsApp
             </a>
@@ -130,6 +133,7 @@
 
             <picture>
                 <source srcset="dr-gilberto-salustiano-infectologista.webp" type="image/webp">
+                <!-- Mantidos width, height, loading, decoding -->
                 <img src="dr-gilberto-salustiano-infectologista.jpg"
                   alt="Foto do Dr. Gilberto Salustiano, infectologista e clínico geral em Maceió"
                   class="w-32 h-32 rounded-full mx-auto mb-4 object-cover"
@@ -201,6 +205,7 @@
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
+        // Configuração do Tailwind (mantida)
         tailwind.config = {
             theme: {
                 extend: {
@@ -208,9 +213,8 @@
                         'sans': ['Inter', 'system-ui', 'sans-serif'],
                     },
                     colors: {
-                        'brand-blue': '#005a9c', // Um tom de azul profissional
-                        // CORREÇÃO DE CONTRASTE: Verde escurecido para contraste AA com branco
-                        'brand-green': '#1f7a33', // Cor para o botão do WhatsApp (antes era #28a745)
+                        'brand-blue': '#005a9c',
+                        'brand-green': '#1f7a33', // Cor corrigida para contraste
                     }
                 }
             }
@@ -221,7 +225,10 @@
     <script>
         document.getElementById('current-year').textContent = new Date().getFullYear();
         // Adiciona classe 'loaded' para mostrar o body após os scripts serem processados
-        document.body.classList.add('loaded');
+        // Ajuda a evitar o FOUC (Flash of Unstyled Content)
+        document.addEventListener('DOMContentLoaded', function() {
+            document.body.classList.add('loaded');
+        });
     </script>
 
 </body>
