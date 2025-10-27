@@ -226,10 +226,13 @@
         document.getElementById('current-year').textContent = new Date().getFullYear();
         // Adiciona classe 'loaded' para mostrar o body após os scripts serem processados
         // Ajuda a evitar o FOUC (Flash of Unstyled Content)
-        document.addEventListener('DOMContentLoaded', function() {
+        // MODIFICADO: Trocado para 'window.onload' para garantir que o Tailwind (e outros scripts)
+        // tenham terminado de executar e aplicar estilos ANTES de tornar o body visível.
+        window.onload = function() {
             document.body.classList.add('loaded');
-        });
+        };
     </script>
 
 </body>
 </html>
+
