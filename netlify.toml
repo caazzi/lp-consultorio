@@ -12,8 +12,8 @@
     # Política de Segurança de Conteúdo (CSP) - REVISADA
     # Permite 'self', fontes do Google, Tailwind CDN, Google Tag Manager/Analytics/Ads.
     # Adicionado domínios necessários para Google Analytics/Ads.
-    # Removido 'unsafe-inline' de style-src pois não é estritamente necessário com Tailwind CDN
-    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://cdn.tailwindcss.com https://googleads.g.doubleclick.net https://pagead2.googlesyndication.com; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://www.google-analytics.com https://stats.g.doubleclick.net https://googleads.g.doubleclick.net https://www.google.com; img-src 'self' data: https://www.google.com https://www.google.com.br *.google.com *.gstatic.com; frame-src 'self' https://www.googletagmanager.com;"
+    # RE-ADICIONADO 'unsafe-inline' para style-src, necessário para o Tailwind CDN e o anti-FOUC.
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://cdn.tailwindcss.com https://googleads.g.doubleclick.net https://pagead2.googlesyndication.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://www.google-analytics.com https://stats.g.doubleclick.net https://googleads.g.doubleclick.net https://www.google.com; img-src 'self' data: https://www.google.com https://www.google.com.br *.google.com *.gstatic.com; frame-src 'self' https://www.googletagmanager.com;"
 
     # Força HTTPS (HSTS) - Aumentado max-age para 6 meses (15552000 segundos).
     # Aumente gradualmente após confirmar que tudo funciona.
@@ -34,3 +34,4 @@
 
     # Trusted Types - Mantido comentado
     # require-trusted-types-for = "'script';"
+
