@@ -10,20 +10,15 @@
     X-Frame-Options = "DENY"
 
     # Política de Segurança de Conteúdo (CSP) - REVISADA
-    # AJUSTE CONFORME NECESSÁRIO!
     # Permite 'self', fontes do Google, Tailwind CDN, Google Tag Manager/Analytics/Ads.
-    # Adicionado https://www.google.com para connect-src
-    # Adicionado https://googleads.g.doubleclick.net para script-src (necessário devido a erro no console)
-    # Adicionado https://pagead2.googlesyndication.com para script-src (frequentemente necessário para Google Ads)
-    # NOTA: 'unsafe-inline' é necessário aqui para o script de configuração inline do Tailwind e potencialmente GTag,
-    #       a menos que uma abordagem mais complexa (hashes/nonces) seja usada.
-    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://cdn.tailwindcss.com https://googleads.g.doubleclick.net https://pagead2.googlesyndication.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://www.google-analytics.com https://stats.g.doubleclick.net https://googleads.g.doubleclick.net https://www.google.com; img-src 'self' data: https://www.google.com https://www.google.com.br *.google.com *.gstatic.com; frame-src 'self' https://www.googletagmanager.com;"
+    # Adicionado domínios necessários para Google Analytics/Ads.
+    # Removido 'unsafe-inline' de style-src pois não é estritamente necessário com Tailwind CDN
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://cdn.tailwindcss.com https://googleads.g.doubleclick.net https://pagead2.googlesyndication.com; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://www.google-analytics.com https://stats.g.doubleclick.net https://googleads.g.doubleclick.net https://www.google.com; img-src 'self' data: https://www.google.com https://www.google.com.br *.google.com *.gstatic.com; frame-src 'self' https://www.googletagmanager.com;"
 
-    # Força HTTPS (HSTS) - Aumentado max-age para 1 semana (604800 segundos).
+    # Força HTTPS (HSTS) - Aumentado max-age para 6 meses (15552000 segundos).
     # Aumente gradualmente após confirmar que tudo funciona.
-    # Preload requer envio manual para listas de preload, mantenha comentado por enquanto.
-    Strict-Transport-Security = "max-age=604800; includeSubDomains" # 1 semana
-    # Strict-Transport-Security = "max-age=63072000; includeSubDomains; preload" # Se estiver pronto para preload
+    Strict-Transport-Security = "max-age=15552000; includeSubDomains" # 6 meses
+    # Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload" # Se estiver pronto para preload
 
     # Política de Abertura Cross-Origin (COOP) - Mantido
     Cross-Origin-Opener-Policy = "same-origin"
@@ -37,6 +32,5 @@
     # Controle de Referrer - Mantido
     Referrer-Policy = "strict-origin-when-cross-origin"
 
-    # Trusted Types - Adicionado (Comentado - pode quebrar scripts não adaptados)
-    # Se descomentar, teste cuidadosamente. Pode precisar remover 'unsafe-inline' de script-src se funcionar.
+    # Trusted Types - Mantido comentado
     # require-trusted-types-for = "'script';"

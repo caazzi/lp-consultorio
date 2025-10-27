@@ -16,29 +16,16 @@
     <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=optional" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=optional" rel="stylesheet"></noscript>
 
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        'sans': ['Inter', 'system-ui', 'sans-serif'],
-                    },
-                    colors: {
-                        'brand-blue': '#005a9c', // Um tom de azul profissional
-                        'brand-green': '#28a745', // Cor para o botão do WhatsApp
-                    }
-                }
-            }
-        }
-    </script>
+    <!-- Tailwind CSS será carregado no final do body -->
 
     <style>
         /* Estilo para garantir que a fonte Inter seja usada, se carregada */
         html { font-family: 'Inter', sans-serif; }
         /* Suavização de rolagem */
         html { scroll-behavior: smooth; }
+        /* Estilo temporário para evitar FOUC (Flash of Unstyled Content) antes do Tailwind carregar */
+        body { opacity: 0; transition: opacity 0.5s; }
+        body.loaded { opacity: 1; }
     </style>
 
     <!-- Google tag (gtag.js) - ADICIONADO -->
@@ -80,10 +67,6 @@
             <h2 class="text-3xl font-bold text-gray-900 mb-3">Dr. Gilberto Salustiano</h2>
             <p class="text-xl text-brand-blue font-semibold mb-4">Infectologista e Clínico Geral em Maceió</p>
 
-            <!--
-              RECOMENDAÇÃO 2 IMPLEMENTADA (COM FOCO EM HIV):
-              Subtítulo ajustado para destacar HIV/AIDS imediatamente.
-            -->
             <p class="text-lg text-gray-700 mb-5 max-w-2xl mx-auto">
                 Atendimento especializado em HIV/AIDS, ISTs (HPV, Sífilis), Arboviroses (Dengue) e outras doenças infecciosas.
             </p>
@@ -95,7 +78,7 @@
                target="_blank"
                rel="noopener"
                class="inline-block bg-brand-green text-white font-bold py-4 px-10 rounded-lg shadow-lg hover:bg-green-700 transition duration-300 text-lg transform hover:scale-105">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline-block mr-2 -mt-1" viewBox="0 0 20 20" fill="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline-block mr-2 -mt-1" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                     <path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.41-1.152l-2.196.61a.5.5 0 01-.598-.597l.608-2.196A8.84 8.84 0 012 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7.19 6.349a.5.5 0 00-.78.411l.243 1.39a.5.5 0 00.41.332h.013l.01-.001a.5.5 0 00.44-0.583l-.237-1.39a.5.5 0 00-.086-.16zM12.81 6.349a.5.5 0 00-.78.411l.243 1.39a.5.5 0 00.41.332h.013l.01-.001a.5.5 0 00.44-0.583l-.237-1.39a.5.5 0 00-.086-.16z" clip-rule="evenodd" />
                 </svg>
                 Agende agora por WhatsApp
@@ -103,38 +86,32 @@
             <p class="text-sm text-gray-500 mt-3">Atendimento atencioso e humanizado.</p>
         </section>
 
-        <!--
-          RECOMENDAÇÃO 1 IMPLEMENTADA:
-          Nova seção "Principais Atendimentos" para corresponder às buscas por doenças.
-        -->
+        <!-- Seção Principais Atendimentos -->
         <section class="bg-white rounded-lg shadow-lg p-6 md:p-8 mb-10">
             <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">Principais Atendimentos</h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 text-gray-700">
-                <!-- Lista baseada nas palavras-chave dos CSVs -->
                 <div class="flex items-start space-x-3 p-3 bg-gray-50 rounded-md">
-                    <span class="text-brand-blue mt-1">✓</span>
+                    <span class="text-brand-blue mt-1" aria-hidden="true">✓</span>
                     <p><span class="font-semibold">ISTs:</span> Diagnóstico e tratamento de HPV, Sífilis, Herpes, Clamídia, Gonorreia.</p>
                 </div>
-                <!-- ADICIONADO: Item dedicado para HIV/AIDS -->
                 <div class="flex items-start space-x-3 p-3 bg-gray-50 rounded-md">
-                    <span class="text-brand-blue mt-1">✓</span>
+                    <span class="text-brand-blue mt-1" aria-hidden="true">✓</span>
                     <p><span class="font-semibold">HIV/AIDS:</span> Diagnóstico, tratamento e acompanhamento completo (incluindo PEP e PrEP).</p>
                 </div>
-                <!-- ADICIONADO: Clínico Geral -->
                 <div class="flex items-start space-x-3 p-3 bg-gray-50 rounded-md">
-                    <span class="text-brand-blue mt-1">✓</span>
+                    <span class="text-brand-blue mt-1" aria-hidden="true">✓</span>
                     <p><span class="font-semibold">Clínico Geral:</span> Consultas de rotina, check-ups e acompanhamento da saúde integral.</p>
                 </div>
                 <div class="flex items-start space-x-3 p-3 bg-gray-50 rounded-md">
-                    <span class="text-brand-blue mt-1">✓</span>
+                    <span class="text-brand-blue mt-1" aria-hidden="true">✓</span>
                     <p><span class="font-semibold">Arboviroses:</span> Diagnóstico e manejo de Dengue, Chikungunya e Zika.</p>
                 </div>
                 <div class="flex items-start space-x-3 p-3 bg-gray-50 rounded-md">
-                    <span class="text-brand-blue mt-1">✓</span>
+                    <span class="text-brand-blue mt-1" aria-hidden="true">✓</span>
                     <p><span class="font-semibold">Outras Infecções:</span> Doença de Chagas, Uretrites, Infecções bacterianas, Tuberculose, Hepatites Virais.</p>
                 </div>
                 <div class="flex items-start space-x-3 p-3 bg-gray-50 rounded-md">
-                    <span class="text-brand-blue mt-1">✓</span>
+                    <span class="text-brand-blue mt-1" aria-hidden="true">✓</span>
                     <p><span class="font-semibold">Infecções em geral:</span> Pele, ossos, pulmões e pós-operatórias.</p>
                 </div>
             </div>
@@ -145,40 +122,30 @@
             <h2 class="text-2xl font-bold text-gray-900 mb-5 text-center">Sobre o Dr. Gilberto Salustiano</h2>
 
             <picture>
-            <source srcset="dr-gilberto-salustiano-infectologista.webp" type="image/webp">
-
-            <img src="dr-gilberto-salustiano-infectologista.jpg"
-              alt="Foto do Dr. Gilberto Salustiano, infectologista e clínico geral em Maceió"
-              class="w-32 h-32 rounded-full mx-auto mb-4 object-cover"
-              width="128"
-              height="128"
-              loading="lazy"
-              decoding="async">
+                <source srcset="dr-gilberto-salustiano-infectologista.webp" type="image/webp">
+                <img src="dr-gilberto-salustiano-infectologista.jpg"
+                  alt="Foto do Dr. Gilberto Salustiano, infectologista e clínico geral em Maceió"
+                  class="w-32 h-32 rounded-full mx-auto mb-4 object-cover"
+                  width="128"
+                  height="128"
+                  loading="lazy"
+                  decoding="async">
             </picture>
 
             <p class="text-gray-700 mb-4 leading-relaxed">
-                <!--
-                  AJUSTE 1 e 3:
-                  Texto revisado para remover repetição de "referência" e negrito de "HIV/AIDS".
-                -->
                 Com mais de 40 anos de sólida experiência em Infectologia, Dr. Gilberto Salustiano é <span class="font-semibold">referência</span> em Alagoas no cuidado e tratamento de doenças infecciosas, com atuação dedicada ao tratamento de HIV/AIDS. Sua prática é pautada pela ética, pelo conhecimento científico atualizado e por um atendimento verdadeiramente humanizado, focado no bem-estar e na qualidade de vida de cada paciente.
             </p>
             <ul class="list-none space-y-3 text-gray-700">
-                <!--
-                  RECOMENDAÇÃO 4 (SUGESTÃO):
-                  Informação do HDT Adicionada e reforçada com HIV
-                -->
                 <li class="flex items-start space-x-2">
-                    <span class="text-brand-blue font-bold mt-1">›</span>
+                    <span class="text-brand-blue font-bold mt-1" aria-hidden="true">›</span>
                     <span>Atua no corpo médico do <span class="font-semibold">Hospital Escola Dr. Helvio Auto (antigo HDT de Alagoas)</span>, referência estadual em infectologia e no tratamento de HIV/AIDS.</span>
                 </li>
-                <!-- ADICIONADO: Clínico Geral -->
                 <li class="flex items-start space-x-2">
-                    <span class="text-brand-blue font-bold mt-1">›</span>
+                    <span class="text-brand-blue font-bold mt-1" aria-hidden="true">›</span>
                     <span>Atuação também como <span class="font-semibold">Clínico Geral</span>, oferecendo um cuidado completo e integrado da sua saúde.</span>
                 </li>
                 <li class="flex items-start space-x-2">
-                    <span class="text-brand-blue font-bold mt-1">›</span>
+                    <span class="text-brand-blue font-bold mt-1" aria-hidden="true">›</span>
                     <span>Foco em <span class="font-semibold">diagnóstico preciso</span>, <span class="font-semibold">prevenção</span> e <span class="font-semibold">tratamento eficaz</span> de doenças infecciosas.</span>
                 </li>
             </ul>
@@ -188,18 +155,12 @@
         <section class="mb-10 text-center">
             <h2 class="text-2xl font-bold text-gray-900 mb-5">Por que agendar sua consulta?</h2>
             <div class="space-y-4 text-gray-700 max-w-lg mx-auto">
-               <!-- AJUSTE 1: Negrito removido de HIV, mas mantido na lista de exemplos -->
-               <p class="text-lg">✅ Diagnóstico preciso e tratamento atualizado para <span class="font-semibold">HIV/AIDS, ISTs, HPV, Arboviroses</span> e mais.</p>
-               <p class="text-lg">✅ Foco na prevenção e na sua qualidade de vida.</p>
-               <p class="text-lg">✅ Acompanhamento médico de confiança e humanizado.</p>
-               <p class="text-lg">✅ +40 anos de experiência consolidada em infectologia.</p>
+               <p class="text-lg"><span aria-hidden="true">✅</span> Diagnóstico preciso e tratamento atualizado para <span class="font-semibold">HIV/AIDS, ISTs, HPV, Arboviroses</span> e mais.</p>
+               <p class="text-lg"><span aria-hidden="true">✅</span> Foco na prevenção e na sua qualidade de vida.</p>
+               <p class="text-lg"><span aria-hidden="true">✅</span> Acompanhamento médico de confiança e humanizado.</p>
+               <p class="text-lg"><span aria-hidden="true">✅</span> +40 anos de experiência consolidada em infectologia.</p>
             </div>
         </section>
-
-        <!--
-          RECOMENDAÇÃO 3 IMPLEMENTADA:
-          Seção de FAQ removida a pedido.
-        -->
 
         <!-- CTA Final -->
         <section class="bg-brand-blue rounded-lg shadow-lg p-8 text-center mb-6">
@@ -221,15 +182,40 @@
         <p class="text-sm">Médico Infectologista - CRM/AL 2023</p>
         <div class="mt-4">
             <p class="font-semibold">Localização:</p>
-            <p class="text-sm">📍 Av. da Paz, 1388, Sala 107, Centro, Maceió - AL</p>
-            <!--
-              RECOMENDAÇÃO 4 (SUGESTÃO):
-              Adicione um Google Maps embedado aqui.
-              <div class="w-full max-w-md mx-auto mt-4 rounded-lg overflow-hidden">
-                <iframe src="URL_DO_GOOGLE_MAPS_EMBED" width="100%" height="250" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
-              </div>
-            -->
+            <p class="text-sm"><span aria-hidden="true">📍</span> Av. da Paz, 1388, Sala 107, Centro, Maceió - AL</p>
+            <!-- Mapa do Google Maps pode ser adicionado aqui -->
         </div>
         <p class="text-xs text-gray-400 mt-6">
-            © 2025 - Dr. Gilberto Salustiano - Todos os direitos reservados.
-        </f
+            © <span id="current-year">2025</span> - Dr. Gilberto Salustiano - Todos os direitos reservados.
+        </p>
+    </footer>
+
+    <!-- Scripts movidos para o final -->
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'sans': ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    colors: {
+                        'brand-blue': '#005a9c', // Um tom de azul profissional
+                        // CORREÇÃO DE CONTRASTE: Verde escurecido para contraste AA com branco
+                        'brand-green': '#1f7a33', // Cor para o botão do WhatsApp (antes era #28a745)
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Script para atualizar o ano e mostrar o body -->
+    <script>
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+        // Adiciona classe 'loaded' para mostrar o body após os scripts serem processados
+        document.body.classList.add('loaded');
+    </script>
+
+</body>
+</html>
