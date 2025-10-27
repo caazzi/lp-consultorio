@@ -3,15 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Título otimizado para incluir "HIV" e "Clínico Geral" -->
     <title>Infectologista e Clínico Geral em Maceió - Dr. Gilberto Salustiano</title>
+    <!-- Descrição otimizada (já inclui HIV, mantida) -->
     <meta name="description" content="Infectologista e Clínico Geral em Maceió com +40 anos de experiência. Especialista em ISTs (HPV, Sífilis), Arboviroses (Dengue) e HIV. Agende sua consulta.">
 
+    <!-- Preconnect hints -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preconnect" href="https://cdn.tailwindcss.com"> <link rel="preconnect" href="https://www.googletagmanager.com"> <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet"></noscript>
 
-    <script src="https://cdn.tailwindcss.com/3.4.17" defer></script>
+    <!-- Google Fonts - Inter (Mantido display=optional) -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=optional" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=optional" rel="stylesheet"></noscript>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -21,8 +27,7 @@
                     },
                     colors: {
                         'brand-blue': '#005a9c', // Um tom de azul profissional
-                        // Cor ajustada para ter contraste acessível (4.53:1 com branco)
-                        'brand-green': '#1e7e34',
+                        'brand-green': '#28a745', // Cor para o botão do WhatsApp
                     }
                 }
             }
@@ -36,6 +41,7 @@
         html { scroll-behavior: smooth; }
     </style>
 
+    <!-- Google tag (gtag.js) - ADICIONADO -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-1Q50PEEMVX"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
@@ -43,18 +49,20 @@
       gtag('js', new Date());
 
       gtag('config', 'G-1Q50PEEMVX');
-      // Se estiver usando Google Ads Conversion Tracking associado ao GTAG, pode precisar disto:
-      // gtag('config', 'AW-XXXXXXXXXX'); // Substitua pelo seu ID de conversão do Ads
     </script>
-    </head>
+    <!-- Fim do Google tag (gtag.js) -->
+
+</head>
 <body class="bg-gray-50 antialiased text-gray-700">
 
+    <!-- Header -->
     <header class="bg-white shadow-md sticky top-0 z-50">
         <div class="container mx-auto max-w-4xl px-5 py-4 flex justify-between items-center">
             <div>
                 <h1 class="text-xl font-bold text-gray-800">Dr. Gilberto Salustiano</h1>
                 <p class="text-sm text-gray-600">Infectologista e Clínico Geral</p>
             </div>
+            <!-- Botão do WhatsApp visível no header para acesso rápido -->
             <a href="https://api.whatsapp.com/send?phone=5582999900844&text=Olá,%20gostaria%20de%20agendar%20uma%20consulta."
                target="_blank"
                rel="noopener"
@@ -64,23 +72,30 @@
         </div>
     </header>
 
+    <!-- Main Content -->
     <main class="container mx-auto max-w-4xl p-5">
 
+        <!-- Seção Hero (Acima da Dobra) -->
         <section class="bg-white rounded-lg shadow-lg p-6 md:p-8 text-center mb-10">
             <h2 class="text-3xl font-bold text-gray-900 mb-3">Dr. Gilberto Salustiano</h2>
             <p class="text-xl text-brand-blue font-semibold mb-4">Infectologista e Clínico Geral em Maceió</p>
 
+            <!--
+              RECOMENDAÇÃO 2 IMPLEMENTADA (COM FOCO EM HIV):
+              Subtítulo ajustado para destacar HIV/AIDS imediatamente.
+            -->
             <p class="text-lg text-gray-700 mb-5 max-w-2xl mx-auto">
                 Atendimento especializado em HIV/AIDS, ISTs (HPV, Sífilis), Arboviroses (Dengue) e outras doenças infecciosas.
             </p>
 
             <p class="text-xl font-semibold text-gray-800 mb-6">CRM/AL 2023 | +40 anos de experiência</p>
 
+            <!-- CTA Principal (WhatsApp) -->
             <a href="https://api.whatsapp.com/send?phone=5582999900844&text=Olá,%20gostaria%20de%20agendar%20uma%20consulta%20com%20o%20Dr.%20Gilberto."
                target="_blank"
                rel="noopener"
                class="inline-block bg-brand-green text-white font-bold py-4 px-10 rounded-lg shadow-lg hover:bg-green-700 transition duration-300 text-lg transform hover:scale-105">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline-block mr-2 -mt-1" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" focusable="false">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline-block mr-2 -mt-1" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.41-1.152l-2.196.61a.5.5 0 01-.598-.597l.608-2.196A8.84 8.84 0 012 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7.19 6.349a.5.5 0 00-.78.411l.243 1.39a.5.5 0 00.41.332h.013l.01-.001a.5.5 0 00.44-0.583l-.237-1.39a.5.5 0 00-.086-.16zM12.81 6.349a.5.5 0 00-.78.411l.243 1.39a.5.5 0 00.41.332h.013l.01-.001a.5.5 0 00.44-0.583l-.237-1.39a.5.5 0 00-.086-.16z" clip-rule="evenodd" />
                 </svg>
                 Agende agora por WhatsApp
@@ -88,17 +103,24 @@
             <p class="text-sm text-gray-500 mt-3">Atendimento atencioso e humanizado.</p>
         </section>
 
+        <!--
+          RECOMENDAÇÃO 1 IMPLEMENTADA:
+          Nova seção "Principais Atendimentos" para corresponder às buscas por doenças.
+        -->
         <section class="bg-white rounded-lg shadow-lg p-6 md:p-8 mb-10">
             <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">Principais Atendimentos</h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 text-gray-700">
+                <!-- Lista baseada nas palavras-chave dos CSVs -->
                 <div class="flex items-start space-x-3 p-3 bg-gray-50 rounded-md">
                     <span class="text-brand-blue mt-1">✓</span>
                     <p><span class="font-semibold">ISTs:</span> Diagnóstico e tratamento de HPV, Sífilis, Herpes, Clamídia, Gonorreia.</p>
                 </div>
+                <!-- ADICIONADO: Item dedicado para HIV/AIDS -->
                 <div class="flex items-start space-x-3 p-3 bg-gray-50 rounded-md">
                     <span class="text-brand-blue mt-1">✓</span>
                     <p><span class="font-semibold">HIV/AIDS:</span> Diagnóstico, tratamento e acompanhamento completo (incluindo PEP e PrEP).</p>
                 </div>
+                <!-- ADICIONADO: Clínico Geral -->
                 <div class="flex items-start space-x-3 p-3 bg-gray-50 rounded-md">
                     <span class="text-brand-blue mt-1">✓</span>
                     <p><span class="font-semibold">Clínico Geral:</span> Consultas de rotina, check-ups e acompanhamento da saúde integral.</p>
@@ -118,30 +140,39 @@
             </div>
         </section>
 
+        <!-- Seção Sobre Mim -->
         <section class="bg-white rounded-lg shadow-lg p-6 md:p-8 mb-10">
             <h2 class="text-2xl font-bold text-gray-900 mb-5 text-center">Sobre o Dr. Gilberto Salustiano</h2>
 
             <picture>
-              <source srcset="dr-gilberto-salustiano-infectologista.webp" type="image/webp">
-              <img src="dr-gilberto-salustiano-infectologista.jpg"
-                alt="Foto do Dr. Gilberto Salustiano, infectologista e clínico geral em Maceió"
-                class="w-32 h-32 rounded-full mx-auto mb-4 object-cover"
-                width="128"
-                height="128"
-                loading="lazy"
-                decoding="async"
-                fetchpriority="high">
+            <source srcset="dr-gilberto-salustiano-infectologista.webp" type="image/webp">
+
+            <img src="dr-gilberto-salustiano-infectologista.jpg"
+              alt="Foto do Dr. Gilberto Salustiano, infectologista e clínico geral em Maceió"
+              class="w-32 h-32 rounded-full mx-auto mb-4 object-cover"
+              width="128"
+              height="128"
+              loading="lazy"
+              decoding="async">
             </picture>
 
-
             <p class="text-gray-700 mb-4 leading-relaxed">
+                <!--
+                  AJUSTE 1 e 3:
+                  Texto revisado para remover repetição de "referência" e negrito de "HIV/AIDS".
+                -->
                 Com mais de 40 anos de sólida experiência em Infectologia, Dr. Gilberto Salustiano é <span class="font-semibold">referência</span> em Alagoas no cuidado e tratamento de doenças infecciosas, com atuação dedicada ao tratamento de HIV/AIDS. Sua prática é pautada pela ética, pelo conhecimento científico atualizado e por um atendimento verdadeiramente humanizado, focado no bem-estar e na qualidade de vida de cada paciente.
             </p>
             <ul class="list-none space-y-3 text-gray-700">
+                <!--
+                  RECOMENDAÇÃO 4 (SUGESTÃO):
+                  Informação do HDT Adicionada e reforçada com HIV
+                -->
                 <li class="flex items-start space-x-2">
                     <span class="text-brand-blue font-bold mt-1">›</span>
                     <span>Atua no corpo médico do <span class="font-semibold">Hospital Escola Dr. Helvio Auto (antigo HDT de Alagoas)</span>, referência estadual em infectologia e no tratamento de HIV/AIDS.</span>
                 </li>
+                <!-- ADICIONADO: Clínico Geral -->
                 <li class="flex items-start space-x-2">
                     <span class="text-brand-blue font-bold mt-1">›</span>
                     <span>Atuação também como <span class="font-semibold">Clínico Geral</span>, oferecendo um cuidado completo e integrado da sua saúde.</span>
@@ -153,9 +184,11 @@
             </ul>
         </section>
 
+        <!-- Seção Benefícios (Por que agendar?) -->
         <section class="mb-10 text-center">
             <h2 class="text-2xl font-bold text-gray-900 mb-5">Por que agendar sua consulta?</h2>
             <div class="space-y-4 text-gray-700 max-w-lg mx-auto">
+               <!-- AJUSTE 1: Negrito removido de HIV, mas mantido na lista de exemplos -->
                <p class="text-lg">✅ Diagnóstico preciso e tratamento atualizado para <span class="font-semibold">HIV/AIDS, ISTs, HPV, Arboviroses</span> e mais.</p>
                <p class="text-lg">✅ Foco na prevenção e na sua qualidade de vida.</p>
                <p class="text-lg">✅ Acompanhamento médico de confiança e humanizado.</p>
@@ -163,6 +196,12 @@
             </div>
         </section>
 
+        <!--
+          RECOMENDAÇÃO 3 IMPLEMENTADA:
+          Seção de FAQ removida a pedido.
+        -->
+
+        <!-- CTA Final -->
         <section class="bg-brand-blue rounded-lg shadow-lg p-8 text-center mb-6">
             <h2 class="text-2xl font-bold text-white mb-4">Dê o primeiro passo para cuidar da sua saúde</h2>
             <p class="text-gray-200 text-lg mb-6">Agende sua consulta com o Dr. Gilberto Salustiano e tenha um atendimento especializado e humano.</p>
@@ -170,23 +209,27 @@
                target="_blank"
                rel="noopener"
                class="inline-block bg-brand-green text-white font-bold py-4 px-10 rounded-lg shadow-lg hover:bg-green-700 transition duration-300 text-lg transform hover:scale-105">
-                Falar agora pelo WhatsApp
+                Falar pelo WhatsApp
             </a>
         </section>
 
     </main>
 
+    <!-- Rodapé -->
     <footer class="bg-gray-800 text-gray-300 text-center py-8 px-4">
         <p class="font-semibold text-lg">Dr. Gilberto Salustiano</p>
         <p class="text-sm">Médico Infectologista - CRM/AL 2023</p>
         <div class="mt-4">
             <p class="font-semibold">Localização:</p>
             <p class="text-sm">📍 Av. da Paz, 1388, Sala 107, Centro, Maceió - AL</p>
-            </div>
+            <!--
+              RECOMENDAÇÃO 4 (SUGESTÃO):
+              Adicione um Google Maps embedado aqui.
+              <div class="w-full max-w-md mx-auto mt-4 rounded-lg overflow-hidden">
+                <iframe src="URL_DO_GOOGLE_MAPS_EMBED" width="100%" height="250" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+              </div>
+            -->
+        </div>
         <p class="text-xs text-gray-400 mt-6">
             © 2025 - Dr. Gilberto Salustiano - Todos os direitos reservados.
-        </p>
-    </footer>
-
-</body>
-</html>
+        </f
