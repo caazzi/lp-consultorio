@@ -11,6 +11,10 @@
     <!-- Preconnect hints -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- ADICIONADO: Preconnect para Google Analytics/Tag Manager e Tailwind CDN -->
+    <link rel="preconnect" href="https://www.googletagmanager.com">
+    <link rel="preconnect" href="https://www.google-analytics.com">
+    <link rel="preconnect" href="https://cdn.tailwindcss.com">
 
     <!-- Google Fonts - Inter (Mantido display=optional) -->
     <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=optional" as="style" onload="this.onload=null;this.rel='stylesheet'">
@@ -28,14 +32,17 @@
         body.loaded { opacity: 1; }
     </style>
 
-    <!-- Google tag (gtag.js) - ADICIONADO -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-1Q50PEEMVX"></script>
+    <!-- Google tag (gtag.js) - MODIFICADO -->
+    <!-- Trocado para 'defer' para otimizar TBT e movido para o head -->
+    <script src="https://www.googletagmanager.com/gtag/js?id=G-1Q50PEEMVX"></script>
     <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-
-      gtag('config', 'G-1Q50PEEMVX');
+      // Espera o DOM carregar antes de inicializar o GTag
+      window.addEventListener('DOMContentLoaded', (event) => {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-1Q50PEEMVX');
+      });
     </script>
     <!-- Fim do Google tag (gtag.js) -->
 
