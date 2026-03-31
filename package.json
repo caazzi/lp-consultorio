@@ -1,0 +1,25 @@
+{
+  "name": "lp-consultorio",
+  "version": "1.0.0",
+  "description": "Landing Page para o consultório do Dr. Gilberto Salustiano, Médico Infectologista e Clínico Geral em Maceió - AL. O projeto é um site de página única estático otimizado para conversão de pacientes via WhatsApp, com foco em performance visual rápida e segurança, hospedado na plataforma Netlify.",
+  "main": "index.js",
+  "scripts": {
+    "build:css": "tailwindcss -i ./input.css -o ./css/style.css --minify",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/caazzi/lp-consultorio.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/caazzi/lp-consultorio/issues"
+  },
+  "homepage": "https://github.com/caazzi/lp-consultorio#readme",
+  "devDependencies": {
+    "tailwindcss": "^3.4.19"
+  }
+}
