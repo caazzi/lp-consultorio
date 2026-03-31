@@ -9,3 +9,7 @@ Thumbs.db
 
 # Build
 /css/style.css
+
+# Imagens Brutas
+*.jpeg
+*.jpg
