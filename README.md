@@ -1,25 +1,79 @@
-# lp-consultorio
+# 🏥 Landing Page Médica de Alta Conversão
 
-Landing Page para o consultório do Dr. Gilberto Salustiano, Médico Infectologista e Clínico Geral em Maceió - AL. O projeto é um site de página única estático otimizado para conversão de pacientes via WhatsApp, com foco em performance visual rápida e segurança, hospedado na plataforma Netlify.
+**Projeto Freelance** | Consultório Dr. Gilberto Salustiano & Dra. Anabel Lima
+*Maceió, AL - Brasil*
 
-## Estrutura do Site (`index.html`)
+🔗 **URL Live:** [https://consultoriosalustiano.com.br/](https://consultoriosalustiano.com.br/)
 
-O site é construído de forma estática com HTML, CSS e JavaScript simples para maximizar a velocidade e reduzir a complexidade:
+Este repositório contém o código de uma solução web estática desenvolvida para um consultório médico, focada em transformar tráfego de campanhas do **Google Ads** em agendamentos via **WhatsApp**.
 
-- **Ebook/Página Única:** A interface possui seções de Hero, Experiência (Trust Bar), Especialidades, Sobre o Médico, Benefícios de agendar e o CTA Principal.
-- **Estilo & Performance:** Utiliza **Tailwind CSS** compilado de forma estática para um arquivo `css/style.css`. Isso elimina as dependências do CDN no cliente, melhorando vertiginosamente o LCP e eliminando tempo de carregamento de telas brancas sem estilo (FOUC).
-- **SEO & Social (Open Graph):** Possui tags de compartilhamento configuradas (`og:image`, `og:title`, etc) otimizadas para WhatsApp e Redes Sociais. É necessário apenas modificar a tag indicando o domínio final no `index.html`.
-- **Rastreamento de Conversões (Analytics):** Google Tag Manager / Analytics (`gtag.js`) está configurado para monitorar visitas. As interações nos botões do WhatsApp invocam a função `trackWhatsAppClick()`, registrando um evento customizado (`generate_lead`) indicando onde o clique ocorreu.
+---
 
-## Implantação e Deploy (`netlify.toml` e Build Node)
+## 🎯 O Desafio
+O cliente necessitava de uma presença digital que fosse extremamente rápida no carregamento (especialmente em conexões móveis) e que transmitisse a autoridade de 40 anos de experiência clínica. O foco principal era a **conversão direta**: cada elemento da página foi desenhado para guiar o usuário ao botão de agendamento.
 
-O projeto está configurado para ser publicado e servido pela infraestrutura global do **Netlify**. 
+## 🚀 Solução Técnica
+Para garantir performance máxima e custo zero de manutenção de servidor, optei por uma arquitetura **JAMstack**:
 
-- **Processo de Build Dinâmico:** O Netlify foi instruído a executar o comando `npm run build:css` em todo novo *deploy*. Isso lê o `input.css`, extrai as sintaxes do Tailwind presentes no `index.html` e cospe o CSS minificado final na pasta `.css/style.css` sem intervenção manual.
-- **Headers de Segurança Injetados (`netlify.toml`):**
-  - `X-Frame-Options: DENY`: Impede o carregamento da página por `<frame>` ou `<iframe>`, prevenindo *clickjacking*.
-  - `Strict-Transport-Security` (HSTS): Força todas as conexões via HTTPS.
-  - `X-Content-Type-Options: nosniff`: Protege o site contra manipulações de tipos MIME.
-  - `Permissions-Policy`: Restringe ativamente o acesso do navegador a recursos locais do usuário (Microfone, Câmera, Geolocalização) ao domínio original.
-  - **Content-Security-Policy (CSP):** Rigorosa política que autoriza os scripts, conexões e estilos apenas originários do GTM (`www.googletagmanager.com`), Google Analytics (`region1.google-analytics.com`, `www.google-analytics.com`), Ads e domínios da marca, blindando contra injeções XSS.
+-   **Frontend:** HTML5 semântico e **Tailwind CSS** (compilado para produção).
+-   **Performance:** Zero dependências de CDNs externas no caminho crítico de renderização, garantindo um LCP (Largest Contentful Paint) baixíssimo.
+-   **Segurança:** Configuração rigorosa de cabeçalhos via `netlify.toml` (CSP, HSTS, X-Frame-Options).
+-   **Analytics:** Integração profunda com **Google Tag Manager** e **GA4**, com rastreamento customizado de cliques no WhatsApp (`generate_lead`).
+
+## 🛠️ Tecnologias Utilizadas
+-   **HTML5 / JavaScript (Vanilla)**
+-   **Tailwind CSS 3.4** (estilização moderna e responsiva)
+-   **Netlify** (Hospedagem e CI/CD)
+-   **Google Tag Manager / Analytics** (Monitoramento de conversão)
+-   **Node.js** (Ambiente de build para o CSS)
+
+---
+
+## 📂 Estrutura do Projeto
+```bash
+.
+├── cardiologia/            # Landing Page da Dra. Anabel Lima (Cardiologista)
+│   └── index.html
+├── css/
+│   └── style.css           # CSS final compilado pelo Tailwind
+├── dr-gilberto-salustiano-infectologista.webp # Imagem principal otimizada
+├── index.html              # Landing Page Principal (Dr. Gilberto - Infectologia)
+├── netlify.toml            # Configurações de deploy, segurança e headers
+├── package.json            # Scripts de build e dependências de dev
+├── tailwind.config.js      # Configurações do framework CSS
+└── robots.txt / sitemap.xml # SEO básico configurado
+```
+
+---
+
+## ⚙️ Como Executar Localmente
+
+### Pré-requisitos
+-   [Node.js](https://nodejs.org/) instalado.
+
+### Instalação
+```bash
+npm install
+```
+
+### Build do CSS (Tailwind)
+Para gerar o arquivo `css/style.css` a partir do `input.css` e das classes usadas no HTML:
+```bash
+npm run build:css
+```
+
+---
+
+## 🔐 Segurança e Boas Práticas
+O projeto implementa uma **Content Security Policy (CSP)** rigorosa para prevenir ataques XSS, além de forçar conexões via HTTPS (HSTS) e desabilitar recursos desnecessários do navegador via Permissions Policy.
+
+---
+
+## 📈 Resultados Esperados
+-   **Mobile First:** Experiência fluida em smartphones, principal origem do tráfego de anúncios.
+-   **SEO-Ready:** Microdados e meta-tags Open Graph configurados para compartilhamento profissional em redes sociais e WhatsApp.
+-   **Manutenibilidade:** Código limpo e modular, permitindo a adição de novas especialidades (como visto na subpasta `/cardiologia`) com esforço mínimo.
+
+---
+*Desenvolvido com foco em resultados reais para a área da saúde.*
 
