@@ -3,12 +3,12 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <!-- Título otimizado -->
     <title>Cardiologista em Maceió - Dra. Anabel Lima</title>
     <!-- Descrição otimizada -->
     <meta name="description"
-        content="Cardiologista em Maceió com ampla experiência clínica. Especialista em prevenção, diagnóstico e tratamento de doenças cardiovasculares. Agende sua consulta.">
+        content="Cardiologista em Maceió com 40 anos de experiência clínica e hospitalar. Especialista em prevenção, diagnóstico e tratamento de doenças cardiovasculares. Agende sua consulta.">
     <link rel="canonical" href="https://consultoriosalustiano.com.br/cardiologia/">
 
     <!-- Preconnect hints -->
@@ -142,18 +142,19 @@
         <section class="bg-white rounded-2xl shadow-xl overflow-hidden mb-10 border border-gray-100">
             <div class="md:flex items-stretch">
                 <div class="md:w-1/2 relative bg-gray-100 min-h-[300px] flex items-center justify-center">
-                    <picture>
+                    <picture class="w-full h-full">
                         <!-- Nova imagem da médica -->
                         <source srcset="/cardiologia.webp" type="image/webp">
                         <img src="/cardiologia.jpeg" alt="Dra. Anabel Lima - Médica Cardiologista em Maceió"
-                            class="w-full h-full object-cover" loading="eager">
+                            class="w-full h-full object-cover aspect-[4/3] md:aspect-auto" loading="eager" width="600"
+                            height="450">
                     </picture>
                     <div
                         class="absolute bottom-4 left-4 right-4 bg-white/90 backdrop-blur-sm p-3 rounded-lg shadow-sm md:hidden text-center">
                         <p class="text-xs font-bold text-red-700 uppercase tracking-wider">Cardiologia Clínica</p>
 
                         <p class="text-sm font-semibold text-gray-800">CRM/AL <span
-                                class="text-red-600 font-bold">2726</span></p>
+                                class="text-red-600 font-bold">2726</span> | 40 anos de experiência</p>
                     </div>
                 </div>
                 <div class="md:w-1/2 p-8 md:p-12 flex flex-col justify-center text-left">
@@ -177,6 +178,10 @@
                             <span>CRM/AL <span class="font-bold text-red-600">2726</span> | RQE <span
                                     class="font-bold text-red-600">2092</span></span>
                         </div>
+                        <div class="flex items-center text-gray-600">
+                            <span class="text-red-700 mr-2 font-bold">✓</span>
+                            <span>40 anos de experiência clínica e hospitalar</span>
+                        </div>
                     </div>
 
                     <!-- CTA Principal -->
@@ -198,6 +203,11 @@
         <!-- Trust Bar -->
         <section
             class="mb-12 flex flex-wrap justify-center gap-8 md:gap-16 opacity-70 grayscale hover:grayscale-0 transition-all duration-500">
+            <div class="flex flex-col items-center">
+                <span class="text-2xl font-bold text-gray-800">40 anos</span>
+                <span class="text-xs uppercase tracking-tighter text-gray-500 font-semibold">de experiência
+                    clínica</span>
+            </div>
             <div class="flex flex-col items-center">
 
                 <span class="text-2xl font-bold text-gray-800">CRM/AL <span class="text-brand-blue">2726</span></span>
@@ -287,8 +297,9 @@
             <h2 class="text-2xl font-bold text-gray-900 mb-4">Sobre a Dra. Anabel Lima</h2>
             <div class="h-1 w-20 bg-brand-blue mb-6"></div>
             <p class="text-gray-700 mb-4 leading-relaxed">
-                Com vasta experiência clínica pautada pelo cuidado integral do paciente, a <span
-                    class="font-semibold">Dra. Anabel Lima</span> atua na prevenção, diagnóstico precoce e tratamento de
+                Com <span class="font-semibold">40 anos de experiência clínica e hospitalar</span> pautada pelo cuidado
+                integral do paciente, a <span class="font-semibold">Dra. Anabel Lima</span> atua na prevenção,
+                diagnóstico precoce e tratamento de
                 doenças do coração. Atendendo em conjunto com o Dr. Gilberto Salustiano, oferece um ambiente de
                 confiança e tradição.
             </p>
@@ -302,6 +313,10 @@
                     <span>Atualização constante e acompanhamento minucioso de <span class="font-semibold">fatores de
                             risco</span>.</span>
                 </li>
+                <li class="flex items-start space-x-2">
+                    <span class="text-brand-blue font-bold mt-1" aria-hidden="true">›</span>
+                    <span>Solidez de 40 anos de prática médica e hospitalar.</span>
+                </li>
             </ul>
         </section>
 
@@ -312,6 +327,7 @@
                 <p class="text-lg"><span aria-hidden="true">✅</span> Prevenção ativa contra infarto e AVC.</p>
                 <p class="text-lg"><span aria-hidden="true">✅</span> Risco Cirúrgico liberado com segurança.</p>
                 <p class="text-lg"><span aria-hidden="true">✅</span> Acompanhamento médico integrado e humanizado.</p>
+                <p class="text-lg"><span aria-hidden="true">✅</span> 40 anos de experiência clínica e hospitalar.</p>
             </div>
         </section>
 
@@ -333,7 +349,8 @@
         <!-- Botão WhatsApp Flutuante Mobile com A11y sr-only -->
         <a href="https://api.whatsapp.com/send?phone=5582999900844&text=Olá,%20gostaria%20de%20agendar%20uma%20consulta%20com%20a%20Dra.%20Anabel."
             onclick="trackWhatsAppClick('Floating Button')" target="_blank" rel="noopener"
-            class="md:hidden fixed bottom-6 right-6 z-[100] bg-red-700 text-white p-4 rounded-full shadow-2xl animate-bounce hover:bg-red-800 transition-colors">
+            class="md:hidden fixed right-6 z-[100] bg-red-700 text-white p-4 rounded-full shadow-2xl animate-bounce hover:bg-red-800 transition-colors"
+            style="bottom: calc(1.5rem + env(safe-area-inset-bottom));">
             <!-- Texto para Leitores de Tela (sr-only) -->
             <span class="sr-only">Agendar consulta por WhatsApp</span>
             <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" viewBox="0 0 24 24" fill="currentColor">
@@ -345,7 +362,8 @@
     </main>
 
     <!-- Rodapé -->
-    <footer class="bg-gray-800 text-gray-300 text-center py-8 px-4">
+    <footer class="bg-gray-800 text-gray-300 text-center py-8 px-4"
+        style="padding-bottom: calc(2rem + env(safe-area-inset-bottom));">
         <p class="font-semibold text-lg">Dra. Anabel Lima</p>
 
         <p class="text-sm">Médica Cardiologista - CRM/AL <span class="font-bold text-white">2726</span> | RQE
