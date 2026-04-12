@@ -18,6 +18,9 @@
     <link rel="preconnect" href="https://www.google-analytics.com">
     <link rel="preconnect" href="https://region1.google-analytics.com">
 
+    <!-- LCP Preload -->
+    <link rel="preload" href="/assets/images/cardiologia.webp" as="image" type="image/webp" fetchpriority="high">
+
     <!-- Google Fonts - Inter -->
     <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=optional"
         as="style" onload="this.onload=null;this.rel='stylesheet'">
@@ -43,23 +46,41 @@
         }
     </style>
 
-    <!-- Google Tag Manager (GTM Placeholder) -->
-    <!-- Cole seu código do GTM aqui no futuro. Ex: <script>(function(w,d,s,l,i)...</script> -->
-
-    <!-- Google tag (gtag.js) - Mantido para compatibilidade -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-1Q50PEEMVX"></script>
+    <!-- Google Analytics / GTM - Optimized Loading -->
     <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag() { dataLayer.push(arguments); }
-        gtag('js', new Date());
-        gtag('config', 'G-1Q50PEEMVX', {
-            'send_page_view': true,
-            'linker': { 'domains': ['api.whatsapp.com'] }
-        });
+        (function () {
+            var gtmLoaded = false;
+            function loadGTM() {
+                if (gtmLoaded) return;
+                gtmLoaded = true;
+                var p = document.createElement('link');
+                p.rel = 'preconnect';
+                p.href = 'https://www.googletagmanager.com';
+                document.head.appendChild(p);
+
+                var g = document.createElement('script');
+                g.async = true;
+                g.src = 'https://www.googletagmanager.com/gtag/js?id=G-1Q50PEEMVX';
+                document.head.appendChild(g);
+
+                window.dataLayer = window.dataLayer || [];
+                function gtag() { dataLayer.push(arguments); }
+                gtag('js', new Date());
+                gtag('config', 'G-1Q50PEEMVX', {
+                    'send_page_view': true,
+                    'linker': { 'domains': ['api.whatsapp.com'] }
+                });
+            }
+
+            ['scroll', 'mousemove', 'touchstart'].forEach(function (e) {
+                window.addEventListener(e, loadGTM, { once: true, passive: true });
+            });
+            setTimeout(loadGTM, 3500);
+        })();
     </script>
 
     <!-- Script de Rastreamento Avançado (UTMs e DataLayer) -->
-    <script src="/assets/js/tracking.js"></script>
+    <script src="/assets/js/tracking.js" defer></script>
 
     <!-- JSON-LD Structured Data -->
     <script type="application/ld+json">
@@ -149,7 +170,7 @@
                         <img src="/assets/images/cardiologia.jpeg"
                             alt="Dra. Anabel Lima - Médica Cardiologista em Maceió"
                             class="w-full h-full object-cover aspect-[4/3] md:aspect-auto" loading="eager" width="600"
-                            height="450">
+                            height="450" fetchpriority="high">
                     </picture>
                     <div
                         class="absolute bottom-4 left-4 right-4 bg-white/90 backdrop-blur-sm p-3 rounded-lg shadow-sm md:hidden text-center">

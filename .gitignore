@@ -15,3 +15,8 @@ Thumbs.db
 *.jpg
 
 /docs
+
+# Lighthouse
+report_*.json
+lighthouse.*
+C:\\*
