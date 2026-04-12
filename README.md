@@ -26,22 +26,25 @@ Para garantir performance máxima e custo zero de manutenção de servidor, opte
 -   **Netlify** (Hospedagem e CI/CD)
 -   **Google Tag Manager / Analytics** (Monitoramento de conversão)
 -   **Node.js** (Ambiente de build para o CSS)
+-   **Elfsight** (Widget de avaliações do Google)
 
 ---
 
 ## 📂 Estrutura do Projeto
 ```bash
 .
-├── cardiologia/            # Landing Page da Dra. Anabel Lima (Cardiologista)
-│   └── index.html
-├── css/
-│   └── style.css           # CSS final compilado pelo Tailwind
-├── dr-gilberto-salustiano-infectologista.webp # Imagem principal otimizada
-├── index.html              # Landing Page Principal (Dr. Gilberto - Infectologia)
+├── public/                 # Assets públicos e páginas prontas
+│   ├── cardiologia/        # Landing Page da Dra. Anabel Lima (Cardiologista)
+│   │   └── index.html
+│   ├── assets/             # Imagens e CSS final compilado
+│   ├── 404.html            # Página de erro customizada
+│   ├── index.html          # Landing Page Principal (Dr. Gilberto - Infectologia)
+│   └── robots.txt / sitemap.xml # SEO básico configurado
+├── src/
+│   └── css/input.css       # CSS original com as diretivas do Tailwind
 ├── netlify.toml            # Configurações de deploy, segurança e headers
 ├── package.json            # Scripts de build e dependências de dev
-├── tailwind.config.js      # Configurações do framework CSS
-└── robots.txt / sitemap.xml # SEO básico configurado
+└── tailwind.config.js      # Configurações do framework CSS
 ```
 
 ---

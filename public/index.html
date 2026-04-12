@@ -33,10 +33,11 @@
     <meta property="og:description"
         content="Referência em Infectologia em Maceió com 4 décadas de dedicação. Atendimento pautado pela ética, sigilo e atualização científica constante.">
     <meta property="og:url" content="https://consultoriosalustiano.com.br/">
-    <meta property="og:image" content="https://consultoriosalustiano.com.br/dr-gilberto-salustiano-infectologista.jpg">
+    <meta property="og:image"
+        content="https://consultoriosalustiano.com.br/assets/images/dr-gilberto-salustiano-infectologista.jpg">
 
     <!-- CSS Estático Compilado -->
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="/assets/css/style.css">
 
     <style>
         /* Estilo para garantir que a fonte Inter seja usada, se carregada */
@@ -50,7 +51,10 @@
         }
     </style>
 
-    <!-- Google tag (gtag.js) -->
+    <!-- Google Tag Manager (GTM Placeholder) -->
+    <!-- Cole seu código do GTM aqui no futuro. Ex: <script>(function(w,d,s,l,i)...</script> -->
+
+    <!-- Google tag (gtag.js) - Mantido para compatibilidade até o GTM estar 100% -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-1Q50PEEMVX"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
@@ -60,17 +64,10 @@
             'send_page_view': true,
             'linker': { 'domains': ['api.whatsapp.com'] }
         });
-
-        // Função para rastrear clicks no WhatsApp
-        function trackWhatsAppClick(location) {
-            gtag('event', 'generate_lead', {
-                'event_category': 'conversion',
-                'event_label': 'WhatsApp ' + location,
-                'value': 1
-            });
-        }
     </script>
-    <!-- Fim do Google tag (gtag.js) -->
+
+    <!-- Script de Rastreamento Avançado (UTMs e DataLayer) -->
+    <script src="/assets/js/tracking.js"></script>
 
     <!-- JSON-LD Structured Data -->
     <script type="application/ld+json">
@@ -78,7 +75,7 @@
       "@context": "https://schema.org",
       "@type": "MedicalBusiness",
       "name": "Dr. Gilberto Salustiano - Infectologista e Clínico Geral",
-      "image": "https://consultoriosalustiano.com.br/dr-gilberto-salustiano-infectologista.jpg",
+      "image": "https://consultoriosalustiano.com.br/assets/images/dr-gilberto-salustiano-infectologista.jpg",
       "@id": "https://consultoriosalustiano.com.br/",
       "url": "https://consultoriosalustiano.com.br/",
       "telephone": "+5582999900844",
@@ -131,6 +128,9 @@
 
 <body class="bg-gray-50 antialiased text-gray-700">
 
+    <!-- Google Tag Manager (noscript) Placeholder -->
+    <!-- Cole seu <noscript> do GTM aqui no futuro -->
+
     <!-- Header -->
     <header class="bg-white shadow-md sticky top-0 z-50">
         <div class="container mx-auto max-w-4xl px-5 py-4 flex justify-between items-center">
@@ -155,8 +155,8 @@
             <div class="md:flex items-stretch">
                 <div class="md:w-1/2 relative bg-gray-100 min-h-[300px] flex items-center justify-center">
                     <picture class="w-full h-full">
-                        <source srcset="dr-gilberto-salustiano-infectologista.webp" type="image/webp">
-                        <img src="dr-gilberto-salustiano-infectologista.jpg"
+                        <source srcset="/assets/images/dr-gilberto-salustiano-infectologista.webp" type="image/webp">
+                        <img src="/assets/images/dr-gilberto-salustiano-infectologista.jpg"
                             alt="Dr. Gilberto Salustiano - Médico Infectologista em Maceió"
                             class="w-full h-full object-cover aspect-[4/3] md:aspect-auto" loading="eager" width="600"
                             height="450">
@@ -341,7 +341,9 @@
                 tratamento com o Dr. Gilberto Salustiano no Google.</p>
 
             <div class="bg-white rounded-2xl shadow-md p-4 md:p-8">
-                <script defer async src='https://cdn.trustindex.io/loader.js?3d711446831d81195526627a02c'></script>
+                <!-- Elfsight Google Reviews | Untitled Google Reviews -->
+                <script src="https://elfsightcdn.com/platform.js" async></script>
+                <div class="elfsight-app-9a051647-ff78-4ae8-838f-2c0b7cbe4d24" data-elfsight-app-lazy></div>
             </div>
         </section>
 

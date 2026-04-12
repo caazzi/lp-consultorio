@@ -1,7 +1,7 @@
 # Arquivo de configuração do Netlify (netlify.toml)
 
 [build]
-  publish = "."
+  publish = "public"
   command = "npm install && npm run build:css"
 
 # Configurações de Cabeçalhos HTTP

@@ -13,3 +13,5 @@ Thumbs.db
 # Imagens Brutas
 *.jpeg
 *.jpg
+
+/docs

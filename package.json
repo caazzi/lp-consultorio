@@ -4,7 +4,7 @@
   "description": "Landing Page para o consultório do Dr. Gilberto Salustiano, Médico Infectologista e Clínico Geral em Maceió - AL. O projeto é um site de página única estático otimizado para conversão de pacientes via WhatsApp, com foco em performance visual rápida e segurança, hospedado na plataforma Netlify.",
   "main": "index.js",
   "scripts": {
-    "build:css": "tailwindcss -i ./input.css -o ./css/style.css --minify",
+    "build:css": "tailwindcss -i ./src/css/input.css -o ./public/assets/css/style.css --minify",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {

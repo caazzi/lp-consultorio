@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Página não encontrada - Consultório Salustiano</title>
+    <meta name="description"
+        content="A página que você está procurando não existe. Por favor, escolha uma das nossas especialidades para continuar.">
+
+    <!-- Preconnect hints -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <!-- Google Fonts - Inter -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=optional"
+        as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=optional" rel="stylesheet">
+    </noscript>
+
+    <!-- CSS Estático Compilado -->
+    <link rel="stylesheet" href="/assets/css/style.css">
+
+    <style>
+        html {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 antialiased text-gray-700 min-h-screen flex flex-col items-center justify-center p-5">
+
+    <main class="max-w-3xl w-full text-center">
+        <!-- 404 Heading -->
+        <h1 class="text-8xl font-black text-gray-200 mb-4 select-none">404</h1>
+        <h2 class="text-3xl font-bold text-gray-900 mb-4">Página não encontrada</h2>
+        <p class="text-lg text-gray-600 mb-12">Desculpe, não conseguimos encontrar o que você estava procurando. Para
+            qual especialidade você deseja retornar?</p>
+
+        <!-- Clinic Options -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+            <!-- Option: Infectologia -->
+            <a href="/"
+                class="group flex flex-col items-center p-8 glass-card rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border-b-8 border-brand-blue">
+                <div
+                    class="w-20 h-20 bg-blue-50 text-brand-blue rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.040L3 14.535a11.99 11.99 0 008.182 4.423l.818 1.613.818-1.613a11.99 11.99 0 008.182-4.423l-1.382-8.551z" />
+                    </svg>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-900 mb-2">Infectologia</h3>
+                <p class="text-sm font-semibold text-brand-blue mb-4">Dr. Gilberto Salustiano</p>
+                <span class="inline-flex items-center text-brand-blue font-bold group-hover:underline">
+                    Ir para Clínica
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20"
+                        fill="currentColor">
+                        <path fill-rule="evenodd"
+                            d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
+                            clip-rule="evenodd" />
+                    </svg>
+                </span>
+            </a>
+
+            <!-- Option: Cardiologia -->
+            <a href="/cardiologia/"
+                class="group flex flex-col items-center p-8 glass-card rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border-b-8 border-red-700">
+                <div
+                    class="w-20 h-20 bg-red-50 text-red-700 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                    </svg>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-900 mb-2">Cardiologia</h3>
+                <p class="text-sm font-semibold text-red-700 mb-4">Dra. Anabel Lima</p>
+                <span class="inline-flex items-center text-red-700 font-bold group-hover:underline">
+                    Ir para Clínica
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20"
+                        fill="currentColor">
+                        <path fill-rule="evenodd"
+                            d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
+                            clip-rule="evenodd" />
+                    </svg>
+                </span>
+            </a>
+
+        </div>
+
+        <!-- Footer Help -->
+        <p class="mt-20 text-gray-500 text-sm italic">
+            Consultório Salustiano - Maceió, AL
+        </p>
+    </main>
+
+</body>
+
+</html>
