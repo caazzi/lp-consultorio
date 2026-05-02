@@ -1,7 +1,7 @@
-// Arquivo centralizado de Rastreamento Avançado
-// Substitui a necessidade de manter lógicas complexas direto no HTML.
+// 🏥 Arquivo de Rastreamento Avançado - lp-consultorio
+// Este script centraliza a lógica de UTMs e disparos de conversão.
 
-// 1. Armazenar UTMs na Sessão (Executa no carregamento)
+// 1. Armazenar UTMs na SessionStorage (Executa no carregamento)
 (function storeUTMs() {
     const urlParams = new URLSearchParams(window.location.search);
     const utms = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'gclid'];
@@ -13,12 +13,13 @@
     });
 })();
 
-// O texto do WhatsApp é mantido original, pois a secretária não fará a análise dos dados.
-// A análise de UTMs e atribuição de conversões acontece no Google Analytics via DataLayer (abaixo).
-
-// 3. Função de Tracking Rica para DataLayer & GA4
+// 2. Inicialização do DataLayer
 window.dataLayer = window.dataLayer || [];
 
+/**
+ * Dispara evento de conversão para o GTM e GA4
+ * @param {string} location - Identificador de onde o clique ocorreu (ex: 'Header', 'Hero')
+ */
 function trackWhatsAppClick(location) {
     const isCardio = window.location.pathname.includes('/cardiologia');
     const specialty = isCardio ? 'Cardiologia' : 'Infectologia';
@@ -34,7 +35,7 @@ function trackWhatsAppClick(location) {
         'gclid': sessionStorage.getItem('gclid') || ''
     });
 
-    // Fallback: Disparo direto para o gtag.js atual (Mantém a compatibilidade!)
+    // Fallback: Disparo direto para o gtag.js (Compatibilidade com tags legadas)
     if (typeof gtag === 'function') {
         const label = isCardio ? 'WhatsApp Dra Anabel ' + location : 'WhatsApp ' + location;
         gtag('event', 'generate_lead', {
@@ -44,3 +45,18 @@ function trackWhatsAppClick(location) {
         });
     }
 }
+
+// 3. Sistema de Event Listeners (Removendo onclick do HTML)
+document.addEventListener('DOMContentLoaded', () => {
+    // Busca todos os links que apontam para o WhatsApp e têm o atributo data-track-location
+    const waButtons = document.querySelectorAll('a[href*="api.whatsapp.com"][data-track-location]');
+    
+    waButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const location = button.getAttribute('data-track-location');
+            if (location) {
+                trackWhatsAppClick(location);
+            }
+        });
+    });
+});

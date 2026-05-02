@@ -50,57 +50,34 @@
         <p class="text-lg text-gray-600 mb-12">Desculpe, não conseguimos encontrar o que você estava procurando. Para
             qual especialidade você deseja retornar?</p>
 
-        <!-- Clinic Options -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <!-- Seção Nossa Equipe (Internal Linking) - Menor e no Fim -->
+        <div class="max-w-xl mx-auto">
+            <h2 class="text-xl font-bold text-gray-900 mb-2">Conheça nossa equipe:</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Dr. Gilberto -->
+                <a href="/" class="glass-card p-4 rounded-xl border-2 border-brand-blue shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 group text-left">
+                    <h3 class="text-lg font-bold text-gray-900 mb-0.5 group-hover:text-brand-blue transition-colors">Dr. Gilberto Salustiano</h3>
+                    <p class="text-xs text-gray-600 font-semibold mb-2">Infectologia e Clínica Médica</p>
+                    <span class="text-brand-blue text-xs font-bold flex items-center">
+                        Ver clínica 
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 ml-1 group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                    </span>
+                </a>
 
-            <!-- Option: Infectologia -->
-            <a href="/"
-                class="group flex flex-col items-center p-8 glass-card rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border-b-8 border-brand-blue">
-                <div
-                    class="w-20 h-20 bg-blue-50 text-brand-blue rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.040L3 14.535a11.99 11.99 0 008.182 4.423l.818 1.613.818-1.613a11.99 11.99 0 008.182-4.423l-1.382-8.551z" />
-                    </svg>
-                </div>
-                <h3 class="text-2xl font-bold text-gray-900 mb-2">Infectologia</h3>
-                <p class="text-sm font-semibold text-brand-blue mb-4">Dr. Gilberto Salustiano</p>
-                <span class="inline-flex items-center text-brand-blue font-bold group-hover:underline">
-                    Ir para clínica
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20"
-                        fill="currentColor">
-                        <path fill-rule="evenodd"
-                            d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
-                            clip-rule="evenodd" />
-                    </svg>
-                </span>
-            </a>
-
-            <!-- Option: Cardiologia -->
-            <a href="/cardiologia/"
-                class="group flex flex-col items-center p-8 glass-card rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border-b-8 border-red-700">
-                <div
-                    class="w-20 h-20 bg-red-50 text-red-700 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                    </svg>
-                </div>
-                <h3 class="text-2xl font-bold text-gray-900 mb-2">Cardiologia</h3>
-                <p class="text-sm font-semibold text-red-700 mb-4">Dra. Anabel Lima</p>
-                <span class="inline-flex items-center text-red-700 font-bold group-hover:underline">
-                    Ir para clínica
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20"
-                        fill="currentColor">
-                        <path fill-rule="evenodd"
-                            d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
-                            clip-rule="evenodd" />
-                    </svg>
-                </span>
-            </a>
-
+                <!-- Dra. Anabel -->
+                <a href="/cardiologia/" class="glass-card p-4 rounded-xl border-2 border-red-700 shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 group text-left">
+                    <h3 class="text-lg font-bold text-gray-900 mb-0.5 group-hover:text-red-700 transition-colors">Dra. Anabel Lima</h3>
+                    <p class="text-xs text-gray-600 font-semibold mb-2">Cardiologia Clínica e Preventiva</p>
+                    <span class="text-red-700 text-xs font-bold flex items-center">
+                        Ver clínica 
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 ml-1 group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                    </span>
+                </a>
+            </div>
         </div>
 
         <!-- Footer Help -->

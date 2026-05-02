@@ -1,85 +1,86 @@
-# 🏥 Landing Page Médica de Alta Conversão
+# 🏥 Landing Page Médica de Alta Performance
 
-**Projeto Freelance** | Consultório Dr. Gilberto Salustiano & Dra. Anabel Lima
-*Maceió, AL - Brasil*
+> **Projeto Premium** | Consultório Dr. Gilberto Salustiano & Dra. Anabel Lima
+> *Maceió, AL - Brasil*
 
-🔗 **URL Live:** [https://consultoriosalustiano.com.br/](https://consultoriosalustiano.com.br/)
+[![Live Demo](https://img.shields.io/badge/URL-consultoriosalustiano.com.br-blue?style=for-the-badge&logo=google-chrome&logoColor=white)](https://consultoriosalustiano.com.br/)
+[![Hosting: Netlify](https://img.shields.io/badge/Netlify-00AD9F?style=for-the-badge&logo=netlify&logoColor=white)](https://www.netlify.com/)
+[![Aesthetics: Premium](https://img.shields.io/badge/Design-Glassmorphism-teal?style=for-the-badge)](https://consultoriosalustiano.com.br/)
 
-Este repositório contém o código de uma solução web estática desenvolvida para um consultório médico, focada em transformar tráfego de campanhas do **Google Ads** em agendamentos via **WhatsApp**.
-
----
-
-## 🎯 O Desafio
-O cliente necessitava de uma presença digital que fosse extremamente rápida no carregamento (especialmente em conexões móveis) e que transmitisse a autoridade de 40 anos de experiência clínica. O foco principal era a **conversão direta**: cada elemento da página foi desenhado para guiar o usuário ao botão de agendamento.
-
-## 🚀 Solução Técnica
-Para garantir performance máxima e custo zero de manutenção de servidor, optei por uma arquitetura **JAMstack**:
-
--   **Frontend:** HTML5 semântico e **Tailwind CSS** (compilado para produção).
--   **Performance:** Zero dependências de CDNs externas no caminho crítico de renderização, garantindo um LCP (Largest Contentful Paint) baixíssimo.
--   **Segurança:** Configuração rigorosa de cabeçalhos via `netlify.toml` (CSP, HSTS, X-Frame-Options).
--   **Analytics:** Integração profunda com **Google Tag Manager** e **GA4**, com rastreamento customizado de cliques no WhatsApp (`generate_lead`).
-
-## 🛠️ Tecnologias Utilizadas
--   **HTML5 / JavaScript (Vanilla)**
--   **Tailwind CSS 3.4** (estilização moderna e responsiva)
--   **Netlify** (Hospedagem e CI/CD)
--   **Google Tag Manager / Analytics** (Monitoramento de conversão)
--   **Node.js** (Ambiente de build para o CSS)
--   **Elfsight** (Widget de avaliações do Google)
+Esta solução JAMstack de alta performance foi desenvolvida para um consultório médico de elite, focada na conversão direta de tráfego vindo de campanhas do **Google Ads** em agendamentos via **WhatsApp**.
 
 ---
 
-## 📂 Estrutura do Projeto
+## 🎯 Objetivo Estratégico
+O projeto resolve a necessidade de uma presença digital que transmita **autoridade (40 anos de experiência)** e **confiança**, garantindo um carregamento instantâneo em conexões móveis (3G/4G).
+
+- **Foco em Conversão:** Layout otimizado para o "Golden Path" do paciente.
+- **UX Particular:** Filtragem de leads para atendimento exclusivo/particular.
+- **Identidade:** Cores baseadas no "Turquesa Maceió" e estética minimalista/hospitalar.
+
+## 🚀 Arquitetura e Performance
+Para atingir scores de 95+ no Lighthouse e garantir custo zero de escala, a arquitetura utiliza:
+
+- **Frontend Core:** HTML5 Semântico + Tailwind CSS 3.4.
+- **Asset Optimization:**
+  - Imagens em formato **WebP** com fallback automático.
+  - **LCP Preload** para imagens de hero acima da dobra.
+  - **GTM Lazy-Loading:** Scripts de rastreamento disparados apenas após interação do usuário (scroll/mouse), reduzindo o bloqueio inicial da thread principal.
+- **Security First:** 
+  - Content Security Policy (CSP) rigorosa via `netlify.toml`.
+  - HSTS, X-Frame-Options e Permissions Policy configurados.
+- **Analytics:** Rastreamento customizado via `dataLayer` para cliques no WhatsApp, capturando UTMs de campanha para atribuição precisa.
+
+## 🛠️ Stack Tecnológica
+- **Linguagens:** HTML5, CSS3, JavaScript (Vanilla).
+- **Estilização:** Tailwind CSS (Compilado & Minificado).
+- **Deployment:** CI/CD via Netlify.
+- **Widgets:** Elfsight (Google Reviews integration).
+- **Tracking:** Google Tag Manager + GA4.
+
+---
+
+## 📂 Estrutura do Repositório
 ```bash
 .
-├── public/                 # Assets públicos e páginas prontas
-│   ├── cardiologia/        # Landing Page da Dra. Anabel Lima (Cardiologista)
-│   │   └── index.html
-│   ├── assets/             # Recursos estáticos e compilados
-│   │   ├── css/            # CSS compilado (style.css)
-│   │   ├── images/         # Imagens do projeto
-│   │   └── js/             # Scripts auxiliares
-│   ├── 404.html            # Página de erro customizada
-│   ├── index.html          # Landing Page Principal (Dr. Gilberto - Infectologia)
-│   └── robots.txt / sitemap.xml # SEO básico configurado
-├── src/
-│   └── css/input.css       # CSS original com as diretivas do Tailwind
-├── netlify.toml            # Configurações de deploy, segurança e headers
-├── package.json            # Scripts de build e dependências de dev
-└── tailwind.config.js      # Configurações do framework CSS
+├── public/                 # Assets públicos e páginas prontas (Production Root)
+│   ├── cardiologia/        # LP Especializada - Dra. Anabel Lima
+│   ├── assets/             # Recursos estáticos (CSS compilado, Imagens, JS)
+│   ├── 404.html            # Error page customizada
+│   ├── index.html          # LP Principal - Dr. Gilberto (Infectologia)
+│   └── sitemap.xml         # SEO Indexing
+├── src/                    # Source files
+│   └── css/input.css       # Tailwind entry point
+├── netlify.toml            # Configuração de Headers, Security & Build
+├── package.json            # Scripts de automação
+└── tailwind.config.js      # Customização do design system (Cores & Fonts)
 ```
 
 ---
 
-## ⚙️ Como Executar Localmente
+## ⚙️ Workflow de Desenvolvimento
 
-### Pré-requisitos
--   [Node.js](https://nodejs.org/) instalado.
-
-### Instalação
+### 1. Instalação
 ```bash
 npm install
 ```
 
-### Build do CSS (Tailwind)
-Para gerar o arquivo `public/assets/css/style.css` a partir do `src/css/input.css` e das classes usadas no HTML:
+### 2. Build de Produção (CSS)
+Gera o arquivo otimizado e minificado para `public/assets/css/style.css`:
 ```bash
 npm run build:css
+```
+
+### 3. Preview Local
+Recomendado usar o `serve` ou a CLI do Netlify:
+```bash
+npx serve public
 ```
 
 ---
 
 ## 🔐 Segurança e Boas Práticas
-O projeto implementa uma **Content Security Policy (CSP)** rigorosa para prevenir ataques XSS, além de forçar conexões via HTTPS (HSTS) e desabilitar recursos desnecessários do navegador via Permissions Policy.
+O projeto segue as recomendações da **OWASP** para sites estáticos, implementando cabeçalhos de segurança que mitigam ataques de Clickjacking e XSS, garantindo que o site seja um ambiente seguro para informações médicas.
 
 ---
-
-## 📈 Resultados Esperados
--   **Mobile First:** Experiência fluida em smartphones, principal origem do tráfego de anúncios.
--   **SEO-Ready:** Microdados e meta-tags Open Graph configurados para compartilhamento profissional em redes sociais e WhatsApp.
--   **Manutenibilidade:** Código limpo e modular, permitindo a adição de novas especialidades (como visto na subpasta `/cardiologia`) com esforço mínimo.
-
----
-*Desenvolvido com foco em resultados reais para a área da saúde.*
-
+*Desenvolvido com foco em resultados reais e excelência técnica.*

@@ -1,7 +1,7 @@
 {
   "name": "lp-consultorio",
   "version": "1.0.0",
-  "description": "Landing Page para o consultório do Dr. Gilberto Salustiano, Médico Infectologista e Clínico Geral em Maceió - AL. O projeto é um site de página única estático otimizado para conversão de pacientes via WhatsApp, com foco em performance visual rápida e segurança, hospedado na plataforma Netlify.",
+  "description": "High-performance medical landing page optimized for conversion and security. Built with Tailwind CSS and hosted on Netlify for Dr. Gilberto Salustiano and Dra. Anabel Lima.",
   "main": "index.js",
   "scripts": {
     "build:css": "tailwindcss -i ./src/css/input.css -o ./public/assets/css/style.css --minify",

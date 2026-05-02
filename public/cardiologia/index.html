@@ -46,6 +46,7 @@
     <link rel="stylesheet" href="/assets/css/style.css">
 
     <style>
+        /* Estilo para garantir que a fonte Inter seja usada, se carregada */
         html {
             font-family: 'Inter', sans-serif;
             scroll-behavior: smooth;
@@ -57,27 +58,22 @@
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.4);
         }
 
         @keyframes pulse-soft {
-            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(127, 29, 29, 0.4); }
-            70% { transform: scale(1.05); box-shadow: 0 0 0 15px rgba(127, 29, 29, 0); }
-            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(127, 29, 29, 0); }
-        }
-
-        @keyframes pulse-green {
             0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(31, 122, 51, 0.4); }
             70% { transform: scale(1.05); box-shadow: 0 0 0 15px rgba(31, 122, 51, 0); }
             100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(31, 122, 51, 0); }
         }
 
         .animate-pulse-premium {
-            animation: pulse-green 2s infinite;
+            animation: pulse-soft 2s infinite;
         }
 
         .gradient-bg {
             background: radial-gradient(circle at top right, rgba(0, 90, 156, 0.05), transparent),
-                        radial-gradient(circle at bottom left, rgba(127, 29, 29, 0.05), transparent);
+                        radial-gradient(circle at bottom left, rgba(31, 122, 51, 0.05), transparent);
         }
 
         /* Efeito de Revelação ao Scroll */
@@ -97,14 +93,8 @@
         .bg-maceio { background-color: #008080; }
         .border-maceio { border-color: #008080; }
 
-        /* Sophisticated Wine Red */
-        .text-wine { color: #7f1d1d; }
-        .bg-wine { background-color: #7f1d1d; }
-        .border-wine { border-color: #7f1d1d; }
-
-        /* Deep Navy Authority */
-        .text-navy { color: #1e293b; }
-        .bg-navy { background-color: #1e293b; }
+        /* Gradient Utilities for brand consistency */
+        .text-blue-100 { color: #dbeafe; }
     </style>
 
     <!-- Google Analytics / GTM - Optimized Loading -->
@@ -218,8 +208,8 @@
                 <p class="text-sm text-gray-600">Cardiologia Clínica</p>
             </a>
             <a href="https://api.whatsapp.com/send?phone=5582999900844&text=Olá,%20gostaria%20de%20verificar%20disponibilidade%20para%20uma%20consulta%20médica%20com%20a%20Dra.%20Anabel."
-                onclick="trackWhatsAppClick('Header')" target="_blank" rel="noopener"
-                class="bg-wine text-white font-semibold py-2 px-4 rounded-lg shadow-sm hover:opacity-90 transition duration-300 text-sm whitespace-nowrap">
+                data-track-location="Header" target="_blank" rel="noopener"
+                class="bg-brand-green text-white font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-green-700 transition duration-300 text-sm whitespace-nowrap">
                 Marcar consulta médica
             </a>
         </div>
@@ -240,21 +230,16 @@
                             class="w-full h-full object-cover object-center md:aspect-auto" loading="eager" width="600"
                             height="450" fetchpriority="high">
                     </picture>
-                    <div
-                        class="absolute bottom-4 left-4 right-4 glass-card p-4 rounded-xl shadow-lg md:hidden text-center">
-                        <p class="text-xs font-bold text-wine uppercase tracking-wider">Cardiologia Clínica</p>
 
-                        <p class="text-sm font-semibold text-gray-800">CRM/AL 2726 | 40 anos de dedicação</p>
-                    </div>
                 </div>
                 <div class="md:w-1/2 p-8 md:p-12 flex flex-col justify-center text-left">
                     <span
-                        class="hidden md:block text-maceio font-bold uppercase tracking-widest text-sm mb-2">Atendimento particular exclusivo e humanizado</span>
+                        class="hidden md:block text-brand-blue font-bold uppercase tracking-widest text-sm mb-2">Atendimento particular exclusivo e humanizado</span>
                     <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4 leading-tight">Dra. Anabel Lima</h2>
 
                     <p class="text-lg text-gray-700 mb-6 leading-relaxed">
                         Quatro décadas de trajetória sólida, oferecendo um <span
-                            class="font-semibold text-maceio">cuidado integral e especializado em cardiologia
+                            class="font-semibold text-brand-blue">cuidado integral e especializado em cardiologia
                             clínica e preventiva</span>.
                     </p>
 
@@ -262,29 +247,29 @@
                         <div class="flex items-center text-gray-700 bg-gray-50 p-2 rounded-lg border-l-4 border-maceio shadow-sm mb-4">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-maceio mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" role="img">
                                 <title>Localização</title>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                             </svg>
                             <span class="text-sm font-semibold italic">Atendimento presencial em Maceió - AL</span>
                         </div>
                         <div class="flex items-center text-gray-600">
-                            <span class="text-wine mr-2 font-bold">✓</span>
+                            <span class="text-brand-green mr-2 font-bold">✓</span>
                             <span>Análise Médica Criteriosa e Humanizada</span>
                         </div>
                         <div class="flex items-center text-gray-600">
-                            <span class="text-wine mr-2 font-bold">✓</span>
+                            <span class="text-brand-green mr-2 font-bold">✓</span>
                             <span>Participação em fóruns de excelência e congressos da área</span>
                         </div>
                         <div class="flex items-center text-gray-600">
-                            <span class="text-wine mr-2 font-bold">✓</span>
+                            <span class="text-brand-green mr-2 font-bold">✓</span>
                             <span>Atendimento pautado pela escuta atenta e acolhimento</span>
                         </div>
                     </div>
 
                     <!-- CTA Principal -->
                     <a href="https://api.whatsapp.com/send?phone=5582999900844&text=Olá,%20gostaria%20de%20verificar%20disponibilidade%20para%20uma%20consulta%20médica%20com%20a%20Dra.%20Anabel."
-                        onclick="trackWhatsAppClick('Hero Main')" target="_blank" rel="noopener"
-                        class="inline-flex items-center justify-center bg-wine text-white font-bold py-4 px-8 rounded-xl shadow-lg hover:opacity-90 transition duration-300 text-lg group">
+                        data-track-location="Hero Main" target="_blank" rel="noopener"
+                        class="inline-flex items-center justify-center bg-brand-green text-white font-bold py-4 px-8 rounded-xl shadow-lg hover:bg-green-700 transition duration-300 text-lg group">
                         <svg xmlns="http://www.w3.org/2000/svg"
                             class="h-6 w-6 mr-3 group-hover:scale-110 transition-transform" viewBox="0 0 24 24"
                             fill="currentColor" role="img">
@@ -298,9 +283,8 @@
             </div>
         </section>
 
-        <!-- Divisor de Ondas Sutil (Contexto Local) -->
         <div class="w-full overflow-hidden leading-[0] mb-20 md:mb-32 opacity-20 reveal">
-            <svg viewBox="0 0 1200 120" preserveAspectRatio="none" class="relative block w-full h-10 fill-maceio">
+            <svg viewBox="0 0 1200 120" preserveAspectRatio="none" class="relative block w-full h-10 fill-brand-blue">
                 <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z"></path>
             </svg>
         </div>
@@ -314,12 +298,12 @@
             </div>
             <div class="flex flex-col items-center">
 
-                <span class="text-2xl font-bold text-gray-800">CRM/AL <span class="text-navy">2726</span></span>
+                <span class="text-2xl font-bold text-gray-800">CRM/AL <span class="text-brand-blue">2726</span></span>
                 <span class="text-xs uppercase tracking-tighter text-gray-500 font-semibold">Registro Médico</span>
             </div>
             <div class="flex flex-col items-center">
 
-                <span class="text-2xl font-bold text-gray-800">RQE <span class="text-navy">2092</span></span>
+                <span class="text-2xl font-bold text-gray-800">RQE <span class="text-brand-blue">2092</span></span>
                 <span class="text-xs uppercase tracking-tighter text-gray-500 font-semibold">Especialista</span>
             </div>
             <div class="flex flex-col items-center text-center max-w-[150px]">
@@ -338,42 +322,42 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <!-- Preventiva (Coração/Heart) -->
                 <div id="risco-cirurgico"
-                    class="glass-card p-6 rounded-2xl shadow-md border-b-4 border-wine hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
-                    <div class="w-12 h-12 bg-wine/10 text-wine rounded-full flex items-center justify-center mb-4">
+                    class="glass-card p-6 rounded-2xl shadow-md border-b-4 border-brand-blue hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
+                    <div class="w-12 h-12 bg-blue-50 text-brand-blue rounded-full flex items-center justify-center mb-4">
                         <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" role="img">
                             <title>Ícone de Coração</title>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                                 d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                         </svg>
                     </div>
-                    <h3 class="text-xl font-bold text-gray-800 mb-3 text-wine">Consulta de avaliação cardiovascular</h3>
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">Consulta de avaliação cardiovascular</h3>
                     <p class="text-sm text-gray-600 leading-relaxed mb-4">Investigação minuciosa para prevenção de
                         riscos, avaliação pré-operatória e acompanhamento da saúde integral do coração.</p>
                     <ul class="text-xs space-y-2 text-gray-600">
-                        <li class="flex items-center"><span class="text-wine mr-2 font-bold">•</span> Risco Cirúrgico
+                        <li class="flex items-center"><span class="text-brand-green mr-2 font-bold">•</span> Risco Cirúrgico
                         </li>
-                        <li class="flex items-center"><span class="text-wine mr-2 font-bold">•</span> Medicina
+                        <li class="flex items-center"><span class="text-brand-green mr-2 font-bold">•</span> Medicina
                             Preventiva</li>
                     </ul>
                 </div>
 
                 <!-- Hipertensão (Medidor/Pressão) -->
                 <div id="hipertensao"
-                    class="glass-card p-6 rounded-2xl shadow-md border-b-4 border-wine hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
-                    <div class="w-12 h-12 bg-wine/10 text-wine rounded-full flex items-center justify-center mb-4">
+                    class="glass-card p-6 rounded-2xl shadow-md border-b-4 border-brand-green hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
+                    <div class="w-12 h-12 bg-green-50 text-brand-green rounded-full flex items-center justify-center mb-4">
                         <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" role="img">
                             <title>Ícone de Relógio</title>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                                 d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                     </div>
-                    <h3 class="text-xl font-bold text-gray-800 mb-3 text-wine">Consulta para hipertensão</h3>
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">Consulta para hipertensão</h3>
                     <p class="text-sm text-gray-600 leading-relaxed mb-4">Acompanhamento criterioso e ajuste terapêutico
                         para o controle da pressão, visando a prevenção de complicações a longo prazo.</p>
                     <ul class="text-xs space-y-2 text-gray-600">
-                        <li class="flex items-center"><span class="text-wine mr-2 font-bold">•</span> Controle de
+                        <li class="flex items-center"><span class="text-brand-green mr-2 font-bold">•</span> Controle de
                             Fatores de Risco</li>
-                        <li class="flex items-center"><span class="text-wine mr-2 font-bold">•</span> Conduta
+                        <li class="flex items-center"><span class="text-brand-green mr-2 font-bold">•</span> Conduta
                             Especializada</li>
                     </ul>
                 </div>
@@ -384,7 +368,7 @@
                     <div class="w-12 h-12 bg-gray-50 text-gray-600 rounded-full flex items-center justify-center mb-4">
                         <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" role="img">
                             <title>Ícone de Pulso</title>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                                 d="M13 10V3L4 14h7v7l9-11h-7z" />
                         </svg>
                     </div>
@@ -392,9 +376,9 @@
                     <p class="text-sm text-gray-600 leading-relaxed mb-4">Monitoramento contínuo de palpitações e falta
                         de ar, aliando experiência clínica ao que há de mais atual na cardiologia.</p>
                     <ul class="text-xs space-y-2 text-gray-600">
-                        <li class="flex items-center"><span class="text-wine mr-2 font-bold">•</span> Escuta Atenta
+                        <li class="flex items-center"><span class="text-brand-green mr-2 font-bold">•</span> Escuta Atenta
                         </li>
-                        <li class="flex items-center"><span class="text-wine mr-2 font-bold">•</span> Acompanhamento
+                        <li class="flex items-center"><span class="text-brand-green mr-2 font-bold">•</span> Acompanhamento
                             Contínuo</li>
                     </ul>
                 </div>
@@ -402,60 +386,43 @@
         </section>
 
         <!-- Sobre Mim -->
-        <section id="sobre" class="glass-card rounded-3xl shadow-lg p-6 md:p-12 mb-20 md:mb-40 reveal">
+        <section id="sobre" class="glass-card rounded-3xl shadow-lg p-8 md:py-24 md:px-16 mb-24 md:mb-48 reveal">
             <h2 class="text-2xl font-bold text-gray-900 mb-4">Sobre a Dra. Anabel Lima</h2>
-            <div class="h-1 w-20 bg-maceio mb-6"></div>
+            <div class="h-1 w-20 bg-brand-blue mb-6"></div>
             <p class="text-gray-700 mb-4 leading-relaxed">
                 Com uma <span class="font-semibold">trajetória consolidada de 40 anos</span> pautada pela excelência e
                 pelo cuidado integral, a <span class="font-semibold">Dra. Anabel Lima</span> une décadas de experiência
                 hospitalar à atualização científica contínua em congressos de cardiologia. Seu atendimento é reconhecido
                 pelo acolhimento e pela dedicação minuciosa à saúde de cada paciente.
             </p>
-            <ul class="list-none space-y-3 text-gray-700">
-                <li class="flex items-start space-x-2">
-                    <span class="text-maceio font-bold mt-1" aria-hidden="true">›</span>
-                    <span>Especialista em <span class="font-semibold">cardiologia clínica e preventiva</span>, focada em
-                        longevidade.</span>
+            <ul class="list-none space-y-4 text-gray-700">
+                <li class="flex items-start space-x-3">
+                    <span class="text-brand-blue bg-blue-100 rounded-full p-1 mt-1">
+                        <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                        </svg>
+                    </span>
+                    <span>Especialista em <span class="font-semibold text-brand-blue">cardiologia clínica e preventiva</span>, focada em longevidade.</span>
                 </li>
-                <li class="flex items-start space-x-2">
-                    <span class="text-maceio font-bold mt-1" aria-hidden="true">›</span>
-                    <span>Atualização constante nos protocolos mais avançados para o manejo de <span
-                            class="font-semibold">fatores de risco cardiovascular</span>.</span>
+                <li class="flex items-start space-x-3">
+                    <span class="text-brand-blue bg-blue-100 rounded-full p-1 mt-1">
+                        <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                        </svg>
+                    </span>
+                    <span>Atualização constante nos protocolos mais avançados para o manejo de <span class="font-semibold text-brand-blue">fatores de risco cardiovascular</span>.</span>
                 </li>
-                <li class="flex items-start space-x-2">
-                    <span class="text-maceio font-bold mt-1" aria-hidden="true">›</span>
-                    <span>Sólida experiência em ambientes de alta complexidade, garantindo segurança e confiança em sua
-                        conduta médica.</span>
+                <li class="flex items-start space-x-3">
+                    <span class="text-brand-blue bg-blue-100 rounded-full p-1 mt-1">
+                        <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                        </svg>
+                    </span>
+                    <span>Sólida experiência em ambientes de alta complexidade, garantindo segurança e confiança em sua conduta médica.</span>
                 </li>
             </ul>
         </section>
 
-        <!-- Seção Nossa Equipe (Internal Linking) -->
-        <section class="mb-24 md:mb-48 reveal">
-            <h2 class="text-3xl font-bold text-gray-900 mb-2 text-center">Nossa Equipe de Especialistas</h2>
-            <p class="text-center text-gray-600 mb-10 max-w-xl mx-auto">Excelência médica em múltiplas especialidades para um cuidado completo.</p>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-2xl mx-auto">
-                <!-- Dr. Gilberto -->
-                <a href="/" class="glass-card p-6 rounded-2xl hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
-                    <h3 class="text-xl font-bold text-gray-900 mb-1 group-hover:text-brand-blue transition-colors">Dr. Gilberto Salustiano</h3>
-                    <p class="text-sm text-gray-600 font-semibold mb-3">Infectologia e Clínica Médica</p>
-                    <span class="text-maceio text-sm font-bold flex items-center">
-                        Ver especialidade 
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                        </svg>
-                    </span>
-                </a>
-
-                <!-- Dra. Anabel (Ativa) -->
-                <div class="glass-card p-6 rounded-2xl border-2 border-wine shadow-lg">
-                    <h3 class="text-xl font-bold text-gray-900 mb-1">Dra. Anabel Lima</h3>
-                    <p class="text-sm text-wine font-semibold mb-3">Cardiologia Clínica e Preventiva</p>
-                    <span class="inline-block bg-wine/10 text-wine text-xs font-bold px-2 py-1 rounded">VOCÊ ESTÁ AQUI</span>
-                </div>
-            </div>
-        </section>
 
         <!-- Seção Depoimentos (Trustindex) -->
         <section id="depoimentos" class="mb-24 md:mb-48 reveal">
@@ -467,31 +434,77 @@
                 <!-- Elfsight Google Reviews | Untitled Google Reviews -->
                 <script src="https://elfsightcdn.com/platform.js" async></script>
                 <div class="elfsight-app-9a051647-ff78-4ae8-838f-2c0b7cbe4d24" data-elfsight-app-lazy></div>
+
+                <!-- Google Reviews Fallback/Direct Link -->
+                <div class="mt-8 text-center">
+                    <a href="https://www.google.com/maps/place/Consult%C3%B3rio+Salustiano/@-9.6693905,-35.7316937,17z/data=!4m8!3m7!1s0x70137fae17dd63f:0xd9148bbd4fa1f62f!8m2!3d-9.6693905!4d-35.7316937!9m1!1b1!16s%2Fg%2F1tgf3djl?entry=ttu&g_ep=EgoyMDI2MDQyOS4wIKXMDSoASAFQAw%3D%3D" 
+                       target="_blank" 
+                       rel="noopener" 
+                       class="inline-flex items-center gap-2 px-6 py-3 bg-white border border-gray-200 rounded-xl text-gray-700 font-semibold shadow-sm hover:shadow-md hover:bg-gray-50 transition-all duration-300 group">
+                        <svg class="w-5 h-5" viewBox="0 0 24 24" role="img">
+                            <title>Google Logo</title>
+                            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
+                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.66l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                        </svg>
+                        <span>Ver todas as avaliações no Google</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1 opacity-50 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                        </svg>
+                    </a>
+                </div>
             </div>
         </section>
 
         <!-- Benefícios CTA -->
         <section class="mb-20 md:mb-32 text-center reveal">
-            <h2 class="text-2xl font-bold text-gray-900 mb-5">Por que agendar sua consulta?</h2>
-            <div class="space-y-4 text-gray-700 max-w-lg mx-auto">
-                <p class="text-lg"><span aria-hidden="true">✅</span> Avaliação clínica detalhada com foco em longevidade
-                    e bem-estar.</p>
-                <p class="text-lg"><span aria-hidden="true">✅</span> Consultas sem pressa: O tempo necessário para uma análise criteriosa do seu coração.</p>
-                <p class="text-lg"><span aria-hidden="true">✅</span> Acompanhamento médico pautado pela confiança e
-                    excelência científica.</p>
-                <p class="text-lg"><span aria-hidden="true">✅</span> Atendimento exclusivamente particular (com recibo para reembolso).</p>
+            <h2 class="text-2xl font-bold text-gray-900 mb-8">Por que agendar sua consulta?</h2>
+            <div class="space-y-6 text-gray-700 max-w-xl mx-auto text-left">
+                <div class="flex items-center space-x-4 bg-white p-4 rounded-xl shadow-sm border-l-4 border-brand-blue">
+                    <span class="text-brand-blue flex-shrink-0">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </span>
+                    <p class="text-lg">Avaliação clínica detalhada com foco em longevidade e bem-estar.</p>
+                </div>
+                <div class="flex items-center space-x-4 bg-white p-4 rounded-xl shadow-sm border-l-4 border-brand-blue">
+                    <span class="text-brand-blue flex-shrink-0">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </span>
+                    <p class="text-lg">Consultas sem pressa: O tempo necessário para uma análise criteriosa.</p>
+                </div>
+                <div class="flex items-center space-x-4 bg-white p-4 rounded-xl shadow-sm border-l-4 border-brand-blue">
+                    <span class="text-brand-blue flex-shrink-0">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </span>
+                    <p class="text-lg">Acompanhamento pautado pela confiança e excelência científica.</p>
+                </div>
+                <div class="flex items-center space-x-4 bg-white p-4 rounded-xl shadow-sm border-l-4 border-brand-blue">
+                    <span class="text-brand-blue flex-shrink-0">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </span>
+                    <p class="text-lg">Atendimento particular com recibo para reembolso.</p>
+                </div>
             </div>
         </section>
 
         <section id="agendar"
-            class="bg-gradient-to-r from-maceio to-navy rounded-2xl shadow-2xl p-8 md:p-16 text-center mb-16 md:mb-32 relative overflow-hidden reveal">
+            class="bg-gradient-to-r from-brand-blue to-blue-700 rounded-2xl shadow-2xl p-8 md:p-16 text-center mb-16 md:mb-32 relative overflow-hidden reveal">
             <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
             <div class="relative z-10">
                 <h2 class="text-3xl font-bold text-white mb-4">Seu coração em boas mãos</h2>
                 <p class="text-blue-100 text-lg mb-8 max-w-2xl mx-auto">Atendimento exclusivamente particular para garantir a excelência que sua saúde exige. Emitimos nota para reembolso.</p>
                 <a href="https://api.whatsapp.com/send?phone=5582999900844&text=Olá,%20gostaria%20de%20verificar%20disponibilidade%20para%20uma%20consulta%20médica%20com%20a%20Dra.%20Anabel."
-                    onclick="trackWhatsAppClick('Final CTA')" target="_blank" rel="noopener"
-                    class="inline-block bg-white text-maceio font-extrabold py-4 px-12 rounded-xl shadow-lg hover:bg-gray-100 transition duration-300 text-lg transform hover:-translate-y-1">
+                    data-track-location="Final CTA" target="_blank" rel="noopener"
+                    class="inline-block bg-white text-brand-blue font-extrabold py-4 px-12 rounded-xl shadow-lg hover:bg-gray-100 transition duration-300 text-lg transform hover:-translate-y-1">
                     Marcar minha consulta médica
                 </a>
             </div>
@@ -499,8 +512,8 @@
 
         <!-- Botão WhatsApp Flutuante Mobile com A11y sr-only -->
         <a href="https://api.whatsapp.com/send?phone=5582999900844&text=Olá,%20gostaria%20de%20verificar%20disponibilidade%20para%20uma%20consulta%20médica%20com%20a%20Dra.%20Anabel."
-            onclick="trackWhatsAppClick('Floating Button')" target="_blank" rel="noopener"
-            class="md:hidden fixed right-6 z-[100] bg-wine text-white p-4 rounded-full shadow-2xl animate-pulse-premium hover:opacity-90 transition-colors"
+            data-track-location="Floating Button" target="_blank" rel="noopener"
+            class="md:hidden fixed right-6 z-[100] bg-brand-green text-white p-4 rounded-full shadow-2xl animate-pulse-premium"
             style="bottom: calc(1.5rem + env(safe-area-inset-bottom));">
             <!-- Texto para Leitores de Tela (sr-only) -->
             <span class="sr-only">Agendar consulta por WhatsApp</span>
@@ -510,6 +523,34 @@
                     d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.487 5.235 3.487 8.417 0 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.273-.099-.471-.148-.67.15-.197.297-.768.967-.941 1.164-.173.197-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.67-1.611-.916-2.206-.242-.579-.487-.501-.67-.51-.173-.008-.371-.01-.57-.01s-.521.074-.795.372c-.273.296-1.043 1.016-1.043 2.479 0 1.462 1.067 2.869 1.216 3.067.148.198 2.096 3.2 5.077 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z" />
             </svg>
         </a>
+
+
+        <!-- Seção Nossa Equipe (Internal Linking) - Menor e no Fim -->
+        <section class="mb-12 md:mb-20 reveal">
+            <h2 class="text-xl font-bold text-gray-900 mb-2 text-center">Nossa Equipe de Especialistas</h2>
+            <p class="text-center text-gray-500 text-sm mb-6 max-w-xl mx-auto">Excelência médica para um cuidado completo.</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-xl mx-auto">
+                <!-- Dr. Gilberto -->
+                <a href="/" class="glass-card p-4 rounded-xl hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 group">
+                    <h3 class="text-lg font-bold text-gray-900 mb-0.5 group-hover:text-brand-blue transition-colors">Dr. Gilberto Salustiano</h3>
+                    <p class="text-xs text-gray-600 font-semibold mb-2">Infectologia e Clínica Médica</p>
+                    <span class="text-brand-blue text-xs font-bold flex items-center">
+                        Ver especialidade 
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 ml-1 group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7" />
+                        </svg>
+                    </span>
+                </a>
+
+                <!-- Dra. Anabel (Ativa) -->
+                <div class="glass-card p-4 rounded-xl border-2 border-brand-blue shadow-md">
+                    <h3 class="text-lg font-bold text-gray-900 mb-0.5">Dra. Anabel Lima</h3>
+                    <p class="text-xs text-brand-blue font-semibold mb-2">Cardiologia Clínica e Preventiva</p>
+                    <span class="inline-block bg-blue-100 text-brand-blue text-[10px] font-bold px-1.5 py-0.5 rounded">VOCÊ ESTÁ AQUI</span>
+                </div>
+            </div>
+        </section>
 
     </main>
 
