@@ -36,7 +36,10 @@ Para garantir performance máxima e custo zero de manutenção de servidor, opte
 ├── public/                 # Assets públicos e páginas prontas
 │   ├── cardiologia/        # Landing Page da Dra. Anabel Lima (Cardiologista)
 │   │   └── index.html
-│   ├── assets/             # Imagens e CSS final compilado
+│   ├── assets/             # Recursos estáticos e compilados
+│   │   ├── css/            # CSS compilado (style.css)
+│   │   ├── images/         # Imagens do projeto
+│   │   └── js/             # Scripts auxiliares
 │   ├── 404.html            # Página de erro customizada
 │   ├── index.html          # Landing Page Principal (Dr. Gilberto - Infectologia)
 │   └── robots.txt / sitemap.xml # SEO básico configurado
@@ -60,7 +63,7 @@ npm install
 ```
 
 ### Build do CSS (Tailwind)
-Para gerar o arquivo `css/style.css` a partir do `input.css` e das classes usadas no HTML:
+Para gerar o arquivo `public/assets/css/style.css` a partir do `src/css/input.css` e das classes usadas no HTML:
 ```bash
 npm run build:css
 ```
