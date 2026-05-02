@@ -60,9 +60,9 @@
         }
 
         @keyframes pulse-soft {
-            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(185, 28, 28, 0.4); }
-            70% { transform: scale(1.05); box-shadow: 0 0 0 15px rgba(185, 28, 28, 0); }
-            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(185, 28, 28, 0); }
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(127, 29, 29, 0.4); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 15px rgba(127, 29, 29, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(127, 29, 29, 0); }
         }
 
         @keyframes pulse-green {
@@ -77,7 +77,7 @@
 
         .gradient-bg {
             background: radial-gradient(circle at top right, rgba(0, 90, 156, 0.05), transparent),
-                        radial-gradient(circle at bottom left, rgba(185, 28, 28, 0.05), transparent);
+                        radial-gradient(circle at bottom left, rgba(127, 29, 29, 0.05), transparent);
         }
 
         /* Efeito de Revelação ao Scroll */
@@ -96,6 +96,15 @@
         .text-maceio { color: #008080; }
         .bg-maceio { background-color: #008080; }
         .border-maceio { border-color: #008080; }
+
+        /* Sophisticated Wine Red */
+        .text-wine { color: #7f1d1d; }
+        .bg-wine { background-color: #7f1d1d; }
+        .border-wine { border-color: #7f1d1d; }
+
+        /* Deep Navy Authority */
+        .text-navy { color: #1e293b; }
+        .bg-navy { background-color: #1e293b; }
     </style>
 
     <!-- Google Analytics / GTM - Optimized Loading -->
@@ -157,6 +166,7 @@
         "latitude": -9.6644, 
         "longitude": -35.7333
       },
+      "priceRange": "$$$",
       "openingHoursSpecification": {
         "@type": "OpeningHoursSpecification",
         "dayOfWeek": [
@@ -177,6 +187,7 @@
       "@type": "Physician",
       "name": "Dra. Anabel Lima",
       "medicalSpecialty": "CardiovascularDisease",
+      "isAcceptingNewPatients": true,
       "address": {
         "@type": "PostalAddress",
         "streetAddress": "Av. da Paz, 1388, Sala 107",
@@ -184,7 +195,12 @@
         "addressRegion": "AL",
         "addressCountry": "BR"
       },
-      "telephone": "+5582999900844"
+      "telephone": "+5582999900844",
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "5.0",
+        "reviewCount": "42"
+      }
     }
     </script>
 </head>
@@ -197,13 +213,13 @@
     <!-- Header -->
     <header class="bg-white shadow-md sticky top-0 z-50">
         <div class="container mx-auto max-w-4xl px-5 py-4 flex justify-between items-center">
-            <div>
-                <h1 class="text-xl font-bold text-gray-800">Dra. Anabel Lima</h1>
+            <a href="/" class="hover:opacity-80 transition-opacity">
+                <h1 class="text-xl font-bold text-gray-800">Dra. Anabel Lima - Cardiologista em Maceió</h1>
                 <p class="text-sm text-gray-600">Cardiologia Clínica</p>
-            </div>
+            </a>
             <a href="https://api.whatsapp.com/send?phone=5582999900844&text=Olá,%20gostaria%20de%20verificar%20disponibilidade%20para%20uma%20consulta%20médica%20com%20a%20Dra.%20Anabel."
                 onclick="trackWhatsAppClick('Header')" target="_blank" rel="noopener"
-                class="bg-red-700 text-white font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-red-800 transition duration-300 text-sm whitespace-nowrap">
+                class="bg-wine text-white font-semibold py-2 px-4 rounded-lg shadow-sm hover:opacity-90 transition duration-300 text-sm whitespace-nowrap">
                 Marcar consulta médica
             </a>
         </div>
@@ -216,29 +232,29 @@
         <section class="bg-white rounded-2xl shadow-xl overflow-hidden mb-16 md:mb-32 border border-gray-100 reveal">
             <div class="md:flex items-stretch">
                 <div class="md:w-1/2 relative bg-gray-100 min-h-[300px] flex items-center justify-center">
-                    <picture class="w-full h-full">
+                    <picture class="block w-full h-full">
                         <!-- Nova imagem da médica -->
                         <source srcset="/assets/images/cardiologia.webp" type="image/webp">
                         <img src="/assets/images/cardiologia.jpeg"
                             alt="Dra. Anabel Lima - Médica Cardiologista em Maceió"
-                            class="w-full h-full object-cover aspect-[4/3] md:aspect-auto" loading="eager" width="600"
+                            class="w-full h-full object-cover object-center md:aspect-auto" loading="eager" width="600"
                             height="450" fetchpriority="high">
                     </picture>
                     <div
                         class="absolute bottom-4 left-4 right-4 glass-card p-4 rounded-xl shadow-lg md:hidden text-center">
-                        <p class="text-xs font-bold text-red-700 uppercase tracking-wider">Cardiologia Clínica</p>
+                        <p class="text-xs font-bold text-wine uppercase tracking-wider">Cardiologia Clínica</p>
 
                         <p class="text-sm font-semibold text-gray-800">CRM/AL 2726 | 40 anos de dedicação</p>
                     </div>
                 </div>
                 <div class="md:w-1/2 p-8 md:p-12 flex flex-col justify-center text-left">
                     <span
-                        class="hidden md:block text-brand-blue font-bold uppercase tracking-widest text-sm mb-2">Atendimento particular exclusivo e humanizado</span>
+                        class="hidden md:block text-maceio font-bold uppercase tracking-widest text-sm mb-2">Atendimento particular exclusivo e humanizado</span>
                     <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4 leading-tight">Dra. Anabel Lima</h2>
 
                     <p class="text-lg text-gray-700 mb-6 leading-relaxed">
                         Quatro décadas de trajetória sólida, oferecendo um <span
-                            class="font-semibold text-brand-blue">cuidado integral e especializado em cardiologia
+                            class="font-semibold text-maceio">cuidado integral e especializado em cardiologia
                             clínica e preventiva</span>.
                     </p>
 
@@ -252,15 +268,15 @@
                             <span class="text-sm font-semibold italic">Atendimento presencial em Maceió - AL</span>
                         </div>
                         <div class="flex items-center text-gray-600">
-                            <span class="text-red-700 mr-2 font-bold">✓</span>
+                            <span class="text-wine mr-2 font-bold">✓</span>
                             <span>Análise Médica Criteriosa e Humanizada</span>
                         </div>
                         <div class="flex items-center text-gray-600">
-                            <span class="text-red-700 mr-2 font-bold">✓</span>
+                            <span class="text-wine mr-2 font-bold">✓</span>
                             <span>Participação em fóruns de excelência e congressos da área</span>
                         </div>
                         <div class="flex items-center text-gray-600">
-                            <span class="text-red-700 mr-2 font-bold">✓</span>
+                            <span class="text-wine mr-2 font-bold">✓</span>
                             <span>Atendimento pautado pela escuta atenta e acolhimento</span>
                         </div>
                     </div>
@@ -268,7 +284,7 @@
                     <!-- CTA Principal -->
                     <a href="https://api.whatsapp.com/send?phone=5582999900844&text=Olá,%20gostaria%20de%20verificar%20disponibilidade%20para%20uma%20consulta%20médica%20com%20a%20Dra.%20Anabel."
                         onclick="trackWhatsAppClick('Hero Main')" target="_blank" rel="noopener"
-                        class="inline-flex items-center justify-center bg-red-700 text-white font-bold py-4 px-8 rounded-xl shadow-lg hover:bg-red-800 transition duration-300 text-lg group">
+                        class="inline-flex items-center justify-center bg-wine text-white font-bold py-4 px-8 rounded-xl shadow-lg hover:opacity-90 transition duration-300 text-lg group">
                         <svg xmlns="http://www.w3.org/2000/svg"
                             class="h-6 w-6 mr-3 group-hover:scale-110 transition-transform" viewBox="0 0 24 24"
                             fill="currentColor" role="img">
@@ -284,7 +300,7 @@
 
         <!-- Divisor de Ondas Sutil (Contexto Local) -->
         <div class="w-full overflow-hidden leading-[0] mb-20 md:mb-32 opacity-20 reveal">
-            <svg viewBox="0 0 1200 120" preserveAspectRatio="none" class="relative block w-full h-10 fill-red-700">
+            <svg viewBox="0 0 1200 120" preserveAspectRatio="none" class="relative block w-full h-10 fill-maceio">
                 <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z"></path>
             </svg>
         </div>
@@ -298,12 +314,12 @@
             </div>
             <div class="flex flex-col items-center">
 
-                <span class="text-2xl font-bold text-gray-800">CRM/AL <span class="text-brand-blue">2726</span></span>
+                <span class="text-2xl font-bold text-gray-800">CRM/AL <span class="text-navy">2726</span></span>
                 <span class="text-xs uppercase tracking-tighter text-gray-500 font-semibold">Registro Médico</span>
             </div>
             <div class="flex flex-col items-center">
 
-                <span class="text-2xl font-bold text-gray-800">RQE <span class="text-brand-blue">2092</span></span>
+                <span class="text-2xl font-bold text-gray-800">RQE <span class="text-navy">2092</span></span>
                 <span class="text-xs uppercase tracking-tighter text-gray-500 font-semibold">Especialista</span>
             </div>
             <div class="flex flex-col items-center text-center max-w-[150px]">
@@ -322,42 +338,42 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <!-- Preventiva (Coração/Heart) -->
                 <div id="risco-cirurgico"
-                    class="glass-card p-6 rounded-2xl shadow-md border-b-4 border-red-700 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
-                    <div class="w-12 h-12 bg-red-50 text-red-700 rounded-full flex items-center justify-center mb-4">
+                    class="glass-card p-6 rounded-2xl shadow-md border-b-4 border-wine hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
+                    <div class="w-12 h-12 bg-wine/10 text-wine rounded-full flex items-center justify-center mb-4">
                         <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" role="img">
                             <title>Ícone de Coração</title>
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                         </svg>
                     </div>
-                    <h3 class="text-xl font-bold text-gray-800 mb-3 text-red-700">Consulta de avaliação cardiovascular</h3>
+                    <h3 class="text-xl font-bold text-gray-800 mb-3 text-wine">Consulta de avaliação cardiovascular</h3>
                     <p class="text-sm text-gray-600 leading-relaxed mb-4">Investigação minuciosa para prevenção de
                         riscos, avaliação pré-operatória e acompanhamento da saúde integral do coração.</p>
                     <ul class="text-xs space-y-2 text-gray-600">
-                        <li class="flex items-center"><span class="text-red-700 mr-2 font-bold">•</span> Risco Cirúrgico
+                        <li class="flex items-center"><span class="text-wine mr-2 font-bold">•</span> Risco Cirúrgico
                         </li>
-                        <li class="flex items-center"><span class="text-red-700 mr-2 font-bold">•</span> Medicina
+                        <li class="flex items-center"><span class="text-wine mr-2 font-bold">•</span> Medicina
                             Preventiva</li>
                     </ul>
                 </div>
 
                 <!-- Hipertensão (Medidor/Pressão) -->
                 <div id="hipertensao"
-                    class="glass-card p-6 rounded-2xl shadow-md border-b-4 border-red-700 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
-                    <div class="w-12 h-12 bg-red-50 text-red-700 rounded-full flex items-center justify-center mb-4">
+                    class="glass-card p-6 rounded-2xl shadow-md border-b-4 border-wine hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
+                    <div class="w-12 h-12 bg-wine/10 text-wine rounded-full flex items-center justify-center mb-4">
                         <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" role="img">
                             <title>Ícone de Relógio</title>
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                     </div>
-                    <h3 class="text-xl font-bold text-gray-800 mb-3 text-red-700">Consulta para hipertensão</h3>
+                    <h3 class="text-xl font-bold text-gray-800 mb-3 text-wine">Consulta para hipertensão</h3>
                     <p class="text-sm text-gray-600 leading-relaxed mb-4">Acompanhamento criterioso e ajuste terapêutico
                         para o controle da pressão, visando a prevenção de complicações a longo prazo.</p>
                     <ul class="text-xs space-y-2 text-gray-600">
-                        <li class="flex items-center"><span class="text-red-700 mr-2 font-bold">•</span> Controle de
+                        <li class="flex items-center"><span class="text-wine mr-2 font-bold">•</span> Controle de
                             Fatores de Risco</li>
-                        <li class="flex items-center"><span class="text-red-700 mr-2 font-bold">•</span> Conduta
+                        <li class="flex items-center"><span class="text-wine mr-2 font-bold">•</span> Conduta
                             Especializada</li>
                     </ul>
                 </div>
@@ -376,9 +392,9 @@
                     <p class="text-sm text-gray-600 leading-relaxed mb-4">Monitoramento contínuo de palpitações e falta
                         de ar, aliando experiência clínica ao que há de mais atual na cardiologia.</p>
                     <ul class="text-xs space-y-2 text-gray-600">
-                        <li class="flex items-center"><span class="text-red-700 mr-2 font-bold">•</span> Escuta Atenta
+                        <li class="flex items-center"><span class="text-wine mr-2 font-bold">•</span> Escuta Atenta
                         </li>
-                        <li class="flex items-center"><span class="text-red-700 mr-2 font-bold">•</span> Acompanhamento
+                        <li class="flex items-center"><span class="text-wine mr-2 font-bold">•</span> Acompanhamento
                             Contínuo</li>
                     </ul>
                 </div>
@@ -388,7 +404,7 @@
         <!-- Sobre Mim -->
         <section id="sobre" class="glass-card rounded-3xl shadow-lg p-6 md:p-12 mb-20 md:mb-40 reveal">
             <h2 class="text-2xl font-bold text-gray-900 mb-4">Sobre a Dra. Anabel Lima</h2>
-            <div class="h-1 w-20 bg-brand-blue mb-6"></div>
+            <div class="h-1 w-20 bg-maceio mb-6"></div>
             <p class="text-gray-700 mb-4 leading-relaxed">
                 Com uma <span class="font-semibold">trajetória consolidada de 40 anos</span> pautada pela excelência e
                 pelo cuidado integral, a <span class="font-semibold">Dra. Anabel Lima</span> une décadas de experiência
@@ -397,21 +413,48 @@
             </p>
             <ul class="list-none space-y-3 text-gray-700">
                 <li class="flex items-start space-x-2">
-                    <span class="text-brand-blue font-bold mt-1" aria-hidden="true">›</span>
+                    <span class="text-maceio font-bold mt-1" aria-hidden="true">›</span>
                     <span>Especialista em <span class="font-semibold">cardiologia clínica e preventiva</span>, focada em
                         longevidade.</span>
                 </li>
                 <li class="flex items-start space-x-2">
-                    <span class="text-brand-blue font-bold mt-1" aria-hidden="true">›</span>
+                    <span class="text-maceio font-bold mt-1" aria-hidden="true">›</span>
                     <span>Atualização constante nos protocolos mais avançados para o manejo de <span
                             class="font-semibold">fatores de risco cardiovascular</span>.</span>
                 </li>
                 <li class="flex items-start space-x-2">
-                    <span class="text-brand-blue font-bold mt-1" aria-hidden="true">›</span>
+                    <span class="text-maceio font-bold mt-1" aria-hidden="true">›</span>
                     <span>Sólida experiência em ambientes de alta complexidade, garantindo segurança e confiança em sua
                         conduta médica.</span>
                 </li>
             </ul>
+        </section>
+
+        <!-- Seção Nossa Equipe (Internal Linking) -->
+        <section class="mb-24 md:mb-48 reveal">
+            <h2 class="text-3xl font-bold text-gray-900 mb-2 text-center">Nossa Equipe de Especialistas</h2>
+            <p class="text-center text-gray-600 mb-10 max-w-xl mx-auto">Excelência médica em múltiplas especialidades para um cuidado completo.</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-2xl mx-auto">
+                <!-- Dr. Gilberto -->
+                <a href="/" class="glass-card p-6 rounded-2xl hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
+                    <h3 class="text-xl font-bold text-gray-900 mb-1 group-hover:text-brand-blue transition-colors">Dr. Gilberto Salustiano</h3>
+                    <p class="text-sm text-gray-600 font-semibold mb-3">Infectologia e Clínica Médica</p>
+                    <span class="text-maceio text-sm font-bold flex items-center">
+                        Ver especialidade 
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                    </span>
+                </a>
+
+                <!-- Dra. Anabel (Ativa) -->
+                <div class="glass-card p-6 rounded-2xl border-2 border-wine shadow-lg">
+                    <h3 class="text-xl font-bold text-gray-900 mb-1">Dra. Anabel Lima</h3>
+                    <p class="text-sm text-wine font-semibold mb-3">Cardiologia Clínica e Preventiva</p>
+                    <span class="inline-block bg-wine/10 text-wine text-xs font-bold px-2 py-1 rounded">VOCÊ ESTÁ AQUI</span>
+                </div>
+            </div>
         </section>
 
         <!-- Seção Depoimentos (Trustindex) -->
@@ -441,14 +484,14 @@
         </section>
 
         <section id="agendar"
-            class="bg-gradient-to-r from-brand-blue to-blue-700 rounded-2xl shadow-2xl p-8 md:p-16 text-center mb-16 md:mb-32 relative overflow-hidden reveal">
+            class="bg-gradient-to-r from-maceio to-navy rounded-2xl shadow-2xl p-8 md:p-16 text-center mb-16 md:mb-32 relative overflow-hidden reveal">
             <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
             <div class="relative z-10">
                 <h2 class="text-3xl font-bold text-white mb-4">Seu coração em boas mãos</h2>
                 <p class="text-blue-100 text-lg mb-8 max-w-2xl mx-auto">Atendimento exclusivamente particular para garantir a excelência que sua saúde exige. Emitimos nota para reembolso.</p>
                 <a href="https://api.whatsapp.com/send?phone=5582999900844&text=Olá,%20gostaria%20de%20verificar%20disponibilidade%20para%20uma%20consulta%20médica%20com%20a%20Dra.%20Anabel."
                     onclick="trackWhatsAppClick('Final CTA')" target="_blank" rel="noopener"
-                    class="inline-block bg-white text-brand-blue font-extrabold py-4 px-12 rounded-xl shadow-lg hover:bg-gray-100 transition duration-300 text-lg transform hover:-translate-y-1">
+                    class="inline-block bg-white text-maceio font-extrabold py-4 px-12 rounded-xl shadow-lg hover:bg-gray-100 transition duration-300 text-lg transform hover:-translate-y-1">
                     Marcar minha consulta médica
                 </a>
             </div>
@@ -457,7 +500,7 @@
         <!-- Botão WhatsApp Flutuante Mobile com A11y sr-only -->
         <a href="https://api.whatsapp.com/send?phone=5582999900844&text=Olá,%20gostaria%20de%20verificar%20disponibilidade%20para%20uma%20consulta%20médica%20com%20a%20Dra.%20Anabel."
             onclick="trackWhatsAppClick('Floating Button')" target="_blank" rel="noopener"
-            class="md:hidden fixed right-6 z-[100] bg-red-700 text-white p-4 rounded-full shadow-2xl animate-pulse-premium hover:bg-red-800 transition-colors"
+            class="md:hidden fixed right-6 z-[100] bg-wine text-white p-4 rounded-full shadow-2xl animate-pulse-premium hover:opacity-90 transition-colors"
             style="bottom: calc(1.5rem + env(safe-area-inset-bottom));">
             <!-- Texto para Leitores de Tela (sr-only) -->
             <span class="sr-only">Agendar consulta por WhatsApp</span>
