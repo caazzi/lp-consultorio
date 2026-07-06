@@ -1,0 +1,19 @@
+# Consultório Salustiano
+
+> Medical clinic in Maceió, AL specializing in Infectious Diseases (Dr. Gilberto Salustiano) and Cardiology (Dra. Anabel Lima).
+
+## Specialties
+
+- **Infectious Diseases & General Practice**: Dr. Gilberto Salustiano (CRM/AL 2023). Focus areas: HIV/AIDS care, STIs (ISTs), HPV, preventive medicine, and general clinical consultations. Over 40 years of clinical experience.
+- **Cardiology**: Dra. Anabel Lima (CRM/AL 2726, RQE 2092). Focus areas: Clinical and preventive cardiology, hypertension control, arrythmias, and pre-operative cardiovascular risk assessment (risco cirúrgico).
+
+## Essential Info
+
+- **Type**: Private medical consultations (exclusively cash/private pay; receipt provided for health insurance/convênio reimbursement).
+- **Location**: Av. da Paz, 1388, Sala 107, Centro, Maceió - AL, CEP 57020-440.
+- **WhatsApp for Appointments**: +55 82 99990-0844
+- **Working Hours**: Monday to Friday, 08:00 - 18:00.
+
+## Pages
+- [Homepage (Infectologia)](https://consultoriosalustiano.com.br/)
+- [Cardiologia subpage](https://consultoriosalustiano.com.br/cardiologia/)
