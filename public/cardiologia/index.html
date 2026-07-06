@@ -24,8 +24,12 @@
     <!-- LCP Preload -->
     <link rel="preload" href="/assets/images/cardiologia.webp" as="image" type="image/webp" fetchpriority="high">
 
-    <!-- Google Fonts - Inter -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=optional" rel="stylesheet">
+    <!-- Google Fonts - Inter (Asynchronous, Non-blocking) -->
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" media="print" onload="this.media='all'">
+    <noscript>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap">
+    </noscript>
 
     <!-- Open Graph / Redes Sociais -->
     <meta property="og:type" content="website">
