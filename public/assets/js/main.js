@@ -19,5 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }, observerOptions);
 
-    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+    window.requestAnimationFrame(() => {
+        document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+    });
 });
