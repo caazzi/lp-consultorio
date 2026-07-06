@@ -26,12 +26,8 @@
         fetchpriority="high">
 
 
-    <!-- Google Fonts - Inter (Mantido display=optional, preload com onload) -->
-    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=optional"
-        as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript>
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=optional" rel="stylesheet">
-    </noscript>
+    <!-- Google Fonts - Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=optional" rel="stylesheet">
 
     <!-- Open Graph / Redes Sociais -->
     <meta property="og:type" content="website">
@@ -113,6 +109,16 @@
         .text-maceio { color: #008080; }
         .bg-maceio { background-color: #008080; }
         .border-maceio { border-color: #008080; }
+
+        /* Reservar espaço para o widget do Elfsight reviews para evitar CLS */
+        .elfsight-wrapper {
+            min-height: 520px;
+        }
+        @media (min-width: 768px) {
+            .elfsight-wrapper {
+                min-height: 400px;
+            }
+        }
     </style>
 
     <!-- Google Analytics / GTM - Optimized Loading -->
@@ -310,11 +316,11 @@
         <section class="bg-white rounded-2xl shadow-xl overflow-hidden mb-16 md:mb-32 border border-gray-100">
             <div class="md:flex items-stretch">
                 <div class="md:w-1/2 relative bg-gray-100 min-h-[300px] flex items-center justify-center">
-                    <picture class="w-full h-full">
+                    <picture class="block w-full h-auto md:h-full">
                         <source srcset="/assets/images/dr-gilberto-salustiano-infectologista.webp" type="image/webp">
                         <img src="/assets/images/dr-gilberto-salustiano-infectologista.jpg"
                             alt="Dr. Gilberto Salustiano - Médico Infectologista em Maceió"
-                            class="w-full h-full object-cover aspect-[4/3] md:aspect-auto" loading="eager" width="600"
+                            class="w-full h-auto aspect-[4/3] md:h-full md:aspect-auto object-cover object-center" loading="eager" width="600"
                             height="450" fetchpriority="high">
                     </picture>
                     <div
@@ -514,7 +520,9 @@
             <div class="bg-white rounded-2xl shadow-md p-4 md:p-8">
                 <!-- Elfsight Google Reviews | Untitled Google Reviews -->
                 <script src="https://elfsightcdn.com/platform.js" async></script>
-                <div class="elfsight-app-9a051647-ff78-4ae8-838f-2c0b7cbe4d24" data-elfsight-app-lazy></div>
+                <div class="elfsight-wrapper">
+                    <div class="elfsight-app-9a051647-ff78-4ae8-838f-2c0b7cbe4d24" data-elfsight-app-lazy></div>
+                </div>
                 
                 <!-- Google Reviews Fallback/Direct Link -->
                 <div class="mt-8 text-center">
