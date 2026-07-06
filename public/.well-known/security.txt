@@ -1,0 +1,5 @@
+# Security contact information for consultoriosalustiano.com.br
+Contact: mailto:security@consultoriosalustiano.com.br
+Expires: 2027-07-01T12:00:00.000Z
+Preferred-Languages: pt, en
+Canonical: https://consultoriosalustiano.com.br/.well-known/security.txt
