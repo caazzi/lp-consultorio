@@ -23,9 +23,10 @@ Para atingir scores de 95+ no Lighthouse e garantir custo zero de escala, a arqu
 
 - **Frontend Core:** HTML5 Semântico + Tailwind CSS 3.4.
 - **Asset Optimization:**
-  - Imagens em formato **WebP** com fallback automático.
-  - **LCP Preload** para imagens de hero acima da dobra.
-  - **GTM Lazy-Loading:** Scripts de rastreamento disparados apenas após interação do usuário (scroll/mouse), reduzindo o bloqueio inicial da thread principal.
+  - Imagens em formato **WebP** otimizadas (`cardiologia.webp` reduzido para 15 KB / -71% de payload LCP).
+  - **LCP Preload** com `fetchpriority="high"` para imagens de hero acima da dobra.
+  - **Elfsight Reviews Lazy-Loading:** Carregamento sob demanda do widget do Google Reviews via `IntersectionObserver` apenas quando o usuário se aproxima da seção, eliminando o bloqueio inicial da thread principal (TBT).
+  - **GTM Lazy-Loading:** Scripts de rastreamento disparados apenas após interação do usuário (scroll/mouse/touch).
 - **Security First:** 
   - Content Security Policy (CSP) rigorosa via `netlify.toml`.
   - HSTS, X-Frame-Options e Permissions Policy configurados.

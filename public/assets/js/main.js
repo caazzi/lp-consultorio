@@ -22,4 +22,24 @@ document.addEventListener('DOMContentLoaded', () => {
     window.requestAnimationFrame(() => {
         document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
     });
+
+    // Lazy load Elfsight Google Reviews widget when near viewport
+    const elfsightWrapper = document.querySelector('.elfsight-wrapper');
+    if (elfsightWrapper) {
+        const elfsightObserver = new IntersectionObserver((entries, obs) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    if (!document.querySelector('script[src*="elfsightcdn.com"]')) {
+                        const script = document.createElement('script');
+                        script.src = 'https://elfsightcdn.com/platform.js';
+                        script.async = true;
+                        document.head.appendChild(script);
+                    }
+                    obs.disconnect();
+                }
+            });
+        }, { rootMargin: '300px 0px' });
+        elfsightObserver.observe(elfsightWrapper);
+    }
 });
+
