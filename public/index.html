@@ -173,14 +173,15 @@
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "MedicalBusiness",
+      "@type": "Physician",
       "name": "Dr. Gilberto Salustiano - Infectologista e Clínico Geral",
       "image": "https://consultoriosalustiano.com.br/assets/images/dr-gilberto-salustiano-infectologista.jpg",
       "@id": "https://consultoriosalustiano.com.br/",
       "url": "https://consultoriosalustiano.com.br/",
       "telephone": "+5582999900844",
-      "medicalSpecialty": "InfectiousDisease",
+      "medicalSpecialty": ["InfectiousDisease", "PrimaryCare"],
       "description": "Consultório médico especializado em Infectologia e Clínica Médica em Maceió, Alagoas. Dr. Gilberto Salustiano oferece atendimento humanizado e individualizado com mais de 40 anos de excelência médica.",
+      "isAcceptingNewPatients": true,
       "address": {
         "@type": "PostalAddress",
         "streetAddress": "Av. da Paz, 1388, Sala 107",
@@ -216,31 +217,7 @@
       "sameAs": [
         "https://www.instagram.com/consultoriomedicosalustiano/",
         "https://www.doctoralia.com.br/gilberto-salustiano/infectologista/maceio"
-      ]
-    }
-    </script>
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "Physician",
-      "name": "Dr. Gilberto Salustiano",
-      "image": "https://consultoriosalustiano.com.br/assets/images/dr-gilberto-salustiano-infectologista.jpg",
-      "url": "https://consultoriosalustiano.com.br/",
-      "medicalSpecialty": ["InfectiousDisease", "GeneralPractice"],
-      "description": "Médico Infectologista e Clínico Geral com mais de 40 anos de sólida experiência. Especialista em tratamento de HIV/AIDS, ISTs e medicina preventiva em Maceió, AL.",
-      "isAcceptingNewPatients": true,
-      "address": {
-        "@type": "PostalAddress",
-        "streetAddress": "Av. da Paz, 1388, Sala 107",
-        "addressLocality": "Maceió",
-        "addressRegion": "AL",
-        "addressCountry": "BR"
-      },
-      "telephone": "+5582999900844",
-      "worksFor": {
-        "@type": "MedicalBusiness",
-        "@id": "https://consultoriosalustiano.com.br/"
-      },
+      ],
       "availableService": [
         {
           "@type": "MedicalProcedure",
