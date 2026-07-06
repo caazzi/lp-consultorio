@@ -30,6 +30,7 @@ lighthouse.*
 .gemini/
 coverage/
 *.log
+consultoriosalustiano.com.br.report.json
 
 # --- Assets ---
 # Only ignore raw/original assets if they are strictly source files

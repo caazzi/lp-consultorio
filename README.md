@@ -48,6 +48,7 @@ Para atingir scores de 95+ no Lighthouse e garantir custo zero de escala, a arqu
 │   ├── assets/             # Recursos estáticos (CSS compilado, Imagens, JS)
 │   ├── 404.html            # Error page customizada
 │   ├── index.html          # LP Principal - Dr. Gilberto (Infectologia)
+│   ├── llms.txt            # AI Agents summary mapping
 │   └── sitemap.xml         # SEO Indexing
 ├── src/                    # Source files
 │   └── css/input.css       # Tailwind entry point
@@ -82,7 +83,9 @@ npx serve public
 ## 🔐 Segurança e Boas Práticas
 O projeto segue as recomendações da **OWASP** para sites estáticos, implementando cabeçalhos de segurança que mitigam ataques de Clickjacking e XSS, garantindo que o site seja um ambiente seguro para informações médicas.
 
-**Implementações Recentes de Hardening:**
+**Implementações Recentes de Hardening & SEO:**
+- **Otimização de SEO & Metadados local**: Inclusão de blocos estruturados de FAQPage e seções de FAQ visuais baseadas em componentes HTML `<details>`. Configuração de Twitter Cards completos e metadados Open Graph.
+- **Integração com Agentes de IA (`llms.txt`)**: Adicionado o resumo de serviços estruturado em Markdown (`public/llms.txt`) para facilitação de leituras por LLMs e robôs de busca modernos.
 - **CSP (Content Security Policy) Otimizada:** Separação do Javascript de UI (Observer, Footer Year) em arquivo externo (`public/assets/js/main.js`), limpando o markup HTML e organizando as diretivas de segurança, enquanto se mantém a compatibilidade vital com ferramentas de marketing (GTM e Google Ads).
 - **HSTS Estrito (Preload):** `Strict-Transport-Security` configurado para 1 ano (`max-age=31536000`) com a flag `preload`, instruindo navegadores modernos a forçarem a conexão segura antes mesmo da primeira requisição de rede ser despachada.
 
