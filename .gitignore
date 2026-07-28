@@ -20,6 +20,7 @@ Thumbs.db
 # --- Build & Output ---
 /public/assets/css/style.css
 .netlify/
+logs/
 dist/
 build/
 
@@ -35,3 +36,8 @@ consultoriosalustiano.com.br.report.json
 # --- Assets ---
 # Only ignore raw/original assets if they are strictly source files
 # src/assets/logo/
+# Secrets
+.env
+.env.*
+!*.env.example
+*credentials*.json

@@ -5,6 +5,8 @@
   "main": "index.js",
   "scripts": {
     "build:css": "tailwindcss -i ./src/css/input.css -o ./public/assets/css/style.css --minify",
+    "analyze": "node scripts/analyze-performance.js",
+    "access-logs": "node scripts/fetch-access-insights.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
