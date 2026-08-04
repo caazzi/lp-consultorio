@@ -7,6 +7,7 @@
     "build:css": "tailwindcss -i ./src/css/input.css -o ./public/assets/css/style.css --minify",
     "analyze": "node scripts/analyze-performance.js",
     "access-logs": "node scripts/fetch-access-insights.js",
+    "ga-metrics": "node scripts/fetch-ga4-metrics.js",
     "test": "node scripts/test-csp.js"
   },
   "repository": {
