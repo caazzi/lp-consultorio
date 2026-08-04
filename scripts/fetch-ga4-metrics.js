@@ -28,7 +28,14 @@ try {
   process.exit(1);
 }
 
-const PROPERTY_ID = process.env.GA4_PROPERTY_ID || '493028300';
+const PROPERTY_ID = process.env.GA4_PROPERTY_ID;
+
+if (!PROPERTY_ID) {
+  console.log('\x1b[33m%s\x1b[0m', '⚠️  Variável GA4_PROPERTY_ID não definida!');
+  console.log('Defina o ID numérico da Propriedade do GA4 via variável de ambiente:');
+  console.log('  export GA4_PROPERTY_ID=123456789\n');
+  process.exit(0);
+}
 
 /**
  * Função utilitária para assinar JWT e obter Access Token da Service Account
