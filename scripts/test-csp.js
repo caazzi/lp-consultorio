@@ -63,6 +63,46 @@ requiredPages.forEach(page => {
   }
 });
 
+// 3. Validar rastreamento: data-track-location em todos os botões de WhatsApp
+console.log('\n');
+console.log('\x1b[33m%s\x1b[0m', '🎯 3. VALIDAÇÃO DE RASTREAMENTO GTM / GA4');
+const trackingPages = ['index.html', 'cardiologia/index.html'];
+trackingPages.forEach(page => {
+  const pagePath = path.join(publicDir, page);
+  if (!fs.existsSync(pagePath)) return;
+  const content = fs.readFileSync(pagePath, 'utf8');
+  const waLinks = content.match(/href="https:\/\/api\.whatsapp\.com[^"]*"/g) || [];
+  const untracked = waLinks.filter(link => {
+    // Verifica se o elemento adjacente tem data-track-location
+    const idx = content.indexOf(link);
+    const surrounding = content.substring(idx - 100, idx + link.length + 200);
+    return !surrounding.includes('data-track-location');
+  });
+  if (untracked.length > 0) {
+    console.error(`\x1b[31m❌ ${page}: ${untracked.length} botão(ões) de WhatsApp sem data-track-location!\x1b[0m`);
+    hasErrors = true;
+  } else {
+    console.log(`✔ ${page}: Todos os botões de WhatsApp possuem data-track-location`);
+  }
+});
+
+// 4. Validar presença do botão sticky no tracking.js
+console.log('\n');
+console.log('\x1b[33m%s\x1b[0m', '📌 4. VALIDAÇÃO DO BOTÃO WHATSAPP FLUTUANTE (STICKY)');
+const trackingJsPath = path.join(__dirname, '../public/assets/js/tracking.js');
+if (!fs.existsSync(trackingJsPath)) {
+  console.error('\x1b[31m❌ tracking.js não encontrado.\x1b[0m');
+  hasErrors = true;
+} else {
+  const trackingContent = fs.readFileSync(trackingJsPath, 'utf8');
+  if (trackingContent.includes('initStickyWhatsApp') && trackingContent.includes('wa-sticky-btn')) {
+    console.log('✔ Botão WhatsApp flutuante sticky implementado e rastreado em tracking.js');
+  } else {
+    console.error('\x1b[31m❌ Botão WhatsApp flutuante sticky ausente em tracking.js!\x1b[0m');
+    hasErrors = true;
+  }
+}
+
 console.log('\n--------------------------------------------------');
 if (hasErrors) {
   console.error('\x1b[31m❌ ALGUNS TESTES FALHARAM.\x1b[0m\n');

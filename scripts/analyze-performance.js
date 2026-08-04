@@ -83,6 +83,13 @@ htmlFiles.forEach(file => {
     console.log(`   ✅  Todas as imagens possuem 'width' e 'height' configurados.`);
   }
 
+  // Checagem de decoding=async nas imagens hero
+  const heroImg = imgMatches.find(img => img.includes('fetchpriority="high"') || img.includes("fetchpriority='high'"));
+  if (heroImg) {
+    const hasDecodingAsync = heroImg.includes('decoding="async"') || heroImg.includes("decoding='async'");
+    console.log(`   ${hasDecodingAsync ? '✅' : '⚠️'}  Hero Image decoding=async: ${hasDecodingAsync ? '\x1b[32mConfigurado\x1b[0m' : '\x1b[31mAusente\x1b[0m (impacto no LCP em mobile)'}`);
+  }
+
   // Checagem de Preload de fontes e LCP
   const fontPreload = content.includes('rel="preload"') && content.includes('woff2');
   console.log(`   ${fontPreload ? '✅' : '⚠️'}  Preload de fontes locais: ${fontPreload ? '\x1b[32mConfigurado\x1b[0m' : '\x1b[31mAusente\x1b[0m'}`);
