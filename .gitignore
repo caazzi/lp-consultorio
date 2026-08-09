@@ -26,6 +26,8 @@ build/
 
 # --- Tools & Reports ---
 report_*.json
+*:Zone.Identifier
+*.csv
 lighthouse.*
 .lighthouse/
 .gemini/
