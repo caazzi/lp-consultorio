@@ -158,7 +158,7 @@ if (fs.existsSync(path.join(__dirname, '../netlify/functions/log-access.js'))) {
   const logFn = fs.readFileSync(path.join(__dirname, '../netlify/functions/log-access.js'), 'utf8');
   const helperPath = path.join(__dirname, '../netlify/access-store.js');
   const helperUsesBlobs = fs.existsSync(helperPath) && fs.readFileSync(helperPath, 'utf8').includes('@netlify/blobs');
-  const logPersistsViaStore = logFn.includes('../access-store') && logFn.includes('getStoreInstance()') && logFn.includes('setJSON');
+  const logPersistsViaStore = logFn.includes('../access-store') && logFn.includes('getStoreInstance(') && logFn.includes('setJSON');
   if (helperUsesBlobs && logPersistsViaStore) {
     console.log('  ✅ log-access.js persiste em Netlify Blobs via access-store (setJSON)');
   } else {

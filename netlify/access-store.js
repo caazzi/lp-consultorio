@@ -1,12 +1,21 @@
 // netlify/access-store.js
 // Shared helper to read/write access events on a durable Netlify Blobs store.
 // Used by both the `log-access` function (write) and the `insights` function (read).
-const { getStore } = require('@netlify/blobs');
+const { connectLambda, getStore } = require('@netlify/blobs');
 
 const STORE_NAME = 'access-events';
 const KEY_PREFIX = 'event/';
 
-function getStoreInstance() {
+// Netlify Functions inject the Blobs context in `event.blobs` + headers.
+// `connectLambda` wires that into the SDK environment so getStore can auto-configure.
+function connectBlobs(event) {
+  if (event && event.blobs) {
+    connectLambda(event);
+  }
+}
+
+function getStoreInstance(event) {
+  if (event) connectBlobs(event);
   return getStore(STORE_NAME);
 }
 
@@ -17,4 +26,4 @@ function makeKey(event) {
   return `${KEY_PREFIX}${ts}_${rand}`;
 }
 
-module.exports = { STORE_NAME, KEY_PREFIX, getStoreInstance, makeKey };
+module.exports = { STORE_NAME, KEY_PREFIX, connectBlobs, getStoreInstance, makeKey };

@@ -29,7 +29,7 @@ exports.handler = async function (event) {
   const sinceMs = Date.now() - days * 24 * 60 * 60 * 1000;
 
   try {
-    const store = getStoreInstance();
+    const store = getStoreInstance(event);
     const events = [];
 
     // No 90-day window the event count is small (an early-stage medical landing page),

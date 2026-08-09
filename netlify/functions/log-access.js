@@ -37,7 +37,7 @@ exports.handler = async function (event, context) {
 
     // Persiste no Netlify Blobs (durable, sobrevive a deploys)
     const key = makeKey(logEntry);
-    await getStoreInstance().setJSON(key, logEntry);
+    await getStoreInstance(event).setJSON(key, logEntry);
 
     console.log(`[ACCESS LOG] ${logEntry.event_type} - ${logEntry.specialty} (${logEntry.path})`);
 
