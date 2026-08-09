@@ -78,3 +78,47 @@ Considerando a sua estrutura de 2 campanhas independentes (Infectologia vs Cardi
 2. Assim que bater ~15 conversões `generate_lead` vindos de anúncios nos últimos 30 dias na conta, altere a estratégia de lances das duas campanhas para **CPA Desejado** ou **Maximizar Conversões**. Isso vai extrair o suco máximo do aprendizado de máquina.
 
 BOA SORTE nas campanhas! Quaisquer alterações no site ou novas páginas de médicos no futuro vão puxar essa mesma base!
+
+---
+
+# 🆕 Atualizações Recentes (rastreamento avançado)
+
+## 4. Dimensão Personalizada `campaign_id` (CVR por campanha)
+
+O código agora anexa as UTMs ao link real do WhatsApp ao clicar, e envia o parâmetro `campaign_id` em eventos de conversão. Isso permite calcular qual campanha do Google Ads **de fato** gera leads.
+
+### Passo 4.1: Registrar a dimensão no GA4
+- No GA4, vá em **Administração > Definições Personalizadas**.
+- Crie uma **Nova Dimensão Personalizada**:
+  - Nome da dimensão: `Campaign ID`
+  - Parâmetro do evento: `campaign_id`
+  - Escopo: **Evento**
+
+> O evento `generate_lead` e o novo `message_sent` já enviam `campaign_id`. Com isso você cruza o relatório **Eventos > generate_lead** quebrado por **Campaign ID** e descobre qual anúncio converte.
+
+### Passo 4.2: Marcar `message_sent` como conversão (opcional)
+- Em **Administração > Conversões**, adicione o evento `message_sent` como **Conversão secundária**.
+- `message_sent` é um **proxy**: dispara quando o usuário sai da página rumo ao WhatsApp logo após clicar em um CTA. É um forte indicador de que a conversa foi aberta com o atendente.
+- ⚠️ **Limite:** a confirmação definitiva de que a mensagem foi enviada/respondeu exige integração com a API do WhatsApp (fora do escopo atual, o atendente cuida do chat).
+
+## 5. Passagem de UTMs para o link do WhatsApp
+
+Quando um usuário clica em **qualquer** botão de WhatsApp (Hero, Header, Cards ou Sticky), o código reescreve o `href` adicionando `utm_source`, `utm_medium`, `utm_campaign`, `utm_term`, `utm_content`, `gclid` e `gbraid` (quando presentes).
+
+**Por que importa:** agora o atendente vê no próprio WhatsApp qual campanha originou a conversa — sem depender só de relatório. Combine com a dimensão `campaign_id` para fechar o ciclo. Exige apenas o **auto-tagging** do Google Ads ativo (padrão) para preencher `gclid`.
+
+## 6. Consulta de dados via CLI (Netlify Blobs)
+
+Os eventos são persistidos de forma **durável** no Netlify Blobs (não mais em arquivo efêmero local). Para ver acessos e cliques de conversão:
+
+```bash
+npm run access-logs
+```
+
+E via API (útil para automação/ha-um-cron):
+
+```bash
+curl "https://consultoriosalustiano.com.br/.netlify/functions/insights?days=7"
+```
+
+A resposta inclui `summary.messages_sent`, `summary.conversion_rate` e a quebra por campanha/especialidade.

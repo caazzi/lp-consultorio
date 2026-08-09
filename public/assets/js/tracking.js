@@ -39,11 +39,43 @@ function sendLogBeacon(data) {
  * Dispara evento de conversão para o GTM, GA4 e Serverless Access Log
  * @param {string} location - Identificador de onde o clique ocorreu (ex: 'Header', 'Hero')
  */
-function trackWhatsAppClick(location) {
+// Converte as UTMs salvas em querystring para anexar ao link do WhatsApp,
+// permitindo que o atendente (e o GA4) atribuam cada conversa à campanha certa.
+function buildWhatsAppUrlWithUtm(baseUrl, locationOverride) {
+    const utmParams = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'gclid', 'gbraid'];
+    const parts = [];
+    utmParams.forEach(p => {
+        const v = sessionStorage.getItem(p);
+        if (v) parts.push(`${encodeURIComponent(p)}=${encodeURIComponent(v)}`);
+    });
+    if (parts.length === 0) return baseUrl;
+    // O WhatsApp usa '&text=' já presente na baseUrl (ou para sticky, usamos locationOverride).
+    return baseUrl + (baseUrl.includes('?') ? '&' : '?') + parts.join('&');
+}
+
+function collectUtmPayload() {
+    return {
+        source: sessionStorage.getItem('utm_source') || '',
+        medium: sessionStorage.getItem('utm_medium') || '',
+        campaign: sessionStorage.getItem('utm_campaign') || '',
+        term: sessionStorage.getItem('utm_term') || '',
+        content: sessionStorage.getItem('utm_content') || '',
+        gclid: sessionStorage.getItem('gclid') || '',
+        gbraid: sessionStorage.getItem('gbraid') || ''
+    };
+}
+
+function trackWhatsAppClick(location, element) {
     const isCardio = window.location.pathname.includes('/cardiologia');
     const specialty = isCardio ? 'Cardiologia' : 'Infectologia';
     const startTime = window.__pageStartTime || Date.now();
     const timeOnPageSec = Math.round((Date.now() - startTime) / 1000);
+    const utms = collectUtmPayload();
+
+    // Anexa UTMs ao link real que será aberto, para o atendente ver a origem.
+    if (element && element.href && element.href.indexOf('api.whatsapp.com') !== -1) {
+        element.href = buildWhatsAppUrlWithUtm(element.href, location);
+    }
 
     // Disparo para o GTM (DataLayer)
     window.dataLayer.push({
@@ -51,19 +83,20 @@ function trackWhatsAppClick(location) {
         'button_location': location,
         'specialty': specialty,
         'time_on_page_sec': timeOnPageSec,
-        'utm_campaign': sessionStorage.getItem('utm_campaign') || '',
-        'utm_source': sessionStorage.getItem('utm_source') || '',
-        'utm_medium': sessionStorage.getItem('utm_medium') || '',
-        'gclid': sessionStorage.getItem('gclid') || ''
+        'utm_campaign': utms.campaign,
+        'utm_source': utms.source,
+        'utm_medium': utms.medium,
+        'gclid': utms.gclid
     });
 
-    // Fallback: Disparo direto para o gtag.js
+    // Fallback: Disparo direto para o gtag.js — com dimensões customizadas para CVR por campanha.
     if (typeof gtag === 'function') {
         const label = isCardio ? 'WhatsApp Dra Anabel ' + location : 'WhatsApp ' + location;
         gtag('event', 'generate_lead', {
             'event_category': 'conversion',
             'event_label': label,
-            'value': 1
+            'value': 1,
+            'campaign_id': utms.campaign
         });
     }
 
@@ -74,12 +107,7 @@ function trackWhatsAppClick(location) {
         path: window.location.pathname,
         button_location: location,
         time_on_page_sec: timeOnPageSec,
-        utms: {
-            source: sessionStorage.getItem('utm_source') || '',
-            medium: sessionStorage.getItem('utm_medium') || '',
-            campaign: sessionStorage.getItem('utm_campaign') || '',
-            gclid: sessionStorage.getItem('gclid') || ''
-        }
+        utms: utms
     });
 }
 
@@ -94,12 +122,7 @@ function trackWhatsAppClick(location) {
         event_type: 'page_view',
         specialty: specialty,
         path: window.location.pathname,
-        utms: {
-            source: sessionStorage.getItem('utm_source') || '',
-            medium: sessionStorage.getItem('utm_medium') || '',
-            campaign: sessionStorage.getItem('utm_campaign') || '',
-            gclid: sessionStorage.getItem('gclid') || ''
-        }
+        utms: collectUtmPayload()
     });
 
     // Rastreamento de profundidade de rolagem (Scroll Depth: 25%, 50%, 75%, 100%)
@@ -196,10 +219,54 @@ document.addEventListener('DOMContentLoaded', () => {
         button.addEventListener('click', () => {
             const location = button.getAttribute('data-track-location');
             if (location) {
-                trackWhatsAppClick(location);
+                trackWhatsAppClick(location, button);
             }
         });
     });
+
+    // Proxy de "message_sent": quando o usuário sai da página para o WhatsApp
+    // logo após clicar em um CTA, sabemos que ele abriu a conversa com o atendente.
+    // (A confirmação definitiva de envio de mensagem depende de integração com a
+    // API do WhatsApp / webhooks, que hoje está fora do nosso escopo.)
+    let pendingWaClick = false;
+    function flagWaProxy() { pendingWaClick = true; }
+
+    document.addEventListener('pointerdown', function (e) {
+        const anc = e.target.closest ? e.target.closest('a[href*="api.whatsapp.com"]') : null;
+        if (anc) flagWaProxy();
+    });
+
+    function maybeFireMessageSent() {
+        if (!pendingWaClick) return;
+        pendingWaClick = false;
+        if (document.hidden) {
+            const isCardio = window.location.pathname.includes('/cardiologia');
+            const specialty = isCardio ? 'Cardiologia' : 'Infectologia';
+            const utms = collectUtmPayload();
+            const timeOnPageSec = Math.round((Date.now() - (window.__pageStartTime || Date.now())) / 1000);
+
+            if (typeof gtag === 'function') {
+                gtag('event', 'message_sent', {
+                    'event_category': 'conversion',
+                    'specialty': specialty,
+                    'time_on_page_sec': timeOnPageSec,
+                    'campaign_id': utms.campaign
+                });
+            }
+            window.dataLayer.push({ 'event': 'message_sent', 'specialty': specialty, 'time_on_page_sec': timeOnPageSec, 'utm_campaign': utms.campaign });
+
+            sendLogBeacon({
+                event_type: 'message_sent',
+                specialty: specialty,
+                path: window.location.pathname,
+                time_on_page_sec: timeOnPageSec,
+                utms: utms
+            });
+        }
+    }
+
+    window.addEventListener('pagehide', maybeFireMessageSent);
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') maybeFireMessageSent(); });
 });
 
 // 6. Botão de WhatsApp Flutuante Sticky (CRO: Sempre visível enquanto rola a página)
@@ -295,7 +362,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.appendChild(btn);
 
     // Vincular evento de clique ao sistema de rastreamento existente
-    btn.addEventListener('click', () => trackWhatsAppClick('Floating_Sticky'));
+    btn.addEventListener('click', (e) => trackWhatsAppClick('Floating_Sticky', btn));
 
     // Mostrar botão após scroll de 150px (usuário rolou além do Hero)
     let stickyVisible = false;

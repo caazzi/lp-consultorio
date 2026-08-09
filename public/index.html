@@ -151,6 +151,10 @@
                 window.dataLayer = window.dataLayer || [];
                 function gtag() { dataLayer.push(arguments); }
                 gtag('js', new Date());
+                // Mapeia o parâmetro 'campaign_id' como dimensão customizada no GA4.
+                // No GA4 UI: Admin > Custom definitions > Criar dimensão customizada
+                //   Nome: "Campaign ID", Event parameter: campaign_id, Escopo: Evento.
+                gtag('set', { campaign_id: '' });
                 gtag('config', 'G-1Q50PEEMVX', {
                     'send_page_view': true,
                     'linker': { 'domains': ['api.whatsapp.com'] }

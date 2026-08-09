@@ -1,6 +1,7 @@
 // netlify/functions/log-access.js
-const fs = require('fs');
-const path = require('path');
+// Persists access & conversion events to a durable Netlify Blobs store.
+// (The previous local fs.writeFileSync approach did NOT survive Netlify deploys.)
+const { STORE_NAME, getStoreInstance, makeKey } = require('../access-store');
 
 exports.handler = async function (event, context) {
   const headers = {
@@ -34,30 +35,16 @@ exports.handler = async function (event, context) {
       utms: payload.utms || {}
     };
 
-    // Salva no registro de logs para análise CLI
-    const logsDir = path.join(__dirname, '../../logs');
-    if (!fs.existsSync(logsDir)) {
-      try { fs.mkdirSync(logsDir, { recursive: true }); } catch (e) {}
-    }
-    const logFile = path.join(logsDir, 'access-events.json');
-    let logs = [];
-    if (fs.existsSync(logFile)) {
-      try {
-        logs = JSON.parse(fs.readFileSync(logFile, 'utf8'));
-      } catch (e) { logs = []; }
-    }
-    logs.push(logEntry);
-    if (logs.length > 1000) logs = logs.slice(-1000); // Mantém últimos 1000 eventos
-    try {
-      fs.writeFileSync(logFile, JSON.stringify(logs, null, 2));
-    } catch (e) {}
+    // Persiste no Netlify Blobs (durable, sobrevive a deploys)
+    const key = makeKey(logEntry);
+    await getStoreInstance().setJSON(key, logEntry);
 
     console.log(`[ACCESS LOG] ${logEntry.event_type} - ${logEntry.specialty} (${logEntry.path})`);
 
     return {
       statusCode: 200,
       headers,
-      body: JSON.stringify({ success: true, logged_at: logEntry.timestamp })
+      body: JSON.stringify({ success: true, logged_at: logEntry.timestamp, store: STORE_NAME })
     };
   } catch (err) {
     return {

@@ -152,6 +152,8 @@
                 window.dataLayer = window.dataLayer || [];
                 function gtag() { dataLayer.push(arguments); }
                 gtag('js', new Date());
+                // Mapeia 'campaign_id' como dimensão customizada no GA4.
+                gtag('set', { campaign_id: '' });
                 gtag('config', 'G-1Q50PEEMVX', {
                     'send_page_view': true,
                     'linker': { 'domains': ['api.whatsapp.com'] }
