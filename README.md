@@ -26,18 +26,18 @@ Para atingir scores de 95+ no Lighthouse e garantir custo zero de escala, a arqu
   - Imagens em formato **WebP** otimizadas (`cardiologia.webp` reduzido para 15 KB / -71% de payload LCP).
   - **LCP Preload** com `fetchpriority="high"` para imagens de hero acima da dobra.
   - **Elfsight Reviews Lazy-Loading:** Carregamento sob demanda do widget do Google Reviews via `IntersectionObserver` apenas quando o usuário se aproxima da seção, eliminando o bloqueio inicial da thread principal (TBT).
-  - **GTM Lazy-Loading:** Scripts de rastreamento disparados apenas após interação do usuário (scroll/mouse/touch).
+  - **gtag.js Lazy-Loading:** Scripts de rastreamento disparados apenas após interação do usuário (scroll/mouse/touch).
 - **Security First:** 
   - Content Security Policy (CSP) rigorosa via `netlify.toml`.
   - HSTS, X-Frame-Options e Permissions Policy configurados.
-- **Analytics:** Rastreamento customizado via `dataLayer` para cliques no WhatsApp, capturando UTMs de campanha para atribuição precisa.
+- **Analytics:** Rastreamento via `gtag.js` + `dataLayer` com pipeline duplo para cliques no WhatsApp: eventos de conversão (`generate_lead`) no GA4 e persistência **first-party** durável em Netlify Blobs (sobrevive a ad-blockers). Captura UTMs, `gclid`/`gad_campaignid` e resolve IDs do Google Ads para nomes de campanha legíveis.
 
 ## 🛠️ Stack Tecnológica
 - **Linguagens:** HTML5, CSS3, JavaScript (Vanilla).
 - **Estilização:** Tailwind CSS (Compilado & Minificado).
 - **Deployment:** CI/CD via Netlify.
 - **Widgets:** Elfsight (Google Reviews integration).
-- **Tracking:** Google Tag Manager + GA4.
+- **Tracking:** gtag.js (GA4) + Netlify Functions/Blobs para métricas first-party.
 
 ---
 
@@ -53,6 +53,13 @@ Para atingir scores de 95+ no Lighthouse e garantir custo zero de escala, a arqu
 │   └── sitemap.xml         # SEO Indexing
 ├── src/                    # Source files
 │   └── css/input.css       # Tailwind entry point
+├── netlify/                # Funções serverless (Netlify Functions)
+│   └── functions/          # log-access (coleta) e insights (agregação) via Blobs
+├── scripts/                # Automação CLI de diagnóstico e relatórios
+│   ├── analyze-performance.js   # npm run analyze
+│   ├── fetch-ga4-metrics.js     # npm run ga-metrics
+│   ├── fetch-access-insights.js # npm run access-logs
+│   └── test-csp.js              # npm run test
 ├── netlify.toml            # Configuração de Headers, Security & Build
 ├── package.json            # Scripts de automação
 └── tailwind.config.js      # Customização do design system (Cores & Fonts)
@@ -81,13 +88,39 @@ npx serve public
 
 ---
 
+## 📊 Rotina de Métricas e Logs
+
+Pipeline de conversão em duas camadas:
+
+- **First-party (fonte de verdade confiável):** cliques no WhatsApp e visualizações são enviados via `navigator.sendBeacon` para a função Netlify `log-access`, persistidos de forma durável em **Netlify Blobs** (imune a ad-blockers) e lidos pela função `insights`.
+- **Google (GA4):** o mesmo clique dispara `generate_lead` via `gtag.js` para atribuição e otimização de campanhas no Google Ads. Requer configuração no Admin do GA4 (marcar `generate_lead` como conversão e registrar a dimensão `campaign_id`).
+
+**Identidade first-party consent-light:** cada visita gera um UUID mantido apenas em memória (sem cookies), permitindo unir eventos em usuários/sessões sem exigir consentimento de cookies.
+
+**Métricas honestas do funil (relatório `access-logs`):**
+- `Engajamento` = cliques no WhatsApp / visualizações (taxa de clique, não conversão).
+- `Taxa de Lead (proxy)` = saídas p/ WhatsApp (`message_sent`, tab-hidden) / visualizações.
+- `Usuários Únicos` via `client_id`; cliques e leads por campanha/especialidade com nomes legíveis.
+
+**Comandos da rotina:**
+```bash
+npm run analyze       # Diagnóstico de performance/Web Vitals
+npm run access-logs   # Métricas first-party de acesso e conversão (produção)
+npm run ga-metrics    # Métricas do Google Analytics 4 (requer GA4_PROPERTY_ID no .env)
+npm run test          # Suíte de testes CSP e integridade do pipeline
+```
+
+> Observação: as funções `log-access`/`insights` exigem um deploy no Netlify para surtir efeito, e os campos novos (`client_id`, `campaign_label`) valem apenas para eventos ocorridos após o deploy.
+
+---
+
 ## 🔐 Segurança e Boas Práticas
 O projeto segue as recomendações da **OWASP** para sites estáticos, implementando cabeçalhos de segurança que mitigam ataques de Clickjacking e XSS, garantindo que o site seja um ambiente seguro para informações médicas.
 
 **Implementações Recentes de Hardening & SEO:**
 - **Otimização de SEO & Metadados local**: Inclusão de blocos estruturados de FAQPage e seções de FAQ visuais baseadas em componentes HTML `<details>`. Configuração de Twitter Cards completos e metadados Open Graph.
 - **Integração com Agentes de IA (`llms.txt`)**: Adicionado o resumo de serviços estruturado em Markdown (`public/llms.txt`) para facilitação de leituras por LLMs e robôs de busca modernos.
-- **CSP (Content Security Policy) Otimizada:** Separação do Javascript de UI (Observer, Footer Year) em arquivo externo (`public/assets/js/main.js`), limpando o markup HTML e organizando as diretivas de segurança, enquanto se mantém a compatibilidade vital com ferramentas de marketing (GTM e Google Ads).
+- **CSP (Content Security Policy) Otimizada:** Separação do Javascript de UI (Observer, Footer Year) em arquivo externo (`public/assets/js/main.js`), limpando o markup HTML e organizando as diretivas de segurança, enquanto se mantém a compatibilidade vital com ferramentas de marketing (gtag.js/GA4 e Google Ads).
 - **HSTS Estrito (Preload):** `Strict-Transport-Security` configurado para 1 ano (`max-age=31536000`) com a flag `preload`, instruindo navegadores modernos a forçarem a conexão segura antes mesmo da primeira requisição de rede ser despachada.
 
 ---
