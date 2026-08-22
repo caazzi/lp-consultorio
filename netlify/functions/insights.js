@@ -43,8 +43,18 @@ exports.handler = async function (event) {
     const pageViews = events.filter(e => e.event_type === 'page_view');
     const waClicks = events.filter(e => e.event_type === 'whatsapp_click');
     const messagesSent = events.filter(e => e.event_type === 'message_sent');
-    const conversionRate = pageViews.length > 0
+    const uniqueClients = new Set(events.map(e => e.client_id || 'anonymous'));
+    const uniqueUsers = uniqueClients.size;
+    // Honest funnel: 'engagement_rate' is click-through to WhatsApp relative to page
+    // views; 'lead_proxy_rate' is the stricter tab-hide proxy for a message being sent.
+    const engagementRate = pageViews.length > 0
       ? Number(((waClicks.length / pageViews.length) * 100).toFixed(1))
+      : 0;
+    const leadProxyRate = pageViews.length > 0
+      ? Number(((messagesSent.length / pageViews.length) * 100).toFixed(1))
+      : 0;
+    const conversionRate = messagesSent.length > 0
+      ? Number(((messagesSent.length / waClicks.length) * 100).toFixed(1))
       : 0;
 
     const bySpecialty = {};
@@ -61,16 +71,21 @@ exports.handler = async function (event) {
       }
     });
 
-    // CVR por campanha (google Ads / cpc): lead = clique no WhatsApp.
+    // CVR por campanha (google Ads / cpc): lead = proxy de mensagem enviada.
+    // Usa campaign_label resolvido no cliente (nome legível), não o gclid/referer cru.
     const byCampaign = {};
     const campaignClicks = {};
+    const campaignLeads = {};
     events.forEach(e => {
-      const campaign = e.utms?.campaign || e.utms?.source || 'Direto / Orgânico';
+      const campaign = e.utms?.campaign_label || e.utms?.campaign || e.utms?.source || 'Direto / Orgânico';
       const spec = e.specialty || 'Geral';
       const key = `${campaign} :: ${spec}`;
       if (e.event_type === 'whatsapp_click') {
         byCampaign[key] = (byCampaign[key] || 0) + 1;
         campaignClicks[key] = true;
+      }
+      if (e.event_type === 'message_sent') {
+        campaignLeads[key] = (campaignLeads[key] || 0) + 1;
       }
     });
 
@@ -83,15 +98,23 @@ exports.handler = async function (event) {
         generated_at: new Date().toISOString(),
         summary: {
           total_events: events.length,
+          unique_users: uniqueUsers,
           page_views: pageViews.length,
           whatsapp_clicks: waClicks.length,
           messages_sent: messagesSent.length,
-          conversion_rate: conversionRate
+          engagement_rate: engagementRate,
+          lead_proxy_rate: leadProxyRate,
+          conversion_rate: conversionRate,
+          events_per_user: events.length > 0 ? Number((events.length / uniqueUsers).toFixed(1)) : 0
         },
         by_specialty: bySpecialty,
         by_source: bySource,
         by_button_location: byLocation,
-        campaigns: { clicks_by_campaign: byCampaign, campaigns_with_clicks: Object.keys(campaignClicks) },
+        campaigns: {
+          clicks_by_campaign: byCampaign,
+          leads_by_campaign: campaignLeads,
+          campaigns_with_clicks: Object.keys(campaignClicks)
+        },
         events: events
       })
     };

@@ -32,8 +32,15 @@ exports.handler = async function (event, context) {
       button_location: payload.button_location || null,
       scroll_depth: payload.scroll_depth || null,
       time_on_page_sec: payload.time_on_page_sec || null,
+      // Consent-light first-party identity (per-visit UUID from the browser). Used to
+      // merge events into users/sessions without cookies.
+      client_id: payload.client_id || 'anonymous',
       utms: payload.utms || {}
     };
+
+    // TODO(confirmed-lead): quando a integração com a WhatsApp Business API / webhooks
+    // estiver disponível, derivar um evento `lead` (confirmado) a partir do message_sent
+    // + confirmação de entrega do WhatsApp. Hoje `message_sent` é apenas um proxy (tab hidden).
 
     // Persiste no Netlify Blobs (durable, sobrevive a deploys)
     const key = makeKey(logEntry);

@@ -15,16 +15,22 @@ function printSections(events, windowLabel) {
   const pageViews = events.filter(e => e.event_type === 'page_view');
   const waClicks = events.filter(e => e.event_type === 'whatsapp_click');
   const messagesSent = events.filter(e => e.event_type === 'message_sent');
-  const conversionRate = pageViews.length > 0 ? ((waClicks.length / pageViews.length) * 100).toFixed(1) : 0;
+  const uniqueClients = new Set(events.map(e => e.client_id || 'anonymous')).size;
+  // Honest funnel metrics: engagement (click-through) is distinct from the
+  // lead proxy (tab-hide after a WhatsApp click).
+  const engagementRate = pageViews.length > 0 ? ((waClicks.length / pageViews.length) * 100).toFixed(1) : 0;
+  const leadProxyRate = pageViews.length > 0 ? ((messagesSent.length / pageViews.length) * 100).toFixed(1) : 0;
 
   console.log(`Janela de Análise: \x1b[36m${windowLabel}\x1b[0m`);
-  console.log(`Total de Eventos   : \x1b[36m${events.length}\x1b[0m\n`);
+  console.log(`Total de Eventos   : \x1b[36m${events.length}\x1b[0m`);
+  console.log(`Usuários Únicos    : \x1b[36m${uniqueClients}\x1b[0m\n`);
 
-  console.log('\x1b[33m%s\x1b[0m', '📈 1. RESUMO DE CONVERSÃO');
+  console.log('\x1b[33m%s\x1b[0m', '📈 1. FUNIL DE CONVERSÃO');
   console.log(` - Visualizações de Página : \x1b[36m${pageViews.length}\x1b[0m`);
   console.log(` - Cliques no WhatsApp    : \x1b[32m${waClicks.length}\x1b[0m`);
   console.log(` - Saídas p/ WhatsApp     : \x1b[36m${messagesSent.length}\x1b[0m (proxy de mensagem enviada)`);
-  console.log(` - Taxa de Conversão      : \x1b[35m${conversionRate}%\x1b[0m (clique / visualização)\n`);
+  console.log(` - Engajamento (clique/visualização): \x1b[35m${engagementRate}%\x1b[0m`);
+  console.log(` - Taxa de Lead (proxy/visualização): \x1b[35m${leadProxyRate}%\x1b[0m\n`);
 
   console.log('\x1b[33m%s\x1b[0m', '🏥 2. INTERESSE POR ESPECIALIDADE');
   const specialties = {};
@@ -52,17 +58,27 @@ function printSections(events, windowLabel) {
 
   console.log('\n\x1b[33m%s\x1b[0m', '📢 5. CLICKS POR CAMPANHA & ESPECIALIDADE');
   const byCampaign = {};
-  const cell = {};
   waClicks.forEach(c => {
-    const key = `${c.utms?.campaign || c.utms?.source || 'Direto / Orgânico'}`;
+    const key = `${c.utms?.campaign_label || c.utms?.campaign || c.utms?.source || 'Direto / Orgânico'}`;
     const spec = c.specialty || 'Geral';
     const row = byCampaign[key] = byCampaign[key] || {};
-    row[spec] = (row[spec] || 0) + 1;
-    cell[key] = true;
+    row[spec] = row[spec] || { clicks: 0, leads: 0 };
+    row[spec].clicks++;
   });
-  if (Object.keys(cell).length > 0) {
+  messagesSent.forEach(m => {
+    const key = `${m.utms?.campaign_label || m.utms?.campaign || m.utms?.source || 'Direto / Orgânico'}`;
+    const spec = m.specialty || 'Geral';
+    const row = byCampaign[key] = byCampaign[key] || {};
+    row[spec] = row[spec] || { clicks: 0, leads: 0 };
+    row[spec].leads++;
+  });
+  if (Object.keys(byCampaign).length > 0) {
     Object.keys(byCampaign).forEach(cam => {
-      console.log(` - ${cam.padEnd(30)}: ${JSON.stringify(byCampaign[cam])}`);
+      console.log(` - ${cam.padEnd(30)}:`);
+      Object.keys(byCampaign[cam]).forEach(spec => {
+        const c = byCampaign[cam][spec];
+        console.log(`     ${spec.padEnd(15)}: \x1b[32m${c.clicks} clique(s)\x1b[0m | \x1b[36m${c.leads} lead(s) proxy\x1b[0m`);
+      });
     });
   } else {
     console.log(' - Nenhum clique registrado no período.');

@@ -1,6 +1,35 @@
 // 🏥 Arquivo de Rastreamento Avançado - lp-consultorio
 // Este script centraliza a lógica de UTMs, disparos de conversão, RUM e inteligência de acessos.
 
+// Consent-light first-party client identity: a per-visit UUID held only in memory
+// (no cookies, no persistent storage). Lets Access events be merged into users/sessions
+// without adding GDPR consent friction on a medical site.
+function generateClientId() {
+    if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+        return window.crypto.randomUUID();
+    }
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+        const r = Math.random() * 16 | 0;
+        const v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
+}
+window.__clientId = window.__clientId || generateClientId();
+
+// Forward mapping of known Google Ads campaign IDs to human-readable labels so reports
+// show "Infectologia" / "Cardiologia" instead of raw gclid/referer URLs.
+const CAMPAIGN_LABELS = {
+    '23071806673': 'Infectologia',
+    '23747859815': 'Cardiologia'
+};
+function resolveCampaignLabel(utms) {
+    const campaignId = utms.gad_campaignid || utms.campaign;
+    if (campaignId && CAMPAIGN_LABELS[campaignId]) return CAMPAIGN_LABELS[campaignId];
+    if (utms.campaign) return utms.campaign;
+    if (utms.source) return utms.source;
+    return 'Direto / Orgânico';
+}
+
 // 1. Armazenar UTMs na SessionStorage (Executa no carregamento)
 (function storeUTMs() {
     const urlParams = new URLSearchParams(window.location.search);
@@ -21,7 +50,11 @@ window.dataLayer = window.dataLayer || [];
  */
 function sendLogBeacon(data) {
     try {
-        const payload = JSON.stringify(data);
+        // Enrich every beacon with the consent-light client identity so the access
+        // store can merge events into users/sessions server-side.
+        const payload = JSON.stringify(
+            Object.assign({}, data, { client_id: window.__clientId })
+        );
         if (navigator.sendBeacon) {
             navigator.sendBeacon('/.netlify/functions/log-access', payload);
         } else {
@@ -54,15 +87,31 @@ function buildWhatsAppUrlWithUtm(baseUrl, locationOverride) {
 }
 
 function collectUtmPayload() {
-    return {
+    const utms = {
         source: sessionStorage.getItem('utm_source') || '',
         medium: sessionStorage.getItem('utm_medium') || '',
         campaign: sessionStorage.getItem('utm_campaign') || '',
         term: sessionStorage.getItem('utm_term') || '',
         content: sessionStorage.getItem('utm_content') || '',
         gclid: sessionStorage.getItem('gclid') || '',
-        gbraid: sessionStorage.getItem('gbraid') || ''
+        gbraid: sessionStorage.getItem('gbraid') || '',
+        gad_campaignid: getParamFromStorage('gad_campaignid', 'gad_source')
     };
+    // Attach resolved, human-readable campaign label for reporting (falls back to source/Direto).
+    utms.campaign_label = resolveCampaignLabel(utms);
+    return utms;
+}
+
+// Reads a value by param name from sessionStorage, falling back to reading from
+// the window URL query string (covers params never persisted like gad_campaignid).
+function getParamFromStorage(...names) {
+    for (const n of names) {
+        const stored = sessionStorage.getItem(n);
+        if (stored) return stored;
+        const fromUrl = new URLSearchParams(window.location.search).get(n);
+        if (fromUrl) return fromUrl;
+    }
+    return '';
 }
 
 function trackWhatsAppClick(location, element) {
@@ -361,8 +410,9 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
     document.body.appendChild(btn);
 
-    // Vincular evento de clique ao sistema de rastreamento existente
-    btn.addEventListener('click', (e) => trackWhatsAppClick('Floating_Sticky', btn));
+    // O botão flutuante possui data-track-location="Floating_Sticky" e é capturado
+    // pelo seletor genérico do bloco de event listeners; o listener direto foi removido
+    // para evitar disparo duplicado de rastreamento.
 
     // Mostrar botão após scroll de 150px (usuário rolou além do Hero)
     let stickyVisible = false;
