@@ -1,40 +1,25 @@
 # 🚀 Guia de Configuração da Arquitetura de Conversão
 
-Este guia descreve o passo a passo de como alinhar suas plataformas (Google Ads, GTM e GA4) com o novo sistema de rastreamento do código. O nosso código envia para a camada de dados (DataLayer) o evento customizado **`generate_lead`** contendo variáveis contextuais como `specialty` (Cardiologia ou Infectologia), `button_location` e as UTMs.
+Este guia descreve o passo a passo de como alinhar suas plataformas (Google Ads e GA4) com o novo sistema de rastreamento do código. O nosso código envia para o GA4 o evento customizado **`generate_lead`** contendo variáveis contextuais como `specialty` (Cardiologia ou Infectologia), `button_location` e as UTMs.
+
+> ⚠️ **Nota importante — este projeto usa `gtag.js` diretamente, NÃO GTM.**
+> Anteriormente este guia descrevia uma integração com o *Google Tag Manager* (GTM), mas o site
+> carrega o snippet nativo do gtag.js (`G-1Q50PEEMVX`) sem container GTM. Não há placeholder de GTM
+> no código. Toda a configuração de eventos é feita **em código** (`public/assets/js/tracking.js`) e
+> a configuração manual fica no **GA4/Google Ads**, não no GTM. As seções a seguir refletem isso.
 
 ---
 
-## 1. Google Tag Manager (GTM)
+## 1. Disparo de conversão no código (gtag.js)
 
-O GTM será a ponte entre o seu site e o GA4. Ele captará o evento gerado pelo clique no WhatsApp e o enviará mastigado para o Analytics.
+Não há tags para criar — o código já envia os eventos. Os scripts relevantes:
 
-### Passo 1.1: Instalar o Snippet no Código
-- Crie um contêiner no [Google Tag Manager](https://tagmanager.google.com/).
-- Copie o snippet do GTM (`<head>` e `<body>`).
-- Abra o código fonte em `public/index.html` e `public/cardiologia/index.html`.
-- Substitua as seções `<!-- Google Tag Manager (GTM Placeholder) -->` geradas anteriormente pelo seu snippet real.
+- **`public/index.html` / `public/cardiologia/index.html`**: carregam o gtag.js de forma **eager**
+  (imediata) e registram a dimensão `campaign_id`.
+- **`public/assets/js/tracking.js`**: função `sendGtagConversion('generate_lead', {...})` dispara o
+  evento confiável a cada clique em botão de WhatsApp, antes de abrir o link.
 
-### Passo 1.2: Criar as Variáveis de DataLayer
-No GTM, vá em **Variáveis > Nova > Variável de Camada de Dados** (Data Layer Variable) e crie uma para cada parâmetro que configuramos no JS:
-- Nome da Variável: `dlv - specialty` | Nome da Camada de Dados: `specialty`
-- Nome da Variável: `dlv - button_location` | Nome da Camada de Dados: `button_location`
-- Nome da Variável: `dlv - gclid` | Nome da Camada de Dados: `gclid`
-
-### Passo 1.3: Criar o Acionador (Trigger)
-- Vá em **Acionadores > Novo > Evento Personalizado**.
-- Nome do Evento: `generate_lead`
-- Definir para disparar em "Todos os Eventos Personalizados".
-
-### Passo 1.4: Criar a Tag do GA4
-- Certifique-se de que a **Tag de Configuração Básica do GA4** (`Google Tag` com o id `G-1Q50PEEMVX`) já está criada e disparando em *All Pages*.
-- Vá em **Tags > Nova > Evento do GA4**.
-- Escolha a tag de configuração base do GA4.
-- Nome do Evento: `generate_lead`
-- **Parâmetros do Evento:** Aqui você conecta as variáveis criadas no Passo 1.2:
-  - Adicione a linha: Parâmetro `specialty` | Valor `{{dlv - specialty}}`
-  - Adicione a linha: Parâmetro `button_location` | Valor `{{dlv - button_location}}`
-- Adicione o Acionador (Trigger) `generate_lead` que criamos no Passo 1.3.
-- Publique a versão do GTM!
+Não é preciso criar o evento na UI — ele é enviado pelo código. O GA4 o registra automaticamente.
 
 ---
 
@@ -122,3 +107,12 @@ curl "https://consultoriosalustiano.com.br/.netlify/functions/insights?days=7"
 ```
 
 A resposta inclui `summary.messages_sent`, `summary.conversion_rate` e a quebra por campanha/especialidade.
+
+---
+
+## 7. Próximos passos
+
+Este guia documenta a arquitetura. Para o **checklist de configuração manual** no GA4/Google Ads
+(necessário para `generate_lead` virar conversão e otimizar lances), ver:
+
+- **`docs/passos-ga4-google-ads.md`** — passos obrigatórios + depuração se o evento não aparecer.
