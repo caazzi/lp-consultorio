@@ -30,6 +30,61 @@ function resolveCampaignLabel(utms) {
     return 'Direto / Orgânico';
 }
 
+// GA4 config: measurement ID espelhado do HTML para carregar o gtag.js se necessário.
+const GA4_MEASUREMENT_ID = 'G-1Q50PEEMVX';
+
+// O gtag.js REAL é carregado de forma eager (não-lazy) no HTML, garantindo que
+// window.gtag esteja inicializado antes de qualquer clique. Este helper garante que o
+// gtag exista mesmo se o carregamento ainda não concluiu (usa o placeholder que empurra
+// comandos para o dataLayer, que o gtag real processa ao inicializar).
+function ensureGtagLoaded(onReady) {
+    // Já sabemos que o gtag real está pronto (carregado eager no HTML).
+    if (window.__gtagReady) { onReady(); return; }
+
+    // Aguarda até 2s pelo gtag real inicializar (o loader eager do HTML o injeta).
+    var tries = 0;
+    var timer = setInterval(function () {
+        var real = typeof window.gtag === 'function'
+            && window.__gtagReady === true;
+        if (real || tries++ > 20) {
+            clearInterval(timer);
+            window.__gtagReady = true;
+            onReady();
+        }
+    }, 100);
+
+    // Fallback imediato: injeta o gtag.js caso o carregamento eager não esteja disponível.
+    if (!document.querySelector('script[src*="googletagmanager.com/gtag/js"]')) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        window.gtag = gtag;
+        var g = document.createElement('script');
+        g.async = true;
+        g.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA4_MEASUREMENT_ID;
+        g.onload = function () {
+            window.gtag('js', new Date());
+            window.gtag('set', { campaign_id: '' });
+            window.gtag('config', GA4_MEASUREMENT_ID, {
+                'send_page_view': false,
+                'linker': { 'domains': ['api.whatsapp.com'] }
+            });
+            window.__gtagReady = true;
+        };
+        document.head.appendChild(g);
+    }
+}
+
+// Envia um evento de conversão ao GA4 de forma confiável.
+function sendGtagConversion(eventName, params) {
+    ensureGtagLoaded(function () {
+        try {
+            // window.gtag real (ou o placeholder) empurra o comando para o dataLayer;
+            // o gtag.js eager inicializa e processa imediatamente, sem perder o evento.
+            window.gtag('event', eventName, params);
+        } catch (e) {}
+    });
+}
+
 // 1. Armazenar UTMs na SessionStorage (Executa no carregamento)
 (function storeUTMs() {
     const urlParams = new URLSearchParams(window.location.search);
@@ -138,16 +193,18 @@ function trackWhatsAppClick(location, element) {
         'gclid': utms.gclid
     });
 
-    // Fallback: Disparo direto para o gtag.js — com dimensões customizadas para CVR por campanha.
-    if (typeof gtag === 'function') {
-        const label = isCardio ? 'WhatsApp Dra Anabel ' + location : 'WhatsApp ' + location;
-        gtag('event', 'generate_lead', {
-            'event_category': 'conversion',
-            'event_label': label,
-            'value': 1,
-            'campaign_id': utms.campaign
-        });
-    }
+    // Disparo direto para o gtag.js com dimensões customizadas para CVR por campanha.
+    // Garante o load do gtag real antes de enviar (evita corrida com o load lazy e
+    // perda de conversão em navegações rápidas para o WhatsApp).
+    const label = isCardio ? 'WhatsApp Dra Anabel ' + location : 'WhatsApp ' + location;
+    sendGtagConversion('generate_lead', {
+        'event_category': 'conversion',
+        'event_label': label,
+        'value': 1,
+        'campaign_id': utms.campaign,
+        'button_location': location,
+        'specialty': specialty
+    });
 
     // Registra log de conversão no servidor Netlify
     sendLogBeacon({
@@ -294,14 +351,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const utms = collectUtmPayload();
             const timeOnPageSec = Math.round((Date.now() - (window.__pageStartTime || Date.now())) / 1000);
 
-            if (typeof gtag === 'function') {
-                gtag('event', 'message_sent', {
-                    'event_category': 'conversion',
-                    'specialty': specialty,
-                    'time_on_page_sec': timeOnPageSec,
-                    'campaign_id': utms.campaign
-                });
-            }
+            // Dispara via caminho confiável (garante load do gtag real antes de enviar).
+            // Em pagehide/visibilitychange o beacom nativo (sendBeacon) é preferível,
+            // então registramos o parâmetro e deixamos o sendGtagLead disparar via fetch.
+            sendGtagConversion('message_sent', {
+                'event_category': 'conversion',
+                'specialty': specialty,
+                'time_on_page_sec': timeOnPageSec,
+                'campaign_id': utms.campaign
+            });
             window.dataLayer.push({ 'event': 'message_sent', 'specialty': specialty, 'time_on_page_sec': timeOnPageSec, 'utm_campaign': utms.campaign });
 
             sendLogBeacon({

@@ -109,7 +109,7 @@ console.log('\x1b[33m%s\x1b[0m', '✉️  5. VALIDAÇÃO DO EVENTO PROXY message
 const jsContent = fs.readFileSync(trackingJsPath, 'utf8');
 const messageSentChecks = {
   "função trackWhatsAppClick exist": jsContent.includes('function trackWhatsAppClick('),
-  "dispara evento message_sent no gtag": /gtag\(['"]event['"],\s*['"]message_sent['"]/.test(jsContent),
+  "dispara evento message_sent no gtag": /sendGtagConversion\(['"]message_sent['"]/.test(jsContent),
   "dispara no DataLayer (message_sent)": /event['"]\s*:\s*['"]message_sent['"]/.test(jsContent),
   "beacon de log com message_sent": jsContent.includes("event_type: 'message_sent'"),
   "detecta pagehide com flag de clique": jsContent.includes('pendingWaClick') && jsContent.includes('addEventListener(\'pagehide\'')
