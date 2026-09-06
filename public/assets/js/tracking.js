@@ -141,6 +141,17 @@ function buildWhatsAppUrlWithUtm(baseUrl, locationOverride) {
     return baseUrl + (baseUrl.includes('?') ? '&' : '?') + parts.join('&');
 }
 
+// Verifica se a URL aponta para o host oficial do WhatsApp (host exato, não substring),
+// evitando open redirect / concatenação de UTMs em domínios arbitrários.
+function isTrustedWhatsAppUrl(url) {
+    try {
+        const parsed = new URL(url || '');
+        return parsed.hostname === 'api.whatsapp.com';
+    } catch (e) {
+        return false;
+    }
+}
+
 function collectUtmPayload() {
     const utms = {
         source: sessionStorage.getItem('utm_source') || '',
@@ -177,7 +188,8 @@ function trackWhatsAppClick(location, element) {
     const utms = collectUtmPayload();
 
     // Anexa UTMs ao link real que será aberto, para o atendente ver a origem.
-    if (element && element.href && element.href.indexOf('api.whatsapp.com') !== -1) {
+    // Valida o host exato (não substring) para não concatenar UTMs em URLs arbitrárias.
+    if (element && isTrustedWhatsAppUrl(element.href)) {
         element.href = buildWhatsAppUrlWithUtm(element.href, location);
     }
 
