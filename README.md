@@ -26,7 +26,7 @@ Para atingir scores de 95+ no Lighthouse e garantir custo zero de escala, a arqu
   - Imagens em formato **WebP** otimizadas (`cardiologia.webp` reduzido para 15 KB / -71% de payload LCP).
   - **LCP Preload** com `fetchpriority="high"` para imagens de hero acima da dobra.
   - **Elfsight Reviews Lazy-Loading:** Carregamento sob demanda do widget do Google Reviews via `IntersectionObserver` apenas quando o usuário se aproxima da seção, eliminando o bloqueio inicial da thread principal (TBT).
-  - **gtag.js Lazy-Loading:** Scripts de rastreamento disparados apenas após interação do usuário (scroll/mouse/touch).
+  - **gtag.js Deferred Loading:** O rastreamento do Google (GA4/Ads) é inicializado fora do caminho crítico — no primeiro gesto do usuário (scroll/touch/teclado) ou em um instante ocioso pós-load, mantendo a página leve na carga sem sacrificar a confiabilidade dos cliques de conversão.
 - **Security First:** 
   - Content Security Policy (CSP) rigorosa via `netlify.toml`.
   - HSTS, X-Frame-Options e Permissions Policy configurados.
@@ -57,6 +57,7 @@ Para atingir scores de 95+ no Lighthouse e garantir custo zero de escala, a arqu
 │   └── functions/          # log-access (coleta) e insights (agregação) via Blobs
 ├── scripts/                # Automação CLI de diagnóstico e relatórios
 │   ├── analyze-performance.js   # npm run analyze
+│   ├── run-perf.js              # npm run perf (Lighthouse mobile)
 │   ├── fetch-ga4-metrics.js     # npm run ga-metrics
 │   ├── fetch-access-insights.js # npm run access-logs
 │   └── test-csp.js              # npm run test
@@ -101,10 +102,12 @@ Pipeline de conversão em duas camadas:
 - `Engajamento` = cliques no WhatsApp / visualizações (taxa de clique, não conversão).
 - `Taxa de Lead (proxy)` = saídas p/ WhatsApp (`message_sent`, tab-hidden) / visualizações.
 - `Usuários Únicos` via `client_id`; cliques e leads por campanha/especialidade com nomes legíveis.
+- Fontes e campanhas são **canonicalizadas server-side** (labels legíveis dos IDs do Google Ads; sem referers crus com `gclid`). Tráfego de **deploy-preview/teste** é agrupado à parte e excluído do funil de produção.
 
 **Comandos da rotina:**
 ```bash
 npm run analyze       # Diagnóstico de performance/Web Vitals
+npm run perf          # Lighthouse mobile (index + cardiologia) p/ validar otimizações
 npm run access-logs   # Métricas first-party de acesso e conversão (produção)
 npm run ga-metrics    # Métricas do Google Analytics 4 (requer GA4_PROPERTY_ID no .env)
 npm run test          # Suíte de testes CSP e integridade do pipeline
