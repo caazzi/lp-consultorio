@@ -30,60 +30,134 @@ function resolveCampaignLabel(utms) {
     return 'Direto / Orgânico';
 }
 
-// GA4 config: measurement ID espelhado do HTML para carregar o gtag.js se necessário.
+// =============================================================================
+// GA4 / Google Ads (gtag.js) — CARREGAMENTO DEFERRED (gesture OU load-idle)
+// -----------------------------------------------------------------------------
+// Objetivo: remover o ~3.5s de trabalho no main-thread (config/GA4 + integração
+// com Google Ads) do caminho crítico da página. O gtag real é injetado apenas no
+// primeiro gesto do usuário OU num instante ocioso após o evento `load`, o que
+// primeiro acontecer. O placeholder síncrono abaixo garante que comandos de
+// conversão nunca se percam mesmo antes do gtag real existir: o Googletagman
+// processa o dataLayer logo que inicializa.
+// Segurança de conversão mantida: garantir que um clique no WhatsApp FORÇA a
+// injeção do gtag imediatamente (ver ensureGtagLoaded abaixo).
+// =============================================================================
 const GA4_MEASUREMENT_ID = 'G-1Q50PEEMVX';
 
-// O gtag.js REAL é carregado de forma eager (não-lazy) no HTML, garantindo que
-// window.gtag esteja inicializado antes de qualquer clique. Este helper garante que o
-// gtag exista mesmo se o carregamento ainda não concluiu (usa o placeholder que empurra
-// comandos para o dataLayer, que o gtag real processa ao inicializar).
-function ensureGtagLoaded(onReady) {
-    // Já sabemos que o gtag real está pronto (carregado eager no HTML).
-    if (window.__gtagReady) { onReady(); return; }
+// Placeholder síncrono (criado sempre; nunca é pesado). Garante que window.gtag
+// exista para RUM/web_vitals e para o dataLayer, sem esperar o gtag real.
+window.dataLayer = window.dataLayer || [];
+if ('function' !== typeof window.gtag) {
+    window.gtag = function () { window.dataLayer.push(arguments); };
+}
 
-    // Aguarda até 2s pelo gtag real inicializar (o loader eager do HTML o injeta).
-    var tries = 0;
-    var timer = setInterval(function () {
-        var real = typeof window.gtag === 'function'
-            && window.__gtagReady === true;
-        if (real || tries++ > 20) {
-            clearInterval(timer);
-            window.__gtagReady = true;
-            onReady();
-        }
-    }, 100);
-
-    // Fallback imediato: injeta o gtag.js caso o carregamento eager não esteja disponível.
-    if (!document.querySelector('script[src*="googletagmanager.com/gtag/js"]')) {
-        window.dataLayer = window.dataLayer || [];
-        function gtag() { dataLayer.push(arguments); }
-        window.gtag = gtag;
-        var g = document.createElement('script');
-        g.async = true;
-        g.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA4_MEASUREMENT_ID;
-        g.onload = function () {
+// Cria o script real do gtag e dispara o config. Idempotente: só pode rodar uma vez.
+function injectGtagAndConfigure() {
+    if (window.__gtagInjected) return;
+    if (document.querySelector('script[src*="googletagmanager.com/gtag/js"]')) {
+        // Já existe um <script> do gtag no documento (ex.: injetado antes).
+        window.__gtagInjected = true;
+        return;
+    }
+    window.__gtagInjected = true;
+    var g = document.createElement('script');
+    g.async = true;
+    g.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA4_MEASUREMENT_ID;
+    g.onload = function () {
+        try {
             window.gtag('js', new Date());
             window.gtag('set', { campaign_id: '' });
             window.gtag('config', GA4_MEASUREMENT_ID, {
-                'send_page_view': false,
+                'send_page_view': true,
                 'linker': { 'domains': ['api.whatsapp.com'] }
             });
-            window.__gtagReady = true;
-        };
-        document.head.appendChild(g);
-    }
+        } catch (e) {}
+        window.__gtagReady = true;
+    };
+    g.onerror = function () { window.__gtagInjected = false; };
+    document.head.appendChild(g);
 }
 
-// Envia um evento de conversão ao GA4 de forma confiável.
+// Injeta o gtag real o mais cedo que é seguro p/ a conversão, mas o mais tarde
+// possível p/ o caminho crítico (TBT/LCP):
+//   - primeiro gesto do usuário (pointerdown/keydown/scroll), OU
+//   - um instante ocioso logo após o evento `load` (requestIdleCallback), o que
+//     vier primeiro.
+// Isso move o trabalho de config/Ads (~3.5s no main-thread em mobile) para fora
+// da janela de medição, enquanto mantém o gtag pronto antes do usuário agir.
+(function armDeferredGtag() {
+    var done = false;
+    var idleHandle = null;
+
+    function teardown() {
+        ['pointerdown', 'keydown', 'scroll'].forEach(function (ev) {
+            window.removeEventListener(ev, onInteraction, true);
+        });
+        window.removeEventListener('load', onDocumentLoad);
+        if (idleHandle) {
+            if (window.cancelIdleCallback) { try { window.cancelIdleCallback(idleHandle); } catch (e) {} }
+            else { clearTimeout(idleHandle); }
+            idleHandle = null;
+        }
+    }
+
+    function armAndLoad() {
+        if (done) return;
+        done = true;
+        teardown();
+        injectGtagAndConfigure();
+    }
+
+    function onInteraction() { armAndLoad(); }
+    function onDocumentLoad() {
+        scheduleIdle();
+    }
+
+    function scheduleIdle() {
+        var fire = function () { armAndLoad(); };
+        if (window.requestIdleCallback) {
+            idleHandle = window.requestIdleCallback(fire, { timeout: 4000 });
+        } else {
+            idleHandle = setTimeout(fire, 1500);
+        }
+    }
+
+    ['pointerdown', 'keydown', 'scroll'].forEach(function (ev) {
+        window.addEventListener(ev, onInteraction, { passive: true, capture: true });
+    });
+
+    if (document.readyState === 'complete') {
+        scheduleIdle();
+    } else {
+        window.addEventListener('load', onDocumentLoad);
+    }
+})();
+
+// Garante que o gtag REAL esteja pronto antes de disparar um evento de conversão.
+// Se ainda não carregou (nenhum gesto/pós-load), injeta NA HORA — assim um clique
+// direto no WhatsApp sem qualquer interação prévia nunca perde o generate_lead.
+function ensureGtagLoaded(onReady) {
+    if (window.__gtagReady) { onReady(); return; }
+    // Força a injeção agora (cobrir clique direto sem gesto prévio).
+    injectGtagAndConfigure();
+    var tries = 0;
+    var timer = setInterval(function () {
+        if (window.__gtagReady || tries++ > 30) {
+            clearInterval(timer);
+            onReady();
+        }
+    }, 100);
+}
+
+// Envia um evento de conversão ao GA4 de forma confiável (placeholder ou real).
 function sendGtagConversion(eventName, params) {
     ensureGtagLoaded(function () {
         try {
-            // window.gtag real (ou o placeholder) empurra o comando para o dataLayer;
-            // o gtag.js eager inicializa e processa imediatamente, sem perder o evento.
             window.gtag('event', eventName, params);
         } catch (e) {}
     });
 }
+
 
 // 1. Armazenar UTMs na SessionStorage (Executa no carregamento)
 (function storeUTMs() {

@@ -133,13 +133,29 @@ Object.keys(utmChecks).forEach(k => {
   else { console.error(`  ❌ ${k}`); hasErrors = true; }
 });
 
-// campaign_id configurado no gtag config das duas páginas (dimensão customizada GA4)
+// campaign_id configurado no gtag config, agora centralizado no tracking.js
+// (config deferred), NÃO mais duplicado inline em cada página HTML.
+const trackingDeferredOk = jsContent.includes('gtag(\'set\', { campaign_id: \'\' })')
+  && jsContent.includes('send_page_view')
+  && (jsContent.includes('function injectGtagAndConfigure(') || jsContent.includes('injectGtagAndConfigure'))
+  && (jsContent.includes('ensureGtagLoaded') && jsContent.includes('function sendGtagConversion('));
+if (trackingDeferredOk) {
+  console.log('  ✅ tracking.js centraliza gtag config deferred (campaign_id + send_page_view)');
+} else {
+  console.error('  ❌ tracking.js não centraliza a config deferred do gtag.');
+  hasErrors = true;
+}
 trackingPages.forEach(page => {
   const pagePath = path.join(publicDir, page);
   const pageContent = fs.readFileSync(pagePath, 'utf8');
-  const hasCampaignDim = /gtag\(['"]set['"],\s*\{[^}]*campaign_id\s*:/.test(pageContent);
-  if (hasCampaignDim) console.log(`  ✅ ${page}: campaign_id registrado no gtag set`);
-  else { console.error(`  ❌ ${page}: campaign_id ausente no gtag set`); hasErrors = true; }
+  // Refactor: páginas NÃO devem mais carregar bloco gtag inline eager.
+  const hasInlineEager = pageContent.includes('googletagmanager.com/gtag/js');
+  if (!hasInlineEager && pageContent.includes('assets/js/tracking.js')) {
+    console.log(`  ✅ ${page}: sem gtag inline eager; rastreamento via tracking.js (deferred)`);
+  } else {
+    console.error(`  ❌ ${page}: gtag inline eager ainda presente (ou tracking.js ausente)`);
+    hasErrors = true;
+  }
 });
 
 // 7. Validar pipeline durável de logs (Netlify Blobs) e endpoint de insights
