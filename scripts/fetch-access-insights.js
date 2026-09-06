@@ -1,5 +1,8 @@
 const fs = require('fs');
 const path = require('path');
+// Reuse the server-side visitor-grouping helper (single DRY source) for the
+// offline log fallback so estimates match the production aggregation exactly.
+const accessStore = require(path.join(__dirname, '../netlify/access-store.js'));
 
 console.log('\x1b[36m%s\x1b[0m', '=======================================================');
 console.log('\x1b[36m%s\x1b[0m', ' 📊 RELATÓRIO DE ACESSOS E INTENÇÃO DE CONVERSÃO (IDE) ');
@@ -38,7 +41,11 @@ function printSections(api, windowLabel) {
 
   console.log(`Janela de Análise: \x1b[36m${windowLabel}\x1b[0m`);
   console.log(`Total de Eventos (produção) : \x1b[36m${totalEvents}\x1b[0m`);
-  console.log(`Usuários Únicos             : \x1b[36m${labelFmt(s.unique_users)}\x1b[0m\n`);
+  console.log(`Usuários Únicos             : \x1b[36m${labelFmt(s.unique_users)}\x1b[0m (por page-load; infla com revisitantes)`);
+  if (s.estimated_visitors != null) {
+    console.log(`Estimativa de Visitantes      : \x1b[36m${labelFmt(s.estimated_visitors)}\x1b[0m (agrupamento server-side ip+UA, janela 24h)`);
+  }
+  console.log('');
 
   if (!isNewSchema) {
     console.log('\x1b[33m%s\x1b[0m', '▶ FUNIL (schema antigo da API publicada — apenas totais confiáveis)');
@@ -134,10 +141,16 @@ async function main() {
       console.log('\x1b[33m%s\x1b[0m', `⚠️  Falha ao consultar API (${err.message}). Usando log local:\n`);
       const raw = JSON.parse(fs.readFileSync(logFile, 'utf8'));
       const events = Array.isArray(raw) ? raw : (raw.events || []);
+      const visitorKeys = new Set();
+      events.forEach(e => {
+        const k = accessStore.deriveVisitorGroupKey(e);
+        if (k !== null) visitorKeys.add(k);
+      });
       const local = {
         summary: {
           events: events.length,
           unique_users: new Set(events.map(e => e.client_id || 'a')).size,
+          estimated_visitors: visitorKeys.size,
           page_views: events.filter(e => e.event_type === 'page_view').length,
           whatsapp_clicks: events.filter(e => e.event_type === 'whatsapp_click').length,
           messages_sent: events.filter(e => e.event_type === 'message_sent').length,

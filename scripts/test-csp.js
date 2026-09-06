@@ -264,6 +264,57 @@ if (!fs.existsSync(accessStorePath)) {
     else { console.error('  ❌ insights.js não usa os helpers canonicos'); hasErrors = true; }
     if (noRawReferer) console.log('  ✅ insights.js não cai em raw referer para grouping');
     else { console.error('  ❌ insights.js ainda usa e.referer cru no grouping'); hasErrors = true; }
+    // insights.js must also consume the shared visitor-key helper (DRY) and expose
+    // the additive estimated_visitors total.
+    const usesVisitorKey = insSrc.includes('deriveVisitorGroupKey');
+    const exposesEstimate = insSrc.includes('estimated_visitors');
+    if (usesVisitorKey && exposesEstimate) {
+      console.log('  ✅ insights.js usa deriveVisitorGroupKey e expõe estimated_visitors (additivo)');
+    } else {
+      console.error('  ❌ insights.js não consome deriveVisitorGroupKey / estimated_visitors');
+      hasErrors = true;
+    }
+  }
+
+  // Visitor-grouping behavior — single DRY source (access-store.deriveVisitorGroupKey)
+  // consumed both by insights.js and the local CLI fallback. These tests pin the
+  // weak/bounded contract: same ip+UA+window => same key; other signals differ.
+  if (access_store && typeof access_store.deriveVisitorGroupKey === 'function') {
+    console.log('\n\x1b[33m%s\x1b[0m', '🔗 9. VALIDAÇÃO DO AGRUPAMENTO DE VISITANTES (weak/bounded, server-side)');
+    const UA = 'Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 Chrome/120';
+    const mk = (ip, ua, tm) => ({ ip, user_agent: ua, timestamp: tm });
+    const sameDayLater = mk('1.2.3.4', UA, '2026-09-06T18:30:00Z');
+    const visChecks = [
+      { d: 'mesmos ip+UA+janela => mesma chave', wantSame: mk('1.2.3.4', UA, '2026-09-06T10:00:00Z'), compare: sameDayLater, same: true },
+      { d: 'mesmo ip, UA diferente => chave diferente', wantDiff: mk('1.2.3.4', 'Mozilla/5.0 (iPhone; OS 17_0)', '2026-09-06T10:05:00Z'), compare: sameDayLater, same: false },
+      { d: 'same UA, ip diferente => chave diferente', wantDiff: mk('5.6.7.8', UA, '2026-09-06T10:10:00Z'), compare: sameDayLater, same: false },
+      { d: 'fora da janela (2 dias) => chave diferente (não durável)', wantDiff: mk('1.2.3.4', UA, '2026-09-08T10:00:00Z'), compare: sameDayLater, same: false }
+    ];
+    const baseKey = access_store.deriveVisitorGroupKey(sameDayLater);
+    visChecks.forEach(c => {
+      const keyThatShouldEqual = c.wantSame ? access_store.deriveVisitorGroupKey(c.wantSame) : access_store.deriveVisitorGroupKey(c.wantDiff);
+      const okSame = c.same ? (keyThatShouldEqual === baseKey) : (keyThatShouldEqual !== baseKey);
+      if (okSame) console.log(`  ✅ deriveVisitorGroupKey: ${c.d}`);
+      else { console.error(`  ❌ deriveVisitorGroupKey: ${c.d}`); hasErrors = true; }
+    });
+    // null-safety: missing identity must not be collapsed into a shared key
+    if (access_store.deriveVisitorGroupKey({ user_agent: UA, timestamp: '2026-09-06T10:00:00Z' }) === null
+      && access_store.deriveVisitorGroupKey({ ip: '1.2.3.4', timestamp: '2026-09-06T10:00:00Z' }) === null
+      && access_store.deriveVisitorGroupKey({ ip: '1.2.3.4', user_agent: UA }) === null) {
+      console.log('  ✅ deriveVisitorGroupKey retorna null c/ ip/UA/timestamp ausentes (não colapsa)');
+    } else {
+      console.error('  ❌ deriveVisitorGroupKey deveria retornar null com inputs ausentes');
+      hasErrors = true;
+    }
+    // determinism + opacity (sha256 digest, no raw ip/ua prefix)
+    const g = access_store.deriveVisitorGroupKey(sameDayLater);
+    const deterministic = access_store.deriveVisitorGroupKey(sameDayLater) === g;
+    const opaque = /^[0-9a-f]{32}$/.test(g);
+    if (deterministic && opaque) console.log('  ✅ chave determinística e opaca (digest 32 hex, sem ip/UA crus)');
+    else { console.error('  ❌ chave não determinística ou não opaca'); hasErrors = true; }
+  } else {
+    console.error('\x1b[31m❌ access-store não expõe deriveVisitorGroupKey.\x1b[0m');
+    hasErrors = true;
   }
 }
 

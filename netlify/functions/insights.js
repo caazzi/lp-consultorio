@@ -15,7 +15,8 @@ const {
   getStoreInstance,
   resolveCampaignLabelFromEvent,
   canonicalSourceFromEvent,
-  isPreviewEvent
+  isPreviewEvent,
+  deriveVisitorGroupKey
 } = require('../access-store');
 
 function parseIso(dateStr) {
@@ -65,6 +66,18 @@ exports.handler = async function (event) {
       const waClicks = list.filter(e => e.event_type === 'whatsapp_click');
       const messagesSent = list.filter(e => e.event_type === 'message_sent');
       const uniqueClients = new Set(list.map(e => e.client_id || 'anonymous'));
+      // Raw `client_id` is a per-page-load UUID, so unique_users over-counts a
+      // returning visitor. estimated_visitors instead groups events by a weak,
+      // bounded server-side visitor key (ip + user_agent + 24h rolling window,
+      // hashed/opaque) — see deriveVisitorGroupKey. Events with no usable key
+      // (missing ip/user_agent) are EXCLUDED from the estimate (never collapsed).
+      let estimatedVisitors = 0;
+      const visitorKeys = new Set();
+      list.forEach(e => {
+        const key = deriveVisitorGroupKey(e);
+        if (key !== null) visitorKeys.add(key);
+      });
+      estimatedVisitors = visitorKeys.size;
       const engagementRate = pageViews.length > 0
         ? Number(((waClicks.length / pageViews.length) * 100).toFixed(1))
         : 0;
@@ -78,6 +91,7 @@ exports.handler = async function (event) {
         totals: {
           events: list.length,
           unique_users: uniqueClients.size,
+          estimated_visitors: estimatedVisitors,
           page_views: pageViews.length,
           whatsapp_clicks: waClicks.length,
           messages_sent: messagesSent.length,

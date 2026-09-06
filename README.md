@@ -102,6 +102,7 @@ Pipeline de conversão em duas camadas:
 - `Engajamento` = cliques no WhatsApp / visualizações (taxa de clique, não conversão).
 - `Taxa de Lead (proxy)` = saídas p/ WhatsApp (`message_sent`, tab-hidden) / visualizações.
 - `Usuários Únicos` via `client_id`; cliques e leads por campanha/especialidade com nomes legíveis.
+- `Estimativa de Visitantes` (`estimated_visitors`): como `client_id` é um UUID por page-load, ele super-conta revisitantes. A estimativa agrupa eventos por uma chave **fraca e não durável** derivada server-side de `ip + user_agent + janela de 24h` (hash opaco), apenas no relatório — sem cookie, sem JS novo, sem alteração de CSP, e sem virar um identificador estável de dispositivo. É uma estimativa, não identidade: IP compartilhado/UA igual pode juntar pessoas distintas; fora da janela o mesmo visitante re-conta de propósito.
 - Fontes e campanhas são **canonicalizadas server-side** (labels legíveis dos IDs do Google Ads; sem referers crus com `gclid`). Tráfego de **deploy-preview/teste** é agrupado à parte e excluído do funil de produção.
 
 **Comandos da rotina:**
