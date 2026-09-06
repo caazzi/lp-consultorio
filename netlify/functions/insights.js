@@ -1,7 +1,22 @@
 // netlify/functions/insights.js
 // GET /.netlify/functions/insights?days=7
 // Aggregates access & conversion events persisted on the Netlify Blobs store.
-const { STORE_NAME, KEY_PREFIX, getStoreInstance } = require('../access-store');
+//
+// Design notes (honest funnel):
+//  - Attribution is resolved SERVER-SIDE via access-store canonical helpers so raw
+//    referer/gclid/gad_campaignid URLs never leak into grouped stats, and so clicks
+//    and their message_sent proxy are grouped identically no matter what the client
+//    beacon happened to send.
+//  - Netlify deploy-preview traffic (test/QA) is computed and reported SEPARATELY
+//    and EXCLUDED from the production funnel denominators/rates, keeping numbers real.
+const {
+  STORE_NAME,
+  KEY_PREFIX,
+  getStoreInstance,
+  resolveCampaignLabelFromEvent,
+  canonicalSourceFromEvent,
+  isPreviewEvent
+} = require('../access-store');
 
 function parseIso(dateStr) {
   if (!dateStr) return null;
@@ -32,62 +47,89 @@ exports.handler = async function (event) {
     const store = getStoreInstance(event);
     const events = [];
 
-    // No 90-day window the event count is small (an early-stage medical landing page),
-    // so listing all keys and filtering in-memory is simpler and sufficient.
+    // In the 90-day window the event count is small (an early-stage medical landing
+    // page), so listing all keys and filtering in-memory is simpler and sufficient.
     const { blobs } = await store.list({ prefix: KEY_PREFIX });
     for (const { key } of blobs) {
       const data = await store.get(key, { type: 'json' });
       if (data && parseIso(data.timestamp) >= sinceMs) events.push(data);
     }
 
-    const pageViews = events.filter(e => e.event_type === 'page_view');
-    const waClicks = events.filter(e => e.event_type === 'whatsapp_click');
-    const messagesSent = events.filter(e => e.event_type === 'message_sent');
-    const uniqueClients = new Set(events.map(e => e.client_id || 'anonymous'));
-    const uniqueUsers = uniqueClients.size;
-    // Honest funnel: 'engagement_rate' is click-through to WhatsApp relative to page
-    // views; 'lead_proxy_rate' is the stricter tab-hide proxy for a message being sent.
-    const engagementRate = pageViews.length > 0
-      ? Number(((waClicks.length / pageViews.length) * 100).toFixed(1))
-      : 0;
-    const leadProxyRate = pageViews.length > 0
-      ? Number(((messagesSent.length / pageViews.length) * 100).toFixed(1))
-      : 0;
-    const conversionRate = messagesSent.length > 0
-      ? Number(((messagesSent.length / waClicks.length) * 100).toFixed(1))
-      : 0;
+    // Split honest production traffic from Netlify deploy-preview (test/QA) events.
+    const previewEvents = events.filter(isPreviewEvent);
+    const prodEvents = events.filter(e => !isPreviewEvent(e));
 
-    const bySpecialty = {};
-    const bySource = {};
-    const byLocation = {};
-    events.forEach(e => {
-      const spec = e.specialty || 'Geral';
-      const src = e.utms?.source || e.referer || 'Direto / Orgânico';
-      bySpecialty[spec] = (bySpecialty[spec] || 0) + 1;
-      bySource[src] = (bySource[src] || 0) + 1;
-      if (e.event_type === 'whatsapp_click') {
-        const loc = e.button_location || 'Desconhecido';
-        byLocation[loc] = (byLocation[loc] || 0) + 1;
-      }
-    });
+    // Helpers operating over a list, computing funnel in one pass.
+    function funnel(list) {
+      const pageViews = list.filter(e => e.event_type === 'page_view');
+      const waClicks = list.filter(e => e.event_type === 'whatsapp_click');
+      const messagesSent = list.filter(e => e.event_type === 'message_sent');
+      const uniqueClients = new Set(list.map(e => e.client_id || 'anonymous'));
+      const engagementRate = pageViews.length > 0
+        ? Number(((waClicks.length / pageViews.length) * 100).toFixed(1))
+        : 0;
+      const leadProxyRate = pageViews.length > 0
+        ? Number(((messagesSent.length / pageViews.length) * 100).toFixed(1))
+        : 0;
+      const conversionRate = waClicks.length > 0
+        ? Number(((messagesSent.length / waClicks.length) * 100).toFixed(1))
+        : 0;
+      return { pageViews, waClicks, messagesSent, uniqueClients,
+        totals: {
+          events: list.length,
+          unique_users: uniqueClients.size,
+          page_views: pageViews.length,
+          whatsapp_clicks: waClicks.length,
+          messages_sent: messagesSent.length,
+          engagement_rate: engagementRate,
+          lead_proxy_rate: leadProxyRate,
+          conversion_rate: conversionRate,
+          events_per_user: uniqueClients.size
+            ? Number((list.length / uniqueClients.size).toFixed(1))
+            : 0
+        } };
+    }
 
-    // CVR por campanha (google Ads / cpc): lead = proxy de mensagem enviada.
-    // Usa campaign_label resolvido no cliente (nome legível), não o gclid/referer cru.
-    const byCampaign = {};
-    const campaignClicks = {};
-    const campaignLeads = {};
-    events.forEach(e => {
-      const campaign = e.utms?.campaign_label || e.utms?.campaign || e.utms?.source || 'Direto / Orgânico';
-      const spec = e.specialty || 'Geral';
-      const key = `${campaign} :: ${spec}`;
-      if (e.event_type === 'whatsapp_click') {
-        byCampaign[key] = (byCampaign[key] || 0) + 1;
-        campaignClicks[key] = true;
-      }
-      if (e.event_type === 'message_sent') {
-        campaignLeads[key] = (campaignLeads[key] || 0) + 1;
-      }
-    });
+    function breakdowns(eventsList, waClicks, messagesSent) {
+      const bySpecialty = {};
+      const bySource = {};
+      const byLocation = {};
+      const byCampaign = { clicks: {}, leads: {} };
+      eventsList.forEach(e => {
+        const spec = e.specialty || 'Geral';
+        bySpecialty[spec] = (bySpecialty[spec] || 0) + 1;
+        const src = canonicalSourceFromEvent(e);
+        bySource[src] = (bySource[src] || 0) + 1;
+        if (e.event_type === 'whatsapp_click') {
+          const loc = e.button_location || 'Desconhecido';
+          byLocation[loc] = (byLocation[loc] || 0) + 1;
+        }
+      });
+
+      const bucket = (subj) => {
+        const lbl = subj.specialty || 'Geral';
+        const campaign = resolveCampaignLabelFromEvent(subj);
+        return `${campaign} :: ${lbl}`;
+      };
+      waClicks.forEach(c => { byCampaign.clicks[bucket(c)] = (byCampaign.clicks[bucket(c)] || 0) + 1; });
+      messagesSent.forEach(m => { byCampaign.leads[bucket(m)] = (byCampaign.leads[bucket(m)] || 0) + 1; });
+
+      return {
+        specialties: bySpecialty,
+        sources: bySource,
+        button_location: byLocation,
+        campaigns: {
+          clicks_by_campaign: byCampaign.clicks,
+          leads_by_campaign: byCampaign.leads
+        }
+      };
+    }
+
+    const prod = funnel(prodEvents);
+    const breakdown = breakdowns(prodEvents, prod.waClicks, prod.messagesSent);
+
+    // Preview (test/QA) is reported but NOT mixed into production funnel/rates.
+    const previewSummary = funnel(previewEvents).totals;
 
     return {
       statusCode: 200,
@@ -96,26 +138,13 @@ exports.handler = async function (event) {
         store: STORE_NAME,
         window_days: days,
         generated_at: new Date().toISOString(),
-        summary: {
-          total_events: events.length,
-          unique_users: uniqueUsers,
-          page_views: pageViews.length,
-          whatsapp_clicks: waClicks.length,
-          messages_sent: messagesSent.length,
-          engagement_rate: engagementRate,
-          lead_proxy_rate: leadProxyRate,
-          conversion_rate: conversionRate,
-          events_per_user: events.length > 0 ? Number((events.length / uniqueUsers).toFixed(1)) : 0
-        },
-        by_specialty: bySpecialty,
-        by_source: bySource,
-        by_button_location: byLocation,
-        campaigns: {
-          clicks_by_campaign: byCampaign,
-          leads_by_campaign: campaignLeads,
-          campaigns_with_clicks: Object.keys(campaignClicks)
-        },
-        events: events
+        summary: prod.totals,
+        preview_traffic: previewSummary,
+        sources: breakdown.sources,
+        specialties: breakdown.specialties,
+        button_location: breakdown.button_location,
+        campaigns: breakdown.campaigns,
+        events: prodEvents
       })
     };
   } catch (err) {

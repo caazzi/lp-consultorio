@@ -30,14 +30,22 @@ report_*.json
 *.csv
 lighthouse.*
 .lighthouse/
+# Lighthouse (WSL) may drop stray dirs into the repo root
+undefined:/
+\\wsl.localhost/
+undefined:*
 .gemini/
 coverage/
 *.log
 consultoriosalustiano.com.br.report.json
+*ANALISE_*.md
 
 # --- Assets ---
 # Only ignore raw/original assets if they are strictly source files
 # src/assets/logo/
+# Local agent learnings (machine-specific operational notes)
+AGENTS.md
+
 # Secrets
 .env
 .env.*

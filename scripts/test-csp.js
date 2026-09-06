@@ -185,6 +185,72 @@ if (fs.existsSync(path.join(__dirname, '../scripts/fetch-access-insights.js'))) 
   }
 }
 
+// 8. Validar canonicalização server-side (fonte atribuição limpa p/ métricas honestas)
+console.log('\n');
+console.log('\x1b[33m%s\x1b[0m', '🧮 8. VALIDAÇÃO DA CANONICALIZAÇÃO DE ATRIBUIÇÃO (access-store)');
+const accessStorePath = path.join(__dirname, '../netlify/access-store.js');
+if (!fs.existsSync(accessStorePath)) {
+  console.error('\x1b[31m❌ access-store.js não encontrado para validar canonicalização.\x1b[0m');
+  hasErrors = true;
+} else {
+  const storeSrc = fs.readFileSync(accessStorePath, 'utf8');
+  const hasHelpers = ['CAMPAIGN_LABELS', 'canonicalSourceFromEvent', 'resolveCampaignLabelFromEvent', 'isPreviewReferer']
+    .every(name => storeSrc.includes(name) && storeSrc.includes(`module.exports`));
+  if (hasHelpers) console.log('  ✅ access-store expõe CAMPAIGN_LABELS + helpers canonicos');
+  else { console.error('  ❌ access-store está sem os helpers canonicos exigidos'); hasErrors = true; }
+
+  // Comportamento das funções contra amostras realistas.
+  const access_store = (() => {
+    try { return require(accessStorePath); } catch { return null; }
+  })();
+
+  if (access_store && typeof access_store.canonicalSourceFromEvent === 'function') {
+    const cases = [
+      // { desc, event, expected }
+      { d: 'utm source presente vence', e: { utms: { source: 'google' } }, want: 'google' },
+      { d: 'referer c/ gclid normaliza p/ Direto', e: { utms: {}, referer: 'https://consultoriosalustiano.com.br/?gad_source=1&gclid=CjwKCAjwwL_UBhAjEiwAEhuT5MEGw44TZX0p_YCaCyMXxuiO3Mzbd720eFEb8EuhP8vrlZlASHDyQBoCB-sQAvD_BwE' }, want: 'Direto / Orgânico' },
+      { d: 'referer externo (google) canonical host', e: { utms: {}, referer: 'https://www.google.com/url?q=x' }, want: 'google.com' },
+      { d: 'sem fonte nem referer vira Direto', e: { utms: {} }, want: 'Direto / Orgânico' },
+      { d: 'referer de deploy-preview vira __preview__', e: { utms: {}, referer: 'https://6a9c6783f3e5a60008061801--consultorio-salustiano.netlify.app/' }, want: '__preview__' }
+    ];
+    cases.forEach((c) => {
+      const got = access_store.canonicalSourceFromEvent(c.e);
+      if (got === c.want) console.log(`  ✅ canonicalSourceFromEvent: ${c.d}`);
+      else { console.error(`  ❌ canonicalSourceFromEvent: ${c.d} → '${got}' (esperado '${c.want}')`); hasErrors = true; }
+    });
+
+    // Campanha legível a partir do campanha id conhecido.
+    if (typeof access_store.resolveCampaignLabelFromEvent === 'function') {
+      const labelGot = access_store.resolveCampaignLabelFromEvent({ utms: { gad_campaignid: '23071806673' } });
+      if (labelGot === 'Infectologia') console.log('  ✅ resolveCampaignLabelFromEvent mapeia 23071806673 → Infectologia');
+      else { console.error(`  ❌ resolveCampaignLabelFromEvent → '${labelGot}'`); hasErrors = true; }
+    }
+    if (typeof access_store.isPreviewReferer === 'function') {
+      const isPrev = access_store.isPreviewReferer('https://6a9c5b87a4aefe0009462a09--consultorio-salustiano.netlify.app/');
+      const notPrev = !access_store.isPreviewReferer('https://consultoriosalustiano.com.br/');
+      if (isPrev && notPrev) console.log('  ✅ isPreviewReferer classifica dev-preview vs produção');
+      else { console.error('  ❌ isPreviewReferer falhou no host'); hasErrors = true; }
+    } else {
+      console.error('  ❌ isPreviewReferer ausente'); hasErrors = true;
+    }
+  } else {
+    console.error('\x1b[31m❌ Não foi possível carregar access-store para testes comportamentais.\x1b[0m');
+    hasErrors = true;
+  }
+
+  // insights.js usa os helpers (atribuição server-side, não referer cru)
+  const insPath = path.join(__dirname, '../netlify/functions/insights.js');
+  if (fs.existsSync(insPath)) {
+    const insSrc = fs.readFileSync(insPath, 'utf8');
+    const usesHelpers = insSrc.includes('canonicalSourceFromEvent') && insSrc.includes('resolveCampaignLabelFromEvent') && insSrc.includes('isPreviewEvent');
+    const noRawReferer = !/e\.referer\s*\|/.test(insSrc); // não deve agrupar por referer cru diretamente
+    if (usesHelpers) console.log('  ✅ insights.js agrega via helpers canonicos (sem referer cru)');
+    else { console.error('  ❌ insights.js não usa os helpers canonicos'); hasErrors = true; }
+    if (noRawReferer) console.log('  ✅ insights.js não cai em raw referer para grouping');
+    else { console.error('  ❌ insights.js ainda usa e.referer cru no grouping'); hasErrors = true; }
+  }
+}
+
 console.log('\n--------------------------------------------------');
 if (hasErrors) {
   console.error('\x1b[31m❌ ALGUNS TESTES FALHARAM.\x1b[0m\n');
