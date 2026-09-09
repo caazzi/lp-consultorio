@@ -65,17 +65,56 @@ function isPreviewReferer(referer) {
 }
 
 /**
+ * Recovers a KNOWN Google Ads campaign id from a raw referer URL, if present.
+ *
+ * WHY: on first landing from a click the browser sends the page's own URL as the
+ * referer, carrying `?gad_source=1&gad_campaignid=<id>&gclid=...`. The client beacon
+ * does capture `gad_campaignid` into `utms` (see tracking.js collectUtmPayload), but
+ * only when the campaign param is still in the live URL at beacon time — which is
+ * not guaranteed on downstream events (clicks/message_sent) fired after internal
+ * navigations strip the query. The referer on the other hand is captured at ingress
+ * by log-access.js for EVERY event (`event.headers.referer`), so it is a reliable,
+ * attribution-complete fallback source.
+ *
+ * Guard: an id is returned ONLY when it maps to a label in CAMPAIGN_LABELS. A bare
+ * gclid or an unrecognized campaign id never leaks here — consistent with the rule
+ * that raw Google Ads ids never appear in grouped stats. Preview/test traffic carries
+ * its own host pattern and is handled separately by isPreviewReferer, so it never
+ * reaches a campaign label here.
+ *
+ * @param {string} referer raw referer URL (may be empty/'null'/unparseable)
+ * @returns {string} known campaign id, or '' when absent/unrecognized/unparseable
+ */
+function knownCampaignIdFromReferer(referer) {
+  if (!referer) return '';
+  let u;
+  try {
+    u = new URL(referer);
+  } catch {
+    return '';
+  }
+  const id = u.searchParams.get('gad_campaignid');
+  return id && CAMPAIGN_LABELS[id] ? id : '';
+}
+
+/**
  * Derives a human-readable campaign label from a stored event.
- * Resolution order matches the client (tracking.js resolveCampaignLabel):
- *   1. known campaign id (gad_campaignid or utm campaign)  -> readable label
- *   2. utms.campaign
- *   3. utms.source
- *   4. 'Direto / Orgânico'
+ * Resolution order matches the client (tracking.js resolveCampaignLabel), extended
+ * server-side with a referer fallback so attribution survives client events whose
+ * `utms.gad_campaignid` was not populated (e.g. WhatsApp clicks/message_sent that
+ * fire after the landing query string has been lost). Order:
+ *   1. known campaign id from utms (gad_campaignid or utm campaign)
+ *   2. known campaign id recovered from the referer querystring (gad_campaignid)
+ *   3. utms.campaign
+ *   4. utms.source
+ *   5. 'Direto / Orgânico'
  */
 function resolveCampaignLabelFromEvent(e) {
   const utms = e.utms || {};
   const campaignId = utms.gad_campaignid || utms.campaign;
   if (campaignId && CAMPAIGN_LABELS[campaignId]) return CAMPAIGN_LABELS[campaignId];
+  const refererCampaignId = knownCampaignIdFromReferer(e && e.referer);
+  if (refererCampaignId) return CAMPAIGN_LABELS[refererCampaignId];
   if (utms.campaign) return utms.campaign;
   if (utms.source) return utms.source;
   return 'Direto / Orgânico';
@@ -86,6 +125,14 @@ function resolveCampaignLabelFromEvent(e) {
  * UTM source and otherwise falling back to a cleaned referer rather than the raw
  * full URL (which is polluted with gclid/gad_campaignid and must never be bucketed
  * verbatim). Preview/test referers collapse to a single `Preview / Teste` bucket.
+ *
+ * Paid-click nuance: an explicit Google Ads first-landing arrives with the page's own
+ * URL as referer (`consultoriosalustiano.com.br/?gad_source=1&gad_campaignid=<id>&gclid=...`).
+ * When that referer carries a KNOWN campaign id we surface the readable campaign label
+ * (e.g. "Infectologia") as the source rather than collapsing to "Direto / Orgânico" —
+ * otherwise paid volume is measured as direct. A bare `gclid` with no KNOWN campaign id
+ * stays "Direto / Orgânico" (genuinely ambiguous: the id alone encodes no readable source,
+ * and raw gclid must never leak).
  */
 function canonicalSourceFromEvent(e) {
   const utms = e.utms || {};
@@ -99,8 +146,13 @@ function canonicalSourceFromEvent(e) {
 
   try {
     const host = new URL(referer).hostname.replace(/^www\./, '');
-    // Own domain or empty host = direct navigation, not an external referrer.
-    if (!host || host === 'consultoriosalustiano.com.br') return 'Direto / Orgânico';
+    // Own domain or empty host = direct navigation, NOT an external referrer —
+    // unless the referer is a paid first-landing carrying a known campaign id.
+    if (!host || host === 'consultoriosalustiano.com.br') {
+      const refCampaignId = knownCampaignIdFromReferer(referer);
+      if (refCampaignId) return CAMPAIGN_LABELS[refCampaignId];
+      return 'Direto / Orgânico';
+    }
     return host;
   } catch {
     // Unparseable referer (rare). Fall back to the path root, stripped of query.
@@ -199,6 +251,7 @@ module.exports = {
   isPreviewReferer,
   isPreviewEvent,
   deriveVisitorGroupKey,
+  knownCampaignIdFromReferer,
   canonicalSourceFromEvent,
   resolveCampaignLabelFromEvent
 };

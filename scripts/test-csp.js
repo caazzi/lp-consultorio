@@ -225,6 +225,8 @@ if (!fs.existsSync(accessStorePath)) {
       // { desc, event, expected }
       { d: 'utm source presente vence', e: { utms: { source: 'google' } }, want: 'google' },
       { d: 'referer c/ gclid normaliza p/ Direto', e: { utms: {}, referer: 'https://consultoriosalustiano.com.br/?gad_source=1&gclid=CjwKCAjwwL_UBhAjEiwAEhuT5MEGw44TZX0p_YCaCyMXxuiO3Mzbd720eFEb8EuhP8vrlZlASHDyQBoCB-sQAvD_BwE' }, want: 'Direto / Orgânico' },
+      { d: 'referer do própio domínio c/ campanha conhecida (infectio) => label', e: { utms: {}, referer: 'https://consultoriosalustiano.com.br/?gad_source=1&gad_campaignid=23071806673&gclid=CjwKCAjwwL_UBhAjEqFhuT5MEGw44TZX0p_YCaCyMXxuiO3Mzbd720eFEb8EuhP8vrlZlASHDyQBoCB-sQAvD_BwE' }, want: 'Infectologia' },
+      { d: 'referer do própio domínio c/ campanha desconhecida => Direto', e: { utms: {}, referer: 'https://consultoriosalustiano.com.br/?gad_source=1&gad_campaignid=999999999&gclid=CjwKCAjwwL_UBhAjEqFhuT5MqFmyQ0u7ftGnzKhgG5SglndoDMQpN8jYH8sqE8Jf6gJXPvmPGLSEb1BBnQBh1NIBOPf_3' }, want: 'Direto / Orgânico' },
       { d: 'referer externo (google) canonical host', e: { utms: {}, referer: 'https://www.google.com/url?q=x' }, want: 'google.com' },
       { d: 'sem fonte nem referer vira Direto', e: { utms: {} }, want: 'Direto / Orgânico' },
       { d: 'referer de deploy-preview vira __preview__', e: { utms: {}, referer: 'https://6a9c6783f3e5a60008061801--consultorio-salustiano.netlify.app/' }, want: '__preview__' }
@@ -240,6 +242,22 @@ if (!fs.existsSync(accessStorePath)) {
       const labelGot = access_store.resolveCampaignLabelFromEvent({ utms: { gad_campaignid: '23071806673' } });
       if (labelGot === 'Infectologia') console.log('  ✅ resolveCampaignLabelFromEvent mapeia 23071806673 → Infectologia');
       else { console.error(`  ❌ resolveCampaignLabelFromEvent → '${labelGot}'`); hasErrors = true; }
+    }
+    if (typeof access_store.resolveCampaignLabelFromEvent === 'function') {
+      // Referer fallback: evento downstream sem utms.gad_campaignid recupera via referer.
+      const viaReferer = access_store.resolveCampaignLabelFromEvent({
+        utms: {},
+        referer: 'https://consultoriosalustiano.com.br/?gad_source=1&gad_campaignid=23747859815&gclid=CjwKCAjwwL_UBhAjEqFhuT5MeLP0R79SnJj6XqLxF9aJ5B3jGV0TvAEdA93blXtV04XfNXB3Cc6O0bBnQBh1NIBOPf_3'
+      });
+      if (viaReferer === 'Cardiologia') console.log('  ✅ resolveCampaignLabelFromEvent recupera 23747859815 via referer → Cardiologia');
+      else { console.error(`  ❌ resolveCampaignLabelFromEvent (referer) → '${viaReferer}'`); hasErrors = true; }
+      // id desconhecido via referer não deve vazar / rotular; cai em Direto.
+      const unknownRef = access_store.resolveCampaignLabelFromEvent({
+        utms: {},
+        referer: 'https://consultoriosalustiano.com.br/?gad_source=1&gad_campaignid=1111111111&gclid=CjwKCAjwwL_UBhAjEqFhuT5MqBqx5W3jhdN0z5GiP7vG2yUaRx7WfY80Hs0cO5rQ8yRGXmVGS2If0xBBnQBh1NIBOPf_3'
+      });
+      if (unknownRef === 'Direto / Orgânico') console.log('  ✅ resolveCampaignLabelFromEvent: referer c/ campanha desconhecida → Direto (raw id não vaza)');
+      else { console.error(`  ❌ resolveCampaignLabelFromEvent (ref unknown) → '${unknownRef}'`); hasErrors = true; }
     }
     if (typeof access_store.isPreviewReferer === 'function') {
       const isPrev = access_store.isPreviewReferer('https://6a9c5b87a4aefe0009462a09--consultorio-salustiano.netlify.app/');
