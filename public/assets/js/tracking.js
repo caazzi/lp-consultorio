@@ -162,7 +162,11 @@ function sendGtagConversion(eventName, params) {
 // 1. Armazenar UTMs na SessionStorage (Executa no carregamento)
 (function storeUTMs() {
     const urlParams = new URLSearchParams(window.location.search);
-    const utms = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'gclid'];
+    // `gad_source`/`gad_campaignid` são enviados pelo Google Ads no clique pago mesmo
+    // sem passagem manual de utm_*. Persisti-los aqui (como o gclid) garante que
+    // beacons de conversão disparados em navegações posteriores (cliques/message_sent)
+    // mantenham a atribuição quando a querystring da URL de aterrissagem já se perdeu.
+    const utms = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'gclid', 'gad_source', 'gad_campaignid'];
 
     utms.forEach(param => {
         if (urlParams.has(param)) {
@@ -204,7 +208,7 @@ function sendLogBeacon(data) {
 // Converte as UTMs salvas em querystring para anexar ao link do WhatsApp,
 // permitindo que o atendente (e o GA4) atribuam cada conversa à campanha certa.
 function buildWhatsAppUrlWithUtm(baseUrl, locationOverride) {
-    const utmParams = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'gclid', 'gbraid'];
+    const utmParams = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'gclid', 'gbraid', 'gad_source', 'gad_campaignid'];
     const parts = [];
     utmParams.forEach(p => {
         const v = sessionStorage.getItem(p);
