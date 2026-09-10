@@ -485,7 +485,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const waNumber = '5582999900844';
     const waText = isCardio
         ? 'Olá,%20gostaria%20de%20verificar%20disponibilidade%20para%20uma%20consulta%20com%20a%20Dra.%20Anabel.'
-        : 'Olá,%20gostaria%20de%20verificar%20disponibilidade%20para%20uma%20consulta%20com%20o%20Dr.%20Gilberto.';
+        : 'Olá,%20gostaria%20de%20verificar%20horários%20disponíveis%20para%20uma%20consulta%20com%20o%20Dr.%20Gilberto.';
 
     // Injetar estilos CSS do botão flutuante
     const style = document.createElement('style');
