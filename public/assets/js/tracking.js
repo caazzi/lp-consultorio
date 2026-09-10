@@ -286,14 +286,20 @@ function trackWhatsAppClick(location, element) {
     // Disparo direto para o gtag.js com dimensões customizadas para CVR por campanha.
     // Garante o load do gtag real antes de enviar (evita corrida com o load lazy e
     // perda de conversão em navegações rápidas para o WhatsApp).
+    // Atribuição completa: além de campaign_id, envia gclid/gad_campaignid e o tempo
+    // na página — permite cruzar a conversão com a campanha no GA4 sem depender do
+    // beacon first-party (útil quando o Ads/GA4 estão disponíveis e o Blob não).
     const label = isCardio ? 'WhatsApp Dra Anabel ' + location : 'WhatsApp ' + location;
     sendGtagConversion('generate_lead', {
         'event_category': 'conversion',
         'event_label': label,
         'value': 1,
         'campaign_id': utms.campaign,
+        'gad_campaignid': utms.gad_campaignid,
+        'gclid': utms.gclid,
         'button_location': location,
-        'specialty': specialty
+        'specialty': specialty,
+        'time_on_page_sec': timeOnPageSec
     });
 
     // Registra log de conversão no servidor Netlify
@@ -444,11 +450,17 @@ document.addEventListener('DOMContentLoaded', () => {
             // Dispara via caminho confiável (garante load do gtag real antes de enviar).
             // Em pagehide/visibilitychange o beacom nativo (sendBeacon) é preferível,
             // então registramos o parâmetro e deixamos o sendGtagLead disparar via fetch.
+            // Atribuição completa (espelha generate_lead): gclid/gad_campaignid/gbraid
+            // deixam o proxy de envio cruzável por campanha no GA4.
             sendGtagConversion('message_sent', {
                 'event_category': 'conversion',
+                'event_label': isCardio ? 'Mensagem Dra Anabel' : 'Mensagem Dr Gilberto',
+                'campaign_id': utms.campaign,
+                'gad_campaignid': utms.gad_campaignid,
+                'gclid': utms.gclid,
+                'gbraid': utms.gbraid,
                 'specialty': specialty,
-                'time_on_page_sec': timeOnPageSec,
-                'campaign_id': utms.campaign
+                'time_on_page_sec': timeOnPageSec
             });
             window.dataLayer.push({ 'event': 'message_sent', 'specialty': specialty, 'time_on_page_sec': timeOnPageSec, 'utm_campaign': utms.campaign });
 

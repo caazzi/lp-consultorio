@@ -13,13 +13,20 @@ para o GA4 o evento customizado **`generate_lead`** contendo variáveis contextu
 
 ## 1. Como o rastreamento funciona (código já está em produção)
 
-- **`public/index.html` / `public/cardiologia/index.html`**: carregam o gtag.js de forma **eager**
-  (imediata) e registram a dimensão `campaign_id`.
-- **`public/assets/js/tracking.js`**: a função `sendGtagConversion('generate_lead', {...})` dispara o
-  evento de forma confiável a cada clique em botão de WhatsApp, **antes** de abrir o link.
+- **`public/index.html` / `public/cardiologia/index.html`**: carregam o `tracking.js` (defer) e registram
+  a dimensão `campaign_id` via `tracking.js`.
+- **`public/assets/js/tracking.js`**: carrega o `gtag.js` de forma **deferred** — o script real só é
+  injetado no **primeiro gesto do usuário** (pointerdown/keydown/scroll) OU em um instante ocioso pós-`load`,
+  o que vier primeiro. Isso tira o trabalho do gtag (~3.5s de main-thread em mobile) do caminho crítico
+  (TBT/LCP), mantendo a conversão confiável: `ensureGtagLoaded()` força a injeção **na hora** de um clique
+  no WhatsApp, então `generate_lead` nunca depende de ter havido gesto prévio (o placeholder síncrono
+  bufferiza o `dataLayer` e o gtag replay ao inicializar).
+- **`public/assets/js/tracking.js`**: as funções `sendGtagConversion('generate_lead', {...})` e
+  `sendGtagConversion('message_sent', {...})` disparam os eventos de forma confiável a cada clique em botão
+  de WhatsApp, **antes** de abrir o link.
 - **Primeira causa histórica do `generate_lead = 0`:** o gtag era carregado **lazy** (só após interação) e o
-  evento se perdia antes do script inicializar. **Correção:** carregamento eager + helper que espera o
-  gtag real estar pronto antes de disparar.
+  evento se perdia antes do script inicializar. **Correção:** helper `ensureGtagLoaded()` que força o load e
+  espera o gtag real estar pronto antes de disparar.
 - Existe um **beacon first-party** (Netlify Blobs) que **sempre** registra cliques, mesmo quando o Google é
   bloqueado por ad-blocker. É a nossa **fonte de verdade** confiável.
 
@@ -40,9 +47,13 @@ Relatórios com quem e qual versão do botão gerou o lead:
   - Nome: `Especialidade` | Parâmetro do evento: `specialty`
   - Nome: `Local do Botao` | Parâmetro do evento: `button_location`
   - Nome: `Campaign ID` (para CVR por campanha) | Parâmetro do evento: `campaign_id` | Escopo: **Evento**
+  - Nome: `Gad Campaign ID` | Parâmetro do evento: `gad_campaignid` | Escopo: **Evento**
+  - Nome: `Gclid` | Parâmetro do evento: `gclid` | Escopo: **Evento**
 
-> O evento `generate_lead` e o proxy `message_sent` já enviam `campaign_id`. Com isso você cruza
-> **Eventos > generate_lead** por **Campaign ID** e descobre qual anúncio converte.
+> Os eventos `generate_lead` e o proxy `message_sent` enviam `campaign_id`, `gad_campaignid`, `gclid`
+> (e `gbraid` no `message_sent`), além de `specialty`, `button_location` e `time_on_page_sec`. Com isso você
+> cruza **Eventos > generate_lead** por **Campaign ID** e descobre qual anúncio converte, mesmo sem abrir o
+> beacon first-party.
 
 ### Passo 2.2: Marcar `generate_lead` como conversão
 - **Administração > Conversões** → **Eventos**.
@@ -96,8 +107,8 @@ Considerando 2 campanhas independentes: **23071806673** = Infectologia (Dr. Gilb
 ## 4. Passagem de UTMs para o link do WhatsApp
 
 Ao clicar em **qualquer** botão de WhatsApp (Hero, Header, Cards ou Sticky), o código reescreve o `href`
-adicionando `utm_source`, `utm_medium`, `utm_campaign`, `utm_term`, `utm_content`, `gclid` e `gbraid`
-(quando presentes).
+adicionando `utm_source`, `utm_medium`, `utm_campaign`, `utm_term`, `utm_content`, `gclid`, `gbraid`,
+`gad_source` e `gad_campaignid` (quando presentes).
 
 **Por que importa:** o atendente vê no próprio WhatsApp qual campanha originou a conversa — sem depender só
 de relatório. Combine com a dimensão `campaign_id` para fechar o ciclo. Exige apenas o **auto-tagging** do

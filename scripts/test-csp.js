@@ -133,6 +133,23 @@ Object.keys(utmChecks).forEach(k => {
   else { console.error(`  ❌ ${k}`); hasErrors = true; }
 });
 
+// 6b. Validar enriquecimento de atribuição dos eventos de conversão no gtag.
+// generate_lead e message_sent devem carregar gclid/gad_campaignid (e gbraid em
+// message_sent) para permitir cruzar a conversão por campanha no GA4 sem depender
+// apenas do beacon first-party.
+const enrichmentChecks = {
+  "generate_lead envia gad_campaignid": /sendGtagConversion\(['"]generate_lead['"][\s\S]*?'gad_campaignid':/.test(jsContent),
+  "generate_lead envia gclid": /sendGtagConversion\(['"]generate_lead['"][\s\S]*?'gclid':/.test(jsContent),
+  "generate_lead envia time_on_page_sec": /sendGtagConversion\(['"]generate_lead['"][\s\S]*?'time_on_page_sec':/.test(jsContent),
+  "message_sent envia gad_campaignid": /sendGtagConversion\(['"]message_sent['"][\s\S]*?'gad_campaignid':/.test(jsContent),
+  "message_sent envia gclid": /sendGtagConversion\(['"]message_sent['"][\s\S]*?'gclid':/.test(jsContent),
+  "message_sent envia gbraid": /sendGtagConversion\(['"]message_sent['"][\s\S]*?'gbraid':/.test(jsContent)
+};
+Object.keys(enrichmentChecks).forEach(k => {
+  if (enrichmentChecks[k]) console.log(`  ✅ ${k}`);
+  else { console.error(`  ❌ ${k}`); hasErrors = true; }
+});
+
 // campaign_id configurado no gtag config, agora centralizado no tracking.js
 // (config deferred), NÃO mais duplicado inline em cada página HTML.
 const trackingDeferredOk = jsContent.includes('gtag(\'set\', { campaign_id: \'\' })')
