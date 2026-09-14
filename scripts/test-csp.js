@@ -351,6 +351,41 @@ if (!fs.existsSync(accessStorePath)) {
     console.error('\x1b[31m❌ access-store não expõe deriveVisitorGroupKey.\x1b[0m');
     hasErrors = true;
   }
+
+  // Manual smoke-test detection (TESTGCLID) — read-side split so QA events that
+  // reached production never enter the reported funnel. Exact-marker match only:
+  // real gclids never contain TEST, so there is no false-positive risk.
+  if (access_store && typeof access_store.isTestEvent === 'function') {
+    console.log('\n\x1b[33m%s\x1b[0m', '🚫 10. VALIDAÇÃO DA EXCLUSÃO DE SMOKE TEST (TESTGCLID)');
+    const REAL_GCLID = 'CjwKCAjw-rTUBhAjEiwAEhuT5MEGw44TZX0p_YCaCyMXxuiO3Mzbd720eFEb8EuhP8vrlZlASHDyQBoCB-sQAvD_BwE';
+    const testCases = [
+      { d: 'utms.gclid TESTGCLID_infecto => teste', e: { utms: { gclid: 'TESTGCLID_infecto' } }, want: true },
+      { d: 'utms.gclid TESTGCLID_cardio => teste', e: { utms: { gclid: 'TESTGCLID_cardio' } }, want: true },
+      { d: 'referer com gclid=TEST => teste', e: { utms: {}, referer: 'https://consultoriosalustiano.com.br/?gad_source=1&gad_campaignid=TEST&gclid=TEST' }, want: true },
+      { d: 'path com marcador => teste', e: { utms: {}, path: '/?gclid=TESTGCLID_infecto' }, want: true },
+      { d: 'gclid real NÃO é teste', e: { utms: { gclid: REAL_GCLID } }, want: false },
+      { d: 'campanha real (23071806673) NÃO é teste', e: { utms: { gad_campaignid: '23071806673' } }, want: false },
+      { d: 'evento vazio NÃO é teste', e: {}, want: false },
+      { d: 'null NÃO é teste', e: null, want: false }
+    ];
+    testCases.forEach(c => {
+      const got = access_store.isTestEvent(c.e);
+      if (got === c.want) console.log(`  ✅ isTestEvent: ${c.d}`);
+      else { console.error(`  ❌ isTestEvent: ${c.d} → ${got} (esperado ${c.want})`); hasErrors = true; }
+    });
+
+    // insights.js must consume the shared predicate and expose the additive bucket.
+    const insSrc2 = fs.readFileSync(path.join(__dirname, '../netlify/functions/insights.js'), 'utf8');
+    if (insSrc2.includes('isTestEvent') && insSrc2.includes('test_traffic')) {
+      console.log('  ✅ insights.js exclui teste do funil e expõe test_traffic (aditivo)');
+    } else {
+      console.error('  ❌ insights.js não consome isTestEvent / test_traffic');
+      hasErrors = true;
+    }
+  } else {
+    console.error('\x1b[31m❌ access-store não expõe isTestEvent.\x1b[0m');
+    hasErrors = true;
+  }
 }
 
 console.log('\n--------------------------------------------------');

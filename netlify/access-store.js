@@ -21,6 +21,17 @@ const KEY_PREFIX = 'event/';
 const VISITOR_WINDOW_MS = 24 * 60 * 60 * 1000; // rolling ~day: bounded, non-durable by design
 const VISITOR_SALT = 'lp-consultorio:visitor:v1';
 
+// Manual smoke-test marker. A post-deploy QA pass once hit the PRODUCTION URL with
+// `?gclid=TESTGCLID_infecto` / `?gclid=TESTGCLID_cardio`, and log-access.js duly
+// persisted those events to the durable store (it has no notion of test traffic).
+// They are NOT real traffic and must never enter the reported funnel. Detection is
+// read-side only (see isTestEvent) so the raw record stays durable/auditable and
+// already-stored history is excluded without a backfill.
+//
+// Rule for the future: run smoke tests against a deploy-preview URL, never the
+// production domain — but this guard makes the pipeline robust if that slips again.
+const TEST_MARKER_RE = /TESTGCLID|gclid=TEST|gad_campaignid=TEST/i;
+
 // Mirror of the client-side map in public/assets/js/tracking.js (CAMPAIGN_LABELS).
 // Keep both in sync — the server resolves canonical labels for reporting so raw
 // gclid/gad_campaignid never leak into grouped stats.
@@ -176,6 +187,37 @@ function isPreviewEvent(e) {
   return false;
 }
 
+/**
+ * Classifies whether an event is a manual smoke test that reached production and
+ * should be excluded from every reported funnel (alongside preview/test traffic).
+ *
+ * WHY: a post-deploy QA pass hit the live domain with `?gclid=TESTGCLID_*`, and
+ * those events were persisted durably like any other. The marker is explicit and
+ * unambiguous, so detection is exact rather than heuristic.
+ *
+ * Signals checked (any match -> true):
+ *   - referer querystring carrying the marker (the landing URL is the referer)
+ *   - utms.gclid / utms.gad_campaignid carrying the marker
+ *   - path carrying the marker (URL-embedded smoke tests)
+ *
+ * Deliberately NARROW: a real gclid never contains `TEST`, so there is no
+ * false-positive risk. Never serializes the whole event (avoids matching, e.g.,
+ * an unrelated field that happens to contain the word "test").
+ *
+ * @param {object} e a stored event
+ * @returns {boolean} true when the event is a manual smoke test
+ */
+function isTestEvent(e) {
+  if (!e) return false;
+  const referer = (e.referer || '');
+  const path = (typeof e.path === 'string' ? e.path : '');
+  const utms = e.utms || {};
+  const gclid = utms.gclid || '';
+  const campaignId = utms.gad_campaignid || utms.campaign || '';
+  return TEST_MARKER_RE.test(referer) || TEST_MARKER_RE.test(path)
+    || TEST_MARKER_RE.test(gclid) || TEST_MARKER_RE.test(campaignId);
+}
+
 // Normalizes a User-Agent string for hashing: trims and collapses internal
 // whitespace so byte-identical browsers do not split into separate keys just
 // because of cosmetic spacing/casing differences.
@@ -250,6 +292,7 @@ module.exports = {
   makeKey,
   isPreviewReferer,
   isPreviewEvent,
+  isTestEvent,
   deriveVisitorGroupKey,
   knownCampaignIdFromReferer,
   canonicalSourceFromEvent,

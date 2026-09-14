@@ -71,9 +71,13 @@ function printSections(api, windowLabel) {
 
   console.log('\x1b[33m%s\x1b[0m', '🧪 1b. TRÁFEGO DE PREVIEW / TESTE (não conta no funil)');
   if (api.preview_traffic && api.preview_traffic.events > 0) {
-    console.log(` - Eventos: ${api.preview_traffic.events} | únicos: ${api.preview_traffic.unique_users} | page views: ${api.preview_traffic.page_views} | cliques: ${api.preview_traffic.whatsapp_clicks}`);
+    console.log(` - Preview: eventos=${api.preview_traffic.events} | únicos=${api.preview_traffic.unique_users} | page views=${api.preview_traffic.page_views} | cliques=${api.preview_traffic.whatsapp_clicks}`);
   } else {
     console.log(' - Nenhum evento de preview/teste no período.');
+  }
+  if (api.test_traffic && api.test_traffic.events > 0) {
+    console.log(`\x1b[31m%s\x1b[0m`, ` - ⚠️  Smoke test (TESTGCLID): eventos=${api.test_traffic.events} | page views=${api.test_traffic.page_views} | cliques=${api.test_traffic.whatsapp_clicks}`);
+    console.log('   Usar deploy-preview para testes; nunca a URL de produção.');
   }
   console.log('\n');
 
@@ -141,21 +145,29 @@ async function main() {
       console.log('\x1b[33m%s\x1b[0m', `⚠️  Falha ao consultar API (${err.message}). Usando log local:\n`);
       const raw = JSON.parse(fs.readFileSync(logFile, 'utf8'));
       const events = Array.isArray(raw) ? raw : (raw.events || []);
+      // Mirror the production split: smoke tests (TESTGCLID) never enter the funnel.
+      const testEvents = events.filter(accessStore.isTestEvent);
+      const prodEvents = events.filter(e => !accessStore.isTestEvent(e));
       const visitorKeys = new Set();
-      events.forEach(e => {
+      prodEvents.forEach(e => {
         const k = accessStore.deriveVisitorGroupKey(e);
         if (k !== null) visitorKeys.add(k);
       });
       const local = {
         summary: {
-          events: events.length,
-          unique_users: new Set(events.map(e => e.client_id || 'a')).size,
+          events: prodEvents.length,
+          unique_users: new Set(prodEvents.map(e => e.client_id || 'a')).size,
           estimated_visitors: visitorKeys.size,
-          page_views: events.filter(e => e.event_type === 'page_view').length,
-          whatsapp_clicks: events.filter(e => e.event_type === 'whatsapp_click').length,
-          messages_sent: events.filter(e => e.event_type === 'message_sent').length,
-          engagement_rate: (events.length ? ((events.filter(e => e.event_type === 'whatsapp_click').length / events.filter(e => e.event_type === 'page_view').length) * 100).toFixed(1) : 0),
-          lead_proxy_rate: (events.length && events.filter(e => e.event_type === 'page_view').length ? ((events.filter(e => e.event_type === 'message_sent').length / events.filter(e => e.event_type === 'page_view').length) * 100).toFixed(1) : 0)
+          page_views: prodEvents.filter(e => e.event_type === 'page_view').length,
+          whatsapp_clicks: prodEvents.filter(e => e.event_type === 'whatsapp_click').length,
+          messages_sent: prodEvents.filter(e => e.event_type === 'message_sent').length,
+          engagement_rate: (prodEvents.length ? ((prodEvents.filter(e => e.event_type === 'whatsapp_click').length / prodEvents.filter(e => e.event_type === 'page_view').length) * 100).toFixed(1) : 0),
+          lead_proxy_rate: (prodEvents.length && prodEvents.filter(e => e.event_type === 'page_view').length ? ((prodEvents.filter(e => e.event_type === 'message_sent').length / prodEvents.filter(e => e.event_type === 'page_view').length) * 100).toFixed(1) : 0)
+        },
+        test_traffic: {
+          events: testEvents.length,
+          page_views: testEvents.filter(e => e.event_type === 'page_view').length,
+          whatsapp_clicks: testEvents.filter(e => e.event_type === 'whatsapp_click').length
         }
       };
       printSections(local, 'log local');

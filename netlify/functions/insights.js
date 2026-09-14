@@ -9,6 +9,8 @@
 //    beacon happened to send.
 //  - Netlify deploy-preview traffic (test/QA) is computed and reported SEPARATELY
 //    and EXCLUDED from the production funnel denominators/rates, keeping numbers real.
+//  - Manual smoke tests that reached production (TESTGCLID) are likewise split into
+//    their own `test_traffic` bucket and excluded from the funnel/rates.
 const {
   STORE_NAME,
   KEY_PREFIX,
@@ -16,6 +18,7 @@ const {
   resolveCampaignLabelFromEvent,
   canonicalSourceFromEvent,
   isPreviewEvent,
+  isTestEvent,
   deriveVisitorGroupKey
 } = require('../access-store');
 
@@ -56,9 +59,12 @@ exports.handler = async function (event) {
       if (data && parseIso(data.timestamp) >= sinceMs) events.push(data);
     }
 
-    // Split honest production traffic from Netlify deploy-preview (test/QA) events.
-    const previewEvents = events.filter(isPreviewEvent);
-    const prodEvents = events.filter(e => !isPreviewEvent(e));
+    // Split honest production traffic from non-production buckets. Manual smoke
+    // tests (TESTGCLID) are checked FIRST so a test event is never double-counted;
+    // deploy-preview events are separated next; everything else is production.
+    const testEvents = events.filter(isTestEvent);
+    const previewEvents = events.filter(e => !isTestEvent(e) && isPreviewEvent(e));
+    const prodEvents = events.filter(e => !isTestEvent(e) && !isPreviewEvent(e));
 
     // Helpers operating over a list, computing funnel in one pass.
     function funnel(list) {
@@ -144,6 +150,8 @@ exports.handler = async function (event) {
 
     // Preview (test/QA) is reported but NOT mixed into production funnel/rates.
     const previewSummary = funnel(previewEvents).totals;
+    // Manual smoke tests are reported separately too, never in the funnel.
+    const testSummary = funnel(testEvents).totals;
 
     return {
       statusCode: 200,
@@ -154,6 +162,7 @@ exports.handler = async function (event) {
         generated_at: new Date().toISOString(),
         summary: prod.totals,
         preview_traffic: previewSummary,
+        test_traffic: testSummary,
         sources: breakdown.sources,
         specialties: breakdown.specialties,
         button_location: breakdown.button_location,
