@@ -111,11 +111,16 @@ function summarizeFirstParty(api) {
  * superestimaria por causa da sobreposição de visitantes entre as duas semanas.
  */
 function previousWeek(current, older) {
-  const dec = (a, b) => Math.max(0, (a || 0) - (b || 0));
+  // Recebe DOIS resumos no formato de summarizeFirstParty (summary.pageViews…),
+  // não o payload cru da API. A janela de 2× inclui a semana atual, então a
+  // anterior é a diferença.
+  const dec = (a, b) => Math.max(0, (Number(a) || 0) - (Number(b) || 0));
+  const cs = current.summary || {};
+  const os = older.summary || {};
   return {
-    pageViews: dec(older.page_views, current.page_views),
-    whatsappClicks: dec(older.whatsapp_clicks, current.whatsapp_clicks),
-    messagesSent: dec(older.messages_sent, current.messages_sent)
+    pageViews: dec(os.pageViews, cs.pageViews),
+    whatsappClicks: dec(os.whatsappClicks, cs.whatsappClicks),
+    messagesSent: dec(os.messagesSent, cs.messagesSent)
   };
 }
 
