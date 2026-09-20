@@ -245,12 +245,20 @@ async function fetchGa4() {
 function fmt(n) { return Number(n).toLocaleString('pt-BR'); }
 
 /**
+ * Concordância natural: "1 pessoa" / "3 pessoas". Usado em todo o copy voltado
+ * ao dono, para evitar o feio "3 pessoa(s)".
+ */
+function plural(n, singular, pluralForm) {
+  return `${fmt(n)} ${Number(n) === 1 ? singular : pluralForm}`;
+}
+
+/**
  * Traduz um número de campanha/origem para um rótulo humano. Os nomes internos
  * ('Infectologia', 'Direto / Orgânico', 'Hero Main') não dizem nada a um leigo.
  */
 function friendlySource(name) {
   const n = String(name || '').trim();
-  if (/direto|org[âa]nico|\(none\)|\(direct\)/i.test(n)) return 'Quem já conhece o site (busca no Google ou digitou o endereço)';
+  if (/direto|org[âa]nico|\(none\)|\(direct\)/i.test(n)) return 'Quem já conhece o site (busca no Google ou digita o endereço)';
   if (/infectolog/i.test(n)) return 'Anúncios pagos no Google (Infectologia)';
   if (/cardio/i.test(n)) return 'Página de Cardiologia';
   return n || 'Outras origens';
@@ -270,7 +278,7 @@ function friendlyButton(name) {
 function friendlyGA4Source(name) {
   const n = String(name || '').trim();
   if (/google\s*\/\s*cpc/i.test(n)) return 'Anúncios do Google (pagos)';
-  if (/google\s*\/\s*organic/i.test(n)) return 'Busca do Google (não pago)';
+  if (/google\s*\/\s*organic/i.test(n)) return 'Busca do Google (sem pagar)';
   if (/direct/i.test(n)) return 'Acesso direto';
   return n;
 }
@@ -285,7 +293,7 @@ function withTrend(current, previous) {
   const arrow = diff > 0 ? '▲' : '▼';
   const cls = diff > 0 ? 'up' : 'down';
   const sign = diff > 0 ? '+' : '';
-  return `${fmt(cur)} <span class="${cls}">(${arrow} ${sign}${fmt(diff)} vs. semana passada)</span>`;
+  return `${fmt(cur)} <span class="${cls}">(${arrow} ${sign}${fmt(diff)} em relação à semana passada)</span>`;
 }
 
 /** Comparação em texto puro (fallback do email). */
@@ -295,14 +303,15 @@ function withTrendText(current, previous) {
   if (previous === undefined || previous === null) return fmt(cur);
   const diff = cur - prev;
   if (diff === 0) return `${fmt(cur)} (igual à semana passada)`;
-  const arrow = diff > 0 ? 'para cima' : 'para baixo';
+  const direction = diff > 0 ? 'a mais' : 'a menos';
   const sign = diff > 0 ? '+' : '';
-  return `${fmt(cur)} (${sign}${fmt(diff)}, ${arrow})`;
+  return `${fmt(cur)} (${sign}${fmt(diff)} ${direction} que na semana passada)`;
 }
 
 /**
  * Gera avisos só quando a mudança é grande o bastante para o dono agir.
- * Silêncio quando não há nada relevante — o email não deve "gritar" toda semana.
+ * Fica em silêncio quando não há nada relevante: o email não deve soar
+ * alarmante toda semana.
  */
 function buildNotices(cur, prev) {
   const flag = (now, before) => {
@@ -316,22 +325,27 @@ function buildNotices(cur, prev) {
   const droppedConvos = flag(cur.messagesSent, prev.messagesSent);
 
   // Cliques e conversas abertas andam juntos (a conversa é consequência do
-  // clique). Se ambos caíram, UM aviso só — repetir parece dois problemas.
+  // clique). Se os dois caíram, mostramos só um aviso, porque repetir dá a
+  // impressão de dois problemas diferentes.
   if (droppedClicks) {
     if (cur.whatsappClicks === 0 && prev.whatsappClicks >= NOTICE_MIN_BASE) {
-      return [`Ninguém chamou no WhatsApp esta semana (na semana passada foram ${fmt(prev.whatsappClicks)}).`];
+      return [`Ninguém chamou no WhatsApp esta semana. Na semana passada foram ${fmt(prev.whatsappClicks)}.`];
     }
     const drop = Math.round(((prev.whatsappClicks - cur.whatsappClicks) / prev.whatsappClicks) * 100);
-    return [`Menos gente chamou no WhatsApp: ${fmt(cur.whatsappClicks)} contra ${fmt(prev.whatsappClicks)} na semana passada (queda de ${drop}%).`];
+    return [`Menos gente chamou no WhatsApp: ${fmt(cur.whatsappClicks)} nesta semana contra ${fmt(prev.whatsappClicks)} na semana passada, uma queda de ${drop}%.`];
   }
   if (droppedConvos) {
-    return [`Menos conversas foram abertas: ${fmt(cur.messagesSent)} contra ${fmt(prev.messagesSent)} na semana passada.`];
+    return [`Menos conversas foram abertas: ${fmt(cur.messagesSent)} nesta semana contra ${fmt(prev.messagesSent)} na semana passada.`];
   }
   return [];
 }
 
 function periodLabel(when) {
   return `Semana encerrada em ${when.split(',')[0]}`;
+}
+
+function periodLabelNatural(when) {
+  return `semana encerrada em ${when.split(',')[0]}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -343,21 +357,23 @@ function renderText(fp, ga, prev, when) {
   const s = fp.summary;
   const leads = s.whatsappClicks;
 
-  L.push('RESUMO DA SEMANA — Consultório Salustiano');
+  L.push('RESUMO DA SEMANA | Consultório Salustiano');
   L.push(periodLabel(when));
   L.push('');
-  L.push(`Nesta semana, ${fmt(leads)} pessoa(s) clicaram para falar no WhatsApp a partir do site.`);
+  const clicaram = Number(leads) === 1 ? 'clicou' : 'clicaram';
+  L.push(`Nesta semana, ${plural(leads, 'pessoa', 'pessoas')} ${clicaram} para falar no WhatsApp a partir do site.`);
   if (s.messagesSent > 0 && s.messagesSent < leads) {
-    L.push(`Dessas, ${fmt(s.messagesSent)} abriram a conversa no WhatsApp.`);
+    const abriram = Number(s.messagesSent) === 1 ? 'abriu' : 'abriram';
+    L.push(`Ao todo, ${plural(s.messagesSent, 'pessoa', 'pessoas')} ${abriram} a conversa no WhatsApp.`);
   } else if (s.messagesSent > 0) {
-    L.push(`O site registrou ${fmt(s.messagesSent)} aberturas de conversa no WhatsApp.`);
+    L.push(`O site também registrou ${plural(s.messagesSent, 'conversa aberta', 'conversas abertas')} no WhatsApp.`);
   }
   L.push('');
 
   L.push('O QUE MAIS IMPORTA');
-  L.push(`- Pessoas que chamaram no WhatsApp..: ${withTrendText(leads, prev.whatsappClicks)}`);
-  L.push(`- Conversas abertas................: ${withTrendText(s.messagesSent, prev.messagesSent)}`);
-  L.push(`- Visitas à página.................: ${withTrendText(s.pageViews, prev.pageViews)}`);
+  L.push(`- Pessoas que chamaram no WhatsApp: ${withTrendText(leads, prev.whatsappClicks)}`);
+  L.push(`- Conversas abertas: ${withTrendText(s.messagesSent, prev.messagesSent)}`);
+  L.push(`- Visitas à página: ${withTrendText(s.pageViews, prev.pageViews)}`);
   L.push('');
 
   const notices = buildNotices(
@@ -378,31 +394,31 @@ function renderText(fp, ga, prev, when) {
     const lead = ga.events.find((e) => e.name === 'generate_lead');
     if (lead) {
       L.push('O GOOGLE TAMBÉM REGISTROU');
-      L.push(`- Contatos (WhatsApp) vistos pelo Google: ${fmt(lead.count)}`);
-      L.push('  (serve de conferência; o número do site acima é o mais confiável)');
+      L.push(`- Contatos de WhatsApp para o Google: ${fmt(lead.count)}`);
+      L.push('  (é só uma conferência. O número do site acima é o mais confiável.)');
       L.push('');
     }
   }
 
-  L.push('--- DETALHES TÉCNICOS (pode ignorar) ---');
+  L.push('DETALHES TÉCNICOS (pode ignorar esta parte)');
   L.push(`Visitantes estimados: ${s.estimatedVisitors != null ? fmt(s.estimatedVisitors) : 'n/d'}`);
   L.push(`Taxa de clique no WhatsApp: ${s.engagementRate}%`);
   if (fp.perCampaign.length) {
     L.push('Por campanha:');
-    fp.perCampaign.forEach((c) => L.push(`  - ${friendlySource(c.campaign)}: ${c.clicks} clique(s), ${c.leads} conversa(s)`));
+    fp.perCampaign.forEach((c) => L.push(`  - ${friendlySource(c.campaign)}: ${plural(c.clicks, 'clique', 'cliques')}, ${plural(c.leads, 'conversa', 'conversas')}`));
   }
   if (fp.buttons && Object.keys(fp.buttons).length) {
     L.push('Botões mais clicados:');
     Object.entries(fp.buttons).forEach(([b, n]) => L.push(`  - ${friendlyButton(b)}: ${n}`));
   }
   if (ga.ok) {
-    L.push(`GA4 — sessões: ${fmt(ga.overview.sessions)} | usuários: ${fmt(ga.overview.activeUsers)} | páginas: ${fmt(ga.overview.pageViews)}`);
-    ga.traffic.forEach((t) => L.push(`  - ${friendlyGA4Source(t.source)}: ${fmt(t.sessions)} sessão(ões)`));
+    L.push(`GA4: sessões ${fmt(ga.overview.sessions)}, usuários ${fmt(ga.overview.activeUsers)}, páginas ${fmt(ga.overview.pageViews)}`);
+    ga.traffic.forEach((t) => L.push(`  - ${friendlyGA4Source(t.source)}: ${plural(t.sessions, 'sessão', 'sessões')}`));
   } else {
     L.push(`GA4 indisponível (${ga.reason})`);
   }
   if (fp.test && fp.test.events > 0) L.push(`Eventos de teste (ignorados): ${fp.test.events}`);
-  if (fp.preview && fp.preview.events > 0) L.push(`Acessos de teste/preview (ignorados): ${fp.preview.events}`);
+  if (fp.preview && fp.preview.events > 0) L.push(`Acessos de teste e pré-visualização (ignorados): ${fp.preview.events}`);
   L.push('');
   L.push(`Relatório detalhado para o técnico: npm run access-logs`);
   return L.join('\n');
@@ -442,19 +458,19 @@ function renderHtml(fp, ga, prev, when) {
   details.push(`<li>Visitantes estimados: <b>${s.estimatedVisitors != null ? fmt(s.estimatedVisitors) : 'n/d'}</b></li>`);
   details.push(`<li>Taxa de clique no WhatsApp: <b>${s.engagementRate}%</b></li>`);
   if (fp.perCampaign.length) {
-    details.push(`<li>Por campanha:<ul>${fp.perCampaign.map((c) => `<li>${friendlySource(c.campaign)}: ${c.clicks} clique(s), ${c.leads} conversa(s)</li>`).join('')}</ul></li>`);
+    details.push(`<li>Por campanha:<ul>${fp.perCampaign.map((c) => `<li>${friendlySource(c.campaign)}: ${plural(c.clicks, 'clique', 'cliques')}, ${plural(c.leads, 'conversa', 'conversas')}</li>`).join('')}</ul></li>`);
   }
   if (fp.buttons && Object.keys(fp.buttons).length) {
     details.push(`<li>Botões mais clicados:<ul>${Object.entries(fp.buttons).map(([b, n]) => `<li>${friendlyButton(b)}: ${n}</li>`).join('')}</ul></li>`);
   }
   if (ga.ok) {
-    details.push(`<li>GA4 — sessões: <b>${fmt(ga.overview.sessions)}</b>, usuários: <b>${fmt(ga.overview.activeUsers)}</b>, páginas: <b>${fmt(ga.overview.pageViews)}</b>
-      <ul>${ga.traffic.map((t) => `<li>${friendlyGA4Source(t.source)}: ${fmt(t.sessions)} sessão(ões)</li>`).join('')}</ul></li>`);
+    details.push(`<li>GA4: sessões <b>${fmt(ga.overview.sessions)}</b>, usuários <b>${fmt(ga.overview.activeUsers)}</b>, páginas <b>${fmt(ga.overview.pageViews)}</b>
+      <ul>${ga.traffic.map((t) => `<li>${friendlyGA4Source(t.source)}: ${plural(t.sessions, 'sessão', 'sessões')}</li>`).join('')}</ul></li>`);
   } else {
     details.push(`<li>GA4 indisponível (${ga.reason})</li>`);
   }
   if (fp.test && fp.test.events > 0) details.push(`<li>Eventos de teste (ignorados): ${fp.test.events}</li>`);
-  if (fp.preview && fp.preview.events > 0) details.push(`<li>Acessos de teste/preview (ignorados): ${fp.preview.events}</li>`);
+  if (fp.preview && fp.preview.events > 0) details.push(`<li>Acessos de teste e pré-visualização (ignorados): ${fp.preview.events}</li>`);
 
   let googleBlock = '';
   if (ga.ok) {
@@ -462,8 +478,8 @@ function renderHtml(fp, ga, prev, when) {
     if (lead) {
       googleBlock = `
       <div style="background:#f0fdfa;padding:12px 16px;border-radius:6px;margin:16px 0;font-size:14px">
-        <b>O Google também registrou ${fmt(lead.count)} contato(s)</b> pelo WhatsApp.<br>
-        <span style="color:#666;font-size:12px">Serve de conferência. O número do site é o mais confiável, porque não é afetado por bloqueadores de anúncio.</span>
+        <b>O Google também registrou ${plural(lead.count, 'contato', 'contatos')}</b> pelo WhatsApp.<br>
+        <span style="color:#666;font-size:12px">É apenas uma conferência. O número do site acima é o mais confiável, porque não é afetado por bloqueadores de anúncio.</span>
       </div>`;
     }
   }
@@ -479,14 +495,14 @@ function renderHtml(fp, ga, prev, when) {
 <body style="font-family:-apple-system,Segoe UI,Arial,sans-serif;color:#111;max-width:640px;margin:auto;padding:8px 16px">
 
   <h1 style="color:#0f766e;font-size:22px;margin-bottom:2px">Como foi a semana do site</h1>
-  <p style="color:#666;margin-top:0;font-size:14px">Consultório Salustiano · ${periodLabel(when)}</p>
+  <p style="color:#666;margin-top:0;font-size:14px">Consultório Salustiano, ${periodLabelNatural(when)}</p>
 
   <p style="font-size:16px;line-height:1.5">
-    Nesta semana, <b>${fmt(leads)} pessoa(s) clicaram para falar no WhatsApp</b> a partir do site.
+    Nesta semana, <b>${plural(leads, 'pessoa', 'pessoas')} ${Number(leads) === 1 ? 'clicou' : 'clicaram'} para falar no WhatsApp</b> a partir do site.
     ${s.messagesSent > 0 && s.messagesSent < leads
-      ? `Dessas, <b>${fmt(s.messagesSent)}</b> abriram a conversa.`
+      ? `Ao todo, <b>${plural(s.messagesSent, 'pessoa', 'pessoas')} ${Number(s.messagesSent) === 1 ? 'abriu' : 'abriram'} a conversa</b>.`
       : s.messagesSent > 0
-        ? `O site registrou <b>${fmt(s.messagesSent)}</b> aberturas de conversa.`
+        ? `O site também registrou <b>${plural(s.messagesSent, 'conversa aberta', 'conversas abertas')}</b>.`
         : ''}
   </p>
 
@@ -511,12 +527,12 @@ function renderHtml(fp, ga, prev, when) {
   <details style="margin-top:20px;border-top:1px solid #eee;padding-top:10px">
     <summary>Ver detalhes técnicos</summary>
     <ul style="font-size:13px;color:#444;line-height:1.6">${details.join('')}</ul>
-    <p style="font-size:12px;color:#888">Para o relatório completo: <code>npm run access-logs</code>.
-    Custos de anúncios não entram neste email.</p>
+    <p style="font-size:12px;color:#888">Para o relatório completo, rode <code>npm run access-logs</code>.
+    Os custos de anúncios não entram neste email.</p>
   </details>
 
   <p style="color:#aaa;font-size:11px;margin-top:24px">
-    Contagem do próprio site (não é afetada por bloqueadores de anúncio). Acessos de teste são ignorados.
+    A contagem vem do próprio site, então não é afetada por bloqueadores de anúncio. Acessos de teste ficam de fora.
   </p>
 </body></html>`;
 }
