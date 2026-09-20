@@ -434,8 +434,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // logo após clicar em um CTA, sabemos que ele abriu a conversa com o atendente.
     // (A confirmação definitiva de envio de mensagem depende de integração com a
     // API do WhatsApp / webhooks, que hoje está fora do nosso escopo.)
-    let pendingWaClick = false;
-    function flagWaProxy() { pendingWaClick = true; }
+    // Cada clique no botão vira uma "rodada" (geração). O message_sent só pode
+    // ser emitido UMA vez por rodada, e precisa de um novo clique para re-armar.
+    // Sem isso, pagehide + visibilitychange na mesma saída disparavam os dois
+    // (o guard booleano não era atômico entre os handlers), fazendo
+    // message_sent > whatsapp_click — impossível por definição.
+    let clickGeneration = 0;
+    let consumedGeneration = -1;
+    function flagWaProxy() { clickGeneration += 1; }
 
     document.addEventListener('pointerdown', function (e) {
         const anc = e.target.closest ? e.target.closest('a[href*="api.whatsapp.com"]') : null;
@@ -443,8 +449,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function maybeFireMessageSent() {
-        if (!pendingWaClick) return;
-        pendingWaClick = false;
+        // Consome a rodada de forma atômica: se já foi consumida, não re-emite.
+        // A checagem e a marcação ficam adjacentes, antes de qualquer await/trabalho.
+        if (clickGeneration === 0 || clickGeneration === consumedGeneration) return;
+        consumedGeneration = clickGeneration;
         if (document.hidden) {
             const isCardio = window.location.pathname.includes('/cardiologia');
             const specialty = isCardio ? 'Cardiologia' : 'Infectologia';

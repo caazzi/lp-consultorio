@@ -112,7 +112,12 @@ const messageSentChecks = {
   "dispara evento message_sent no gtag": /sendGtagConversion\(['"]message_sent['"]/.test(jsContent),
   "dispara no DataLayer (message_sent)": /event['"]\s*:\s*['"]message_sent['"]/.test(jsContent),
   "beacon de log com message_sent": jsContent.includes("event_type: 'message_sent'"),
-  "detecta pagehide com flag de clique": jsContent.includes('pendingWaClick') && jsContent.includes('addEventListener(\'pagehide\'')
+  "detecta pagehide com rodada de clique": jsContent.includes('clickGeneration') && jsContent.includes('addEventListener(\'pagehide\''),
+  // Regressão: message_sent NÃO pode exceder whatsapp_click. Cada rodada de
+  // clique só emite uma vez (consumo atômico antes de qualquer trabalho), senão
+  // pagehide + visibilitychange disparavam em duplicidade na mesma saída.
+  "consome rodada de clique atomicamente": /clickGeneration === consumedGeneration\)\s*return;[\s\S]{0,40}consumedGeneration = clickGeneration;/.test(jsContent),
+  "message_sent exige novo clique para re-armar": jsContent.includes('function flagWaProxy() { clickGeneration += 1; }')
 };
 Object.keys(messageSentChecks).forEach(k => {
   if (messageSentChecks[k]) console.log(`  ✅ ${k}`);
