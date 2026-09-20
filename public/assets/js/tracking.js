@@ -166,7 +166,10 @@ function sendGtagConversion(eventName, params) {
     // sem passagem manual de utm_*. Persisti-los aqui (como o gclid) garante que
     // beacons de conversão disparados em navegações posteriores (cliques/message_sent)
     // mantenham a atribuição quando a querystring da URL de aterrissagem já se perdeu.
-    const utms = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'gclid', 'gad_source', 'gad_campaignid'];
+    // `gbraid`/`wbraid` são os identificadores de clique do iOS (quando o app não
+    // manda `gclid`, por App Tracking Transparency) e do web-to-app; sem persisti-los
+    // o tráfego pago de iOS chega sem atribuição.
+    const utms = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'gclid', 'gbraid', 'wbraid', 'gad_source', 'gad_campaignid'];
 
     utms.forEach(param => {
         if (urlParams.has(param)) {
@@ -208,7 +211,7 @@ function sendLogBeacon(data) {
 // Converte as UTMs salvas em querystring para anexar ao link do WhatsApp,
 // permitindo que o atendente (e o GA4) atribuam cada conversa à campanha certa.
 function buildWhatsAppUrlWithUtm(baseUrl, locationOverride) {
-    const utmParams = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'gclid', 'gbraid', 'gad_source', 'gad_campaignid'];
+    const utmParams = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'gclid', 'gbraid', 'wbraid', 'gad_source', 'gad_campaignid'];
     const parts = [];
     utmParams.forEach(p => {
         const v = sessionStorage.getItem(p);
@@ -237,8 +240,11 @@ function collectUtmPayload() {
         campaign: sessionStorage.getItem('utm_campaign') || '',
         term: sessionStorage.getItem('utm_term') || '',
         content: sessionStorage.getItem('utm_content') || '',
-        gclid: sessionStorage.getItem('gclid') || '',
-        gbraid: sessionStorage.getItem('gbraid') || '',
+        // Read click identifiers via getParamFromStorage so they work even if the
+        // landing querystring was not persisted (same rule as gad_campaignid).
+        gclid: getParamFromStorage('gclid'),
+        gbraid: getParamFromStorage('gbraid'),
+        wbraid: getParamFromStorage('wbraid'),
         // NOTE: read ONLY gad_campaignid. Do NOT pass gad_source as a fallback name:
         // gad_source carries the literal "1" (a source marker, not a campaign id), so
         // falling back to it would write "1" into gad_campaignid and break attribution
@@ -301,6 +307,8 @@ function trackWhatsAppClick(location, element) {
         'campaign_id': utms.campaign,
         'gad_campaignid': utms.gad_campaignid,
         'gclid': utms.gclid,
+        'gbraid': utms.gbraid,
+        'wbraid': utms.wbraid,
         'button_location': location,
         'specialty': specialty,
         'time_on_page_sec': timeOnPageSec
@@ -420,32 +428,31 @@ function trackWhatsAppClick(location, element) {
 
 // 5. Sistema de Event Listeners (Removendo onclick do HTML)
 document.addEventListener('DOMContentLoaded', () => {
+    // Proxy de "message_sent": quando o usuário sai da página para o WhatsApp
+    // logo após clicar em um CTA, sabemos que ele abriu a conversa com o atendente.
+    // (A confirmação definitiva de envio de mensagem depende de integração com a
+    // API do WhatsApp / webhooks, que hoje está fora do nosso escopo.)
+    //
+    // Cada clique no botão vira uma "rodada" (geração). O message_sent só pode ser
+    // emitido UMA vez por rodada. DUAS garantias importantes:
+    //  1. A rodada é armada no PRÓPRIO handler de click do botão — a mesma origem
+    //     do whatsapp_click. Antes era armada num listener global de pointerdown,
+    //     que disparava sem o clique correspondente e gerava message_sent órfão
+    //     (message_sent > whatsapp_click, impossível por definição).
+    //  2. Consumo atômico: pagehide + visibilitychange disparam os dois na mesma
+    //     saída; o guard booleano antigo não era atômico e contava duas vezes.
+    let clickGeneration = 0;
+    let consumedGeneration = -1;
+
     const waButtons = document.querySelectorAll('a[href*="api.whatsapp.com"][data-track-location]');
     waButtons.forEach(button => {
         button.addEventListener('click', () => {
             const location = button.getAttribute('data-track-location');
             if (location) {
+                clickGeneration += 1;
                 trackWhatsAppClick(location, button);
             }
         });
-    });
-
-    // Proxy de "message_sent": quando o usuário sai da página para o WhatsApp
-    // logo após clicar em um CTA, sabemos que ele abriu a conversa com o atendente.
-    // (A confirmação definitiva de envio de mensagem depende de integração com a
-    // API do WhatsApp / webhooks, que hoje está fora do nosso escopo.)
-    // Cada clique no botão vira uma "rodada" (geração). O message_sent só pode
-    // ser emitido UMA vez por rodada, e precisa de um novo clique para re-armar.
-    // Sem isso, pagehide + visibilitychange na mesma saída disparavam os dois
-    // (o guard booleano não era atômico entre os handlers), fazendo
-    // message_sent > whatsapp_click — impossível por definição.
-    let clickGeneration = 0;
-    let consumedGeneration = -1;
-    function flagWaProxy() { clickGeneration += 1; }
-
-    document.addEventListener('pointerdown', function (e) {
-        const anc = e.target.closest ? e.target.closest('a[href*="api.whatsapp.com"]') : null;
-        if (anc) flagWaProxy();
     });
 
     function maybeFireMessageSent() {
@@ -462,7 +469,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Dispara via caminho confiável (garante load do gtag real antes de enviar).
             // Em pagehide/visibilitychange o beacom nativo (sendBeacon) é preferível,
             // então registramos o parâmetro e deixamos o sendGtagLead disparar via fetch.
-            // Atribuição completa (espelha generate_lead): gclid/gad_campaignid/gbraid
+            // Atribuição completa (espelha generate_lead): gclid/gbraid/wbraid/gad_campaignid
             // deixam o proxy de envio cruzável por campanha no GA4.
             sendGtagConversion('message_sent', {
                 'event_category': 'conversion',
@@ -471,6 +478,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 'gad_campaignid': utms.gad_campaignid,
                 'gclid': utms.gclid,
                 'gbraid': utms.gbraid,
+                'wbraid': utms.wbraid,
                 'specialty': specialty,
                 'time_on_page_sec': timeOnPageSec
             });

@@ -117,7 +117,11 @@ const messageSentChecks = {
   // clique só emite uma vez (consumo atômico antes de qualquer trabalho), senão
   // pagehide + visibilitychange disparavam em duplicidade na mesma saída.
   "consome rodada de clique atomicamente": /clickGeneration === consumedGeneration\)\s*return;[\s\S]{0,40}consumedGeneration = clickGeneration;/.test(jsContent),
-  "message_sent exige novo clique para re-armar": jsContent.includes('function flagWaProxy() { clickGeneration += 1; }')
+  // Regressão: a rodada é armada no PRÓPRIO handler de click do botão (mesma
+  // origem do whatsapp_click). O listener global de pointerdown gerava
+  // message_sent órfão (sem whatsapp_click correspondente).
+  "rodada armada no click do botão": /button\.addEventListener\('click'[\s\S]{0,200}clickGeneration \+= 1;[\s\S]{0,40}trackWhatsAppClick\(/.test(jsContent),
+  "não usa pointerdown para armar proxy": !jsContent.includes("addEventListener('pointerdown'") || !/pointerdown[\s\S]{0,120}clickGeneration/.test(jsContent)
 };
 Object.keys(messageSentChecks).forEach(k => {
   if (messageSentChecks[k]) console.log(`  ✅ ${k}`);
@@ -129,7 +133,7 @@ console.log('\n');
 console.log('\x1b[33m%s\x1b[0m', '📡 6. VALIDAÇÃO DE UTMs NO LINK DO WHATSAPP E campaign_id NO GA4');
 const utmChecks = {
   "função buildWhatsAppUrlWithUtm existe": jsContent.includes('function buildWhatsAppUrlWithUtm('),
-  "anexa gclid ao link": jsContent.includes("'gclid'") && jsContent.includes("sessionStorage.getItem('gclid')"),
+  "anexa gclid ao link": jsContent.includes("'gclid'") && /gclid: getParamFromStorage\('gclid'\)/.test(jsContent),
   "envia campaign_id no evento generate_lead": jsContent.includes("'campaign_id': utms.campaign"),
   "anexa UTMs ao href do elemento clicado": jsContent.includes('.href = buildWhatsAppUrlWithUtm(')
 };
@@ -139,16 +143,24 @@ Object.keys(utmChecks).forEach(k => {
 });
 
 // 6b. Validar enriquecimento de atribuição dos eventos de conversão no gtag.
-// generate_lead e message_sent devem carregar gclid/gad_campaignid (e gbraid em
-// message_sent) para permitir cruzar a conversão por campanha no GA4 sem depender
-// apenas do beacon first-party.
+// generate_lead e message_sent devem carregar gclid/gbraid/wbraid/gad_campaignid
+// para permitir cruzar a conversão por campanha no GA4 sem depender apenas do
+// beacon first-party. gbraid/wbraid cobrem tráfego pago de iOS (sem gclid).
 const enrichmentChecks = {
   "generate_lead envia gad_campaignid": /sendGtagConversion\(['"]generate_lead['"][\s\S]*?'gad_campaignid':/.test(jsContent),
   "generate_lead envia gclid": /sendGtagConversion\(['"]generate_lead['"][\s\S]*?'gclid':/.test(jsContent),
+  "generate_lead envia gbraid": /sendGtagConversion\(['"]generate_lead['"][\s\S]*?'gbraid':/.test(jsContent),
+  "generate_lead envia wbraid": /sendGtagConversion\(['"]generate_lead['"][\s\S]*?'wbraid':/.test(jsContent),
   "generate_lead envia time_on_page_sec": /sendGtagConversion\(['"]generate_lead['"][\s\S]*?'time_on_page_sec':/.test(jsContent),
   "message_sent envia gad_campaignid": /sendGtagConversion\(['"]message_sent['"][\s\S]*?'gad_campaignid':/.test(jsContent),
   "message_sent envia gclid": /sendGtagConversion\(['"]message_sent['"][\s\S]*?'gclid':/.test(jsContent),
   "message_sent envia gbraid": /sendGtagConversion\(['"]message_sent['"][\s\S]*?'gbraid':/.test(jsContent),
+  "message_sent envia wbraid": /sendGtagConversion\(['"]message_sent['"][\s\S]*?'wbraid':/.test(jsContent),
+  // Regressão: gbraid/wbraid (iOS) precisam ser PERSISTIDOS na sessionStorage.
+  // Antes só gclid era gravado, então o tráfego pago de iOS chegava sem atribuição.
+  "gbraid persistido na sessionStorage": /const utms = \[[\s\S]*?'gbraid'[\s\S]*?\];/.test(jsContent) && jsContent.includes("sessionStorage.setItem(param"),
+  "wbraid persistido na sessionStorage": /const utms = \[[\s\S]*?'wbraid'[\s\S]*?\];/.test(jsContent),
+  "gbraid/wbraid lidos via getParamFromStorage": /gbraid: getParamFromStorage\('gbraid'\)/.test(jsContent) && /wbraid: getParamFromStorage\('wbraid'\)/.test(jsContent),
   // Regressão: gad_campaignid NÃO pode usar gad_source como fallback. gad_source
   // carrega o literal "1" (marcador de origem, não id de campanha); usá-lo como
   // fallback corromperia a atribuição (o id precisa casar com CAMPAIGN_LABELS).
