@@ -26,7 +26,7 @@ Para atingir scores de 95+ no Lighthouse e garantir custo zero de escala, a arqu
   - Imagens em formato **WebP** otimizadas (`cardiologia.webp` reduzido para 15 KB / -71% de payload LCP).
   - **LCP Preload** com `fetchpriority="high"` para imagens de hero acima da dobra.
   - **Elfsight Reviews Lazy-Loading:** Carregamento sob demanda do widget do Google Reviews via `IntersectionObserver` apenas quando o usuário se aproxima da seção, eliminando o bloqueio inicial da thread principal (TBT).
-  - **gtag.js Deferred Loading:** O rastreamento do Google (GA4/Ads) é inicializado fora do caminho crítico — no primeiro gesto do usuário (scroll/touch/teclado) ou em um instante ocioso pós-load, mantendo a página leve na carga sem sacrificar a confiabilidade dos cliques de conversão.
+  - **gtag.js Deferred Loading:** O rastreamento do Google (GA4/Ads) é inicializado fora do caminho crítico — apenas no primeiro gesto do usuário (pointerdown/scroll/touch/teclado). Não há fallback por ociosidade: em página ocupada o timeout injetava o gtag dentro da janela do TBT (~1.2s de long task em mobile). Um clique no WhatsApp força a injeção na hora (`ensureGtagLoaded`), preservando a confiabilidade de `generate_lead` mesmo sem gesto prévio.
 - **Security First:** 
   - Content Security Policy (CSP) rigorosa via `netlify.toml`.
   - HSTS, X-Frame-Options e Permissions Policy configurados.

@@ -16,11 +16,12 @@ para o GA4 o evento customizado **`generate_lead`** contendo variáveis contextu
 - **`public/index.html` / `public/cardiologia/index.html`**: carregam o `tracking.js` (defer) e registram
   a dimensão `campaign_id` via `tracking.js`.
 - **`public/assets/js/tracking.js`**: carrega o `gtag.js` de forma **deferred** — o script real só é
-  injetado no **primeiro gesto do usuário** (pointerdown/keydown/scroll) OU em um instante ocioso pós-`load`,
-  o que vier primeiro. Isso tira o trabalho do gtag (~3.5s de main-thread em mobile) do caminho crítico
-  (TBT/LCP), mantendo a conversão confiável: `ensureGtagLoaded()` força a injeção **na hora** de um clique
-  no WhatsApp, então `generate_lead` nunca depende de ter havido gesto prévio (o placeholder síncrono
-  bufferiza o `dataLayer` e o gtag replay ao inicializar).
+  injetado no **primeiro gesto do usuário** (pointerdown/keydown/scroll/touchstart). **Não** há fallback por
+  ociosidade: em página ocupada o timeout pós-`load` injetava o gtag dentro da janela do TBT (~1.2s de long
+  task em mobile) e derrubava o gate de Web Vitals. Isso tira o trabalho do gtag (~3.5s de main-thread em
+  mobile) do caminho crítico (TBT/LCP), mantendo a conversão confiável: `ensureGtagLoaded()` força a injeção
+  **na hora** de um clique no WhatsApp, então `generate_lead` nunca depende de ter havido gesto prévio (o
+  placeholder síncrono bufferiza o `dataLayer` e o gtag replay ao inicializar).
 - **`public/assets/js/tracking.js`**: as funções `sendGtagConversion('generate_lead', {...})` e
   `sendGtagConversion('message_sent', {...})` disparam os eventos de forma confiável a cada clique em botão
   de WhatsApp, **antes** de abrir o link.

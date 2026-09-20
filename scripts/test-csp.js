@@ -199,6 +199,23 @@ if (trackingDeferredOk) {
   console.error('  ❌ tracking.js não centraliza a config deferred do gtag.');
   hasErrors = true;
 }
+
+// O gtag só pode ser injetado por GESTO do usuário. Um fallback por ociosidade
+// (requestIdleCallback/setTimeout pós-load) disparava o timeout em páginas
+// ocupadas e injetava o gtag dentro da janela do TBT (~1.2s de long task),
+// derrubando o gate de Web Vitals. ensureGtagLoaded cobre o clique direto.
+const gtagGestureOnly =
+  !/requestIdleCallback/.test(jsContent) &&
+  !/scheduleIdle/.test(jsContent) &&
+  jsContent.includes("armDeferredGtag") &&
+  jsContent.includes("'pointerdown'") &&
+  jsContent.includes("ensureGtagLoaded");
+if (gtagGestureOnly) {
+  console.log('  ✅ gtag carrega só por gesto (sem fallback idle/timeout); ensureGtagLoaded cobre clique direto');
+} else {
+  console.error('  ❌ tracking.js voltou a carregar gtag por ociosidade (requestIdleCallback/timeout).');
+  hasErrors = true;
+}
 trackingPages.forEach(page => {
   const pagePath = path.join(publicDir, page);
   const pageContent = fs.readFileSync(pagePath, 'utf8');
