@@ -54,3 +54,6 @@ AGENTS.md
 
 # Google Ads CLI tooling — local-only, never versioned (code, data, credentials)
 ads/
+
+# Weekly metrics report scratch output (local run of `npm run weekly-report --out`)
+.weekly-report/

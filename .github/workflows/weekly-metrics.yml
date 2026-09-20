@@ -1,0 +1,108 @@
+# Relatório semanal de métricas — Consultório Salustiano
+#
+# Roda todo sábado de manhã (BRT) e envia por email o funil first-party
+# (Netlify Blobs) + overlay do GA4. A lógica de números vive em
+# scripts/weekly-report.js; este YAML só coleta, escreve os corpos e envia.
+#
+# Secrets necessários (Settings > Secrets and variables > Actions):
+#   MAIL_USERNAME     seu endereço Gmail (ex.: voce@gmail.com)
+#   MAIL_PASSWORD     App Password de 16 dígitos (requer 2FA no Google)
+#   MAIL_TO           destinatário (pode ser o mesmo do MAIL_USERNAME)
+#   GA4_CREDENTIALS   conteúdo COMPLETO do ga-credentials.json (service account)
+#
+# GA4_PROPERTY_ID e ACCESS_INSIGHTS_DAYS não são segredo → definidos em `env`.
+# O first-party não exige credencial (endpoint público da função insights).
+# Se GA4_CREDENTIALS faltar, o relatório ainda sai só com o first-party.
+#
+# Escopo (AGENTS.md): mídia paga = só infectologia. Ads (custo/R$) NÃO entra
+# aqui porque a pasta ads/ é local-only (OAuth interativo); para isso rode
+# `npm run ads-report` na máquina.
+
+name: Weekly Metrics Report
+
+on:
+  schedule:
+    # 11:00 UTC = 08:00 America/Sao_Paulo (sábado). BRT não tem DST desde 2019.
+    - cron: '0 11 * * 6'
+  workflow_dispatch:
+    inputs:
+      days:
+        description: 'Janela em dias'
+        required: false
+        default: '7'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: weekly-metrics
+  cancel-in-progress: false
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    env:
+      GA4_PROPERTY_ID: '493028300'
+      ACCESS_INSIGHTS_DAYS: ${{ github.event.inputs.days || '7' }}
+      WEEKLY_OUT_DIR: ${{ github.workspace }}/.weekly-report
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # As dependências (Netlify Blobs) não são necessárias para o relatório,
+      # mas o install explícito casa com o lockfile.
+      - name: Install dependencies
+        run: npm ci --omit=dev
+
+      - name: Materializar credencial GA4
+        env:
+          GA4_CREDENTIALS: ${{ secrets.GA4_CREDENTIALS }}
+        run: |
+          set -euo pipefail
+          if [ -n "${GA4_CREDENTIALS:-}" ]; then
+            printf '%s' "$GA4_CREDENTIALS" > "$RUNNER_TEMP/ga-credentials.json"
+            echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/ga-credentials.json" >> "$GITHUB_ENV"
+          else
+            echo "::warning::GA4_CREDENTIALS ausente — relatório sairá só com first-party."
+          fi
+
+      - name: Gerar relatório
+        id: gen
+        run: |
+          set -euo pipefail
+          mkdir -p "$WEEKLY_OUT_DIR"
+          node scripts/weekly-report.js --out "$WEEKLY_OUT_DIR" | tee "$RUNNER_TEMP/report.out"
+          test -s "$WEEKLY_OUT_DIR/body.txt" || { echo "corpo de texto vazio"; exit 1; }
+          echo "ok=1" >> "$GITHUB_OUTPUT"
+
+      - name: Enviar email
+        if: ${{ steps.gen.outputs.ok == '1' }}
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          from: Relatório Salustiano <${{ secrets.MAIL_USERNAME }}>
+          to: ${{ secrets.MAIL_TO }}
+          subject: "Métricas semanais — Consultório Salustiano"
+          html_body: file://${{ github.workspace }}/.weekly-report/body.html
+          body: file://${{ github.workspace }}/.weekly-report/body.txt
+
+      # Sempre disponibiliza o relatório como artefato, mesmo se o email falhar.
+      - name: Upload artefato
+        if: ${{ always() && steps.gen.outputs.ok == '1' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: weekly-report-${{ github.run_id }}
+          path: ${{ github.workspace }}/.weekly-report/
+          retention-days: 30

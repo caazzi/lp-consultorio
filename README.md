@@ -60,6 +60,7 @@ Para atingir scores de 95+ no Lighthouse e garantir custo zero de escala, a arqu
 │   ├── run-perf.js              # npm run perf (Lighthouse mobile)
 │   ├── fetch-ga4-metrics.js     # npm run ga-metrics
 │   ├── fetch-access-insights.js # npm run access-logs
+│   ├── weekly-report.js         # npm run weekly-report (email do GHA)
 │   └── test-csp.js              # npm run test
 ├── netlify.toml            # Configuração de Headers, Security & Build
 ├── package.json            # Scripts de automação
@@ -111,10 +112,35 @@ npm run analyze       # Diagnóstico de performance/Web Vitals
 npm run perf          # Lighthouse mobile (index + cardiologia) p/ validar otimizações
 npm run access-logs   # Métricas first-party de acesso e conversão (produção)
 npm run ga-metrics    # Métricas do Google Analytics 4 (requer GA4_PROPERTY_ID no .env)
+npm run weekly-report # Relatório combinado (first-party + GA4) — corpo do email semanal
 npm run test          # Suíte de testes CSP e integridade do pipeline
 ```
 
 > Observação: as funções `log-access`/`insights` exigem um deploy no Netlify para surtir efeito, e os campos novos (`client_id`, `campaign_label`) valem apenas para eventos ocorridos após o deploy.
+
+### Relatório semanal automático (GitHub Actions)
+
+O workflow `.github/workflows/weekly-metrics.yml` roda **todo sábado às 08:00 (BRT)**
+e envia por email o relatório de funil first-party + GA4. A lógica fica em
+`scripts/weekly-report.js`; o YAML só coleta, escreve os corpos e envia.
+
+**Secrets necessários** (Settings → Secrets and variables → Actions):
+
+| Secret | Descrição |
+|---|---|
+| `MAIL_USERNAME` | Endereço Gmail remetente (ex.: `voce@gmail.com`) |
+| `MAIL_PASSWORD` | **App Password** de 16 dígitos (requer 2FA ativo no Google) |
+| `MAIL_TO` | Destinatário (pode ser o mesmo do remetente) |
+| `GA4_CREDENTIALS` | Conteúdo **completo** do `ga-credentials.json` (service account) |
+
+`GA4_PROPERTY_ID` (`493028300`) e a janela não são segredo — estão no `env` do
+workflow. Sem `GA4_CREDENTIALS`, o relatório ainda é enviado só com o first-party
+(o endpoint `insights` é público). O workflow também publica o relatório como
+**artefato** (30 dias), então falha de email não perde os números.
+
+> **Ads (custo/R$) não entra no email.** O CLI em `ads/` é gitignored e usa OAuth
+> interativo, incompatível com runner. Para o funil com custo, rode
+> `npm run ads-report` na máquina (ver `AGENTS.md`).
 
 ---
 

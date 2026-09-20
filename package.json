@@ -8,6 +8,7 @@
     "analyze": "node scripts/analyze-performance.js",
     "access-logs": "node scripts/fetch-access-insights.js",
     "ga-metrics": "node scripts/fetch-ga4-metrics.js",
+    "weekly-report": "node scripts/weekly-report.js",
     "ads-attribution": "node scripts/fetch-ads-attribution.js",
     "ads": "node ads/ads-cli.js",
     "ads-auth": "node ads/ads-cli.js auth",
