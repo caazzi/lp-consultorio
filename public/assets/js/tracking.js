@@ -239,7 +239,11 @@ function collectUtmPayload() {
         content: sessionStorage.getItem('utm_content') || '',
         gclid: sessionStorage.getItem('gclid') || '',
         gbraid: sessionStorage.getItem('gbraid') || '',
-        gad_campaignid: getParamFromStorage('gad_campaignid', 'gad_source')
+        // NOTE: read ONLY gad_campaignid. Do NOT pass gad_source as a fallback name:
+        // gad_source carries the literal "1" (a source marker, not a campaign id), so
+        // falling back to it would write "1" into gad_campaignid and break attribution
+        // (the id must match CAMPAIGN_LABELS). See access-store.knownCampaignIdFromReferer.
+        gad_campaignid: getParamFromStorage('gad_campaignid')
     };
     // Attach resolved, human-readable campaign label for reporting (falls back to source/Direto).
     utms.campaign_label = resolveCampaignLabel(utms);

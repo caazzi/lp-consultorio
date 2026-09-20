@@ -143,7 +143,11 @@ const enrichmentChecks = {
   "generate_lead envia time_on_page_sec": /sendGtagConversion\(['"]generate_lead['"][\s\S]*?'time_on_page_sec':/.test(jsContent),
   "message_sent envia gad_campaignid": /sendGtagConversion\(['"]message_sent['"][\s\S]*?'gad_campaignid':/.test(jsContent),
   "message_sent envia gclid": /sendGtagConversion\(['"]message_sent['"][\s\S]*?'gclid':/.test(jsContent),
-  "message_sent envia gbraid": /sendGtagConversion\(['"]message_sent['"][\s\S]*?'gbraid':/.test(jsContent)
+  "message_sent envia gbraid": /sendGtagConversion\(['"]message_sent['"][\s\S]*?'gbraid':/.test(jsContent),
+  // Regressão: gad_campaignid NÃO pode usar gad_source como fallback. gad_source
+  // carrega o literal "1" (marcador de origem, não id de campanha); usá-lo como
+  // fallback corromperia a atribuição (o id precisa casar com CAMPAIGN_LABELS).
+  "gad_campaignid não cai em gad_source": !/getParamFromStorage\(\s*['"]gad_campaignid['"]\s*,\s*['"]gad_source['"]/.test(jsContent)
 };
 Object.keys(enrichmentChecks).forEach(k => {
   if (enrichmentChecks[k]) console.log(`  ✅ ${k}`);

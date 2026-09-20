@@ -51,3 +51,6 @@ AGENTS.md
 .env.*
 !*.env.example
 *credentials*.json
+
+# Google Ads CLI tooling — local-only, never versioned (code, data, credentials)
+ads/
