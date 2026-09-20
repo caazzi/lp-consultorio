@@ -1,0 +1,33 @@
+#!/usr/bin/env sh
+#
+# pre-commit — bloqueia commit que introduza segredo.
+#
+# Camada LOCAL (antes de o segredo sair da máquina). Complementa o Secret
+# Scanning + Push Protection do GitHub, que só agem no push e não pegam padrões
+# genéricos/entropia. Instale com: npm run hooks:install
+#
+# Comportamento quando o gitleaks NÃO está instalado: avisa e deixa passar
+# (fail-open). O CI (.github/workflows/gitleaks.yml) é a rede de segurança
+# obrigatória; o hook é conveniência, não deve travar quem não tem a ferramenta.
+
+set -eu
+
+if ! command -v gitleaks >/dev/null 2>&1; then
+  echo "⚠️  pre-commit: gitleaks não encontrado — pulando scan local."
+  echo "    Instale: https://github.com/gitleaks/gitleaks#installing"
+  echo "    (o CI continua varrendo; veja .github/workflows/gitleaks.yml)"
+  exit 0
+fi
+
+# `--staged` varre apenas o que está prestes a ser commitado (rápido).
+# `--redact` evita imprimir o valor do segredo no terminal/log.
+if ! gitleaks protect --staged --redact --config .gitleaks.toml --verbose; then
+  echo ""
+  echo "❌ Commit bloqueado: possível segredo detectado nos arquivos staged."
+  echo "   Revise o(s) arquivo(s) acima. Se for falso positivo, ajuste a"
+  echo "   allowlist em .gitleaks.toml (com justificativa) ou use:"
+  echo "     git commit --no-verify"
+  exit 1
+fi
+
+exit 0

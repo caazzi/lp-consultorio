@@ -1,0 +1,28 @@
+# gitleaks configuration — https://github.com/gitleaks/gitleaks
+#
+# Estende as regras padrão (que já pegam Google service accounts, OAuth client
+# secrets, AWS keys, etc.) e adiciona uma allowlist EXPLÍCITA para os falsos
+# positivos conhecidos deste repositório.
+#
+# Princípio: allowlist MÍNIMA e por REGEX (não por PATH). Nunca liberar um arquivo
+# inteiro — um arquivo que hoje só cita nome de campo pode amanhã receber uma
+# chave real, e uma allowlist por path esconderia exatamente esse caso.
+
+title = "lp-consultorio"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Falsos positivos conhecidos do site (não são credenciais)"
+
+# `client_id` aqui é o UUID efêmero por page-load usado pelo pipeline first-party
+# (netlify/access-store.js) — identidade de visitante, sem cookie. NÃO é o
+# client_id de um OAuth client. A regex exige UUID v4 com hífens para não abrir
+# espaço a segredos de formato livre.
+regexes = [
+  '''client_id['":\s]+[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}''',
+  '''window\.__clientId''',
+  # Marcador literal de smoke test (QA), documentado em AGENTS.md/test-csp.
+  '''TESTGCLID'''
+]

@@ -74,6 +74,7 @@ Para atingir scores de 95+ no Lighthouse e garantir custo zero de escala, a arqu
 ### 1. Instalação
 ```bash
 npm install
+npm run hooks:install   # ativa o pre-commit de secret scan (.githooks)
 ```
 
 ### 2. Build de Produção (CSS)
@@ -152,6 +153,32 @@ O projeto segue as recomendações da **OWASP** para sites estáticos, implement
 - **Integração com Agentes de IA (`llms.txt`)**: Adicionado o resumo de serviços estruturado em Markdown (`public/llms.txt`) para facilitação de leituras por LLMs e robôs de busca modernos.
 - **CSP (Content Security Policy) Otimizada:** Separação do Javascript de UI (Observer, Footer Year) em arquivo externo (`public/assets/js/main.js`), limpando o markup HTML e organizando as diretivas de segurança, enquanto se mantém a compatibilidade vital com ferramentas de marketing (gtag.js/GA4 e Google Ads).
 - **HSTS Estrito (Preload):** `Strict-Transport-Security` configurado para 1 ano (`max-age=31536000`) com a flag `preload`, instruindo navegadores modernos a forçarem a conexão segura antes mesmo da primeira requisição de rede ser despachada.
+
+### Proteção de credenciais (secret scanning)
+
+Segredos nunca devem chegar ao Git. A defesa é em **três camadas independentes**:
+
+| Camada | Ferramenta | Onde age | Cobre |
+|---|---|---|---|
+| 1. GitHub | Secret Scanning + Push Protection | remoto | ~200 padrões de provedores; **bloqueia o push** |
+| 2. CI | `gitleaks` (`.github/workflows/gitleaks.yml`) | push/PR + semanal | histórico completo; regras + entropia; PRs de fork |
+| 3. Local | `gitleaks` pre-commit (`.githooks/`) | antes do commit | o que ainda nem saiu da máquina |
+
+> O **Dependabot** cobre dependências (CVEs), **não** segredos. As camadas acima é
+> que tratam credenciais vazadas.
+
+**Setup local (uma vez):**
+```bash
+npm run hooks:install     # core.hooksPath=.githooks
+# opcional, proteção completa no commit:
+# instale o gitleaks -> https://github.com/gitleaks/gitleaks#installing
+npm run secret-scan       # varredura manual do histórico
+```
+
+A allowlist de falsos positivos fica em **`.gitleaks.toml`** — é mínima e por
+**regex** (ex.: o `client_id` UUID de visitante do first-party, que não é
+credencial). Nunca libere um arquivo inteiro: um arquivo que hoje só cita nome de
+campo pode amanhã receber uma chave real.
 
 ---
 *Desenvolvido com foco em resultados reais e excelência técnica.*

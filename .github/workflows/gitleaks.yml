@@ -1,0 +1,65 @@
+# Secret scanning no CI — defesa em profundidade sobre o Secret Scanning nativo.
+#
+# O GitHub já tem Secret Scanning + Push Protection ligados neste repo público
+# (detecta padrões de ~200 provedores, inclusive antes do push). Este workflow
+# adiciona uma segunda opinião independente que:
+#   - roda em todo push/PR (inclusive de forks, onde push protection não age);
+#   - varre o HISTÓRICO COMPLETO semanalmente (segredos antigos/rotacionados);
+#   - usa a base de regras + entropia do gitleaks, complementar à do GitHub.
+#
+# Não consome secrets (roda com o token efêmero do runner). Sem dependências npm.
+
+name: Secret Scan
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    # Segundas 03:00 UTC — varredura do histórico, independente de commits.
+    - cron: '0 3 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gitleaks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gitleaks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout (histórico completo)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Binário oficial fixado por versão + verificação de checksum (supply-chain).
+      - name: Instalar gitleaks
+        env:
+          GITLEAKS_VERSION: '8.24.3'
+        run: |
+          set -euo pipefail
+          base="https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}"
+          curl -fsSL -o /tmp/gitleaks.tar.gz "${base}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          curl -fsSL -o /tmp/gitleaks.sha256 "${base}/gitleaks_${GITLEAKS_VERSION}_checksums.txt"
+          (cd /tmp && grep 'linux_x64.tar.gz$' gitleaks.sha256 | sed 's/gitleaks_[^ ]*\.tar\.gz/gitleaks.tar.gz/' | sha256sum -c -)
+          tar -xzf /tmp/gitleaks.tar.gz -C /tmp gitleaks
+          sudo install -m 0755 /tmp/gitleaks /usr/local/bin/gitleaks
+          gitleaks version
+
+      # Scan do histórico inteiro. `--redact` evita imprimir o segredo no log
+      # público do Actions (o alerta continua indicando arquivo/linha/regra).
+      - name: Varredura de segredos (histórico completo)
+        run: |
+          set -euo pipefail
+          gitleaks detect \
+            --source . \
+            --config .gitleaks.toml \
+            --log-opts="--all" \
+            --redact \
+            --verbose
