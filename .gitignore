@@ -34,6 +34,8 @@ lighthouse.*
 undefined:/
 \\wsl.localhost/
 undefined:*
+# Windows-style paths leaked by a crashed Lighthouse run
+C:\\Users\\*
 .gemini/
 coverage/
 *.log
@@ -57,3 +59,6 @@ ads/
 
 # Weekly metrics report scratch output (local run of `npm run weekly-report --out`)
 .weekly-report/
+
+# Monthly product report scratch output (local run of `npm run product-report --out`)
+.product-report/

@@ -339,7 +339,10 @@ function trackWhatsAppClick(location, element) {
         utms: collectUtmPayload()
     });
 
-    // Rastreamento de profundidade de rolagem (Scroll Depth: 25%, 50%, 75%, 100%)
+    // Profundidade de rolagem (25/50/75/100%). INSIGHT DE PRODUTO (CRO: onde
+    // posicionar o CTA), não conversão. Por isso vai ao first-party (Blobs) e é
+    // lido pelo relatório mensal de produto, nunca pelo funil de Ads/email de
+    // conversão. Sem dataLayer: não há GTM instalado, então seria inerte.
     let trackedDepths = {};
     window.addEventListener('scroll', function() {
         const docHeight = document.documentElement.scrollHeight - window.innerHeight;
@@ -348,83 +351,25 @@ function trackWhatsAppClick(location, element) {
         [25, 50, 75, 100].forEach(depth => {
             if (scrollPercent >= depth && !trackedDepths[depth]) {
                 trackedDepths[depth] = true;
-                window.dataLayer.push({
-                    'event': 'scroll_depth',
-                    'depth': depth,
-                    'specialty': specialty
+                sendLogBeacon({
+                    event_type: 'scroll_depth',
+                    specialty: specialty,
+                    path: window.location.pathname,
+                    scroll_depth: depth,
+                    utms: collectUtmPayload()
                 });
             }
         });
     }, { passive: true });
 })();
 
-// 4. Rastreamento de Real User Monitoring (Core Web Vitals & Navigation Performance)
-(function initRUMPerformance() {
-    if (typeof window === 'undefined' || !('PerformanceObserver' in window)) return;
-
-    function sendMetric(name, value, rating) {
-        const valRounded = Math.round(name === 'CLS' ? value * 1000 : value);
-        
-        window.dataLayer.push({
-            'event': 'core_web_vitals',
-            'metric_name': name,
-            'metric_value': valRounded,
-            'metric_rating': rating || 'good'
-        });
-
-        if (typeof gtag === 'function') {
-            gtag('event', 'web_vitals_' + name.toLowerCase(), {
-                'event_category': 'Web Vitals',
-                'event_label': name,
-                'value': valRounded,
-                'non_interaction': true,
-                'metric_rating': rating || 'good'
-            });
-        }
-    }
-
-    try {
-        new PerformanceObserver((entryList) => {
-            const entries = entryList.getEntries();
-            const lastEntry = entries[entries.length - 1];
-            if (lastEntry) {
-                const val = lastEntry.startTime;
-                const rating = val <= 2500 ? 'good' : val <= 4000 ? 'needs-improvement' : 'poor';
-                sendMetric('LCP', val, rating);
-            }
-        }).observe({ type: 'largest-contentful-paint', buffered: true });
-    } catch (e) {}
-
-    try {
-        let clsValue = 0;
-        new PerformanceObserver((entryList) => {
-            for (const entry of entryList.getEntries()) {
-                if (!entry.hadRecentInput) {
-                    clsValue += entry.value;
-                }
-            }
-            const rating = clsValue <= 0.1 ? 'good' : clsValue <= 0.25 ? 'needs-improvement' : 'poor';
-            sendMetric('CLS', clsValue, rating);
-        }).observe({ type: 'layout-shift', buffered: true });
-    } catch (e) {}
-
-    window.addEventListener('load', () => {
-        setTimeout(() => {
-            try {
-                const nav = performance.getEntriesByType('navigation')[0];
-                if (nav) {
-                    const ttfb = nav.responseStart;
-                    sendMetric('TTFB', ttfb, ttfb <= 800 ? 'good' : 'poor');
-                }
-                const fcpEntry = performance.getEntriesByType('paint').find(e => e.name === 'first-contentful-paint');
-                if (fcpEntry) {
-                    const fcp = fcpEntry.startTime;
-                    sendMetric('FCP', fcp, fcp <= 1800 ? 'good' : 'poor');
-                }
-            } catch (e) {}
-        }, 0);
-    });
-})();
+// 4. Web Vitals: medidos no CI (.github/workflows/perf.yml via Lighthouse), não
+// mais como RUM no GA4. A telemetria no navegador disparava a cada layout-shift/
+// entrada de LCP (~19x por visita), poluindo a contagem de eventos do GA4 sem
+// alimentar nenhuma decisão de conversão. O laboratório do CI é determinístico
+// (mesmo runner, mesmo throttle), roda sobre o código do push antes do deploy e
+// falha o build se o orçamento de performance for estourado. Ver
+// scripts/perf-check.js e scripts/lib/perf.js.
 
 // 5. Sistema de Event Listeners (Removendo onclick do HTML)
 document.addEventListener('DOMContentLoaded', () => {

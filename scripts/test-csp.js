@@ -171,6 +171,22 @@ Object.keys(enrichmentChecks).forEach(k => {
   else { console.error(`  ❌ ${k}`); hasErrors = true; }
 });
 
+// 6c. Separação conversão x produto.
+// - Web Vitals NÃO podem voltar como RUM no GA4: viraram gate de CI
+//   (.github/workflows/perf.yml). RUM disparava web_vitals_* a cada
+//   layout-shift/entrada de LCP e poluía a contagem de eventos do GA4.
+// - scroll_depth é INSIGHT DE PRODUTO: vai ao first-party (Blobs), nunca ao
+//   dataLayer morto nem ao funil de conversão.
+const separationChecks = {
+  "sem RUM de web_vitals no site": !/web_vitals_|core_web_vitals|initRUMPerformance/.test(jsContent),
+  "scroll_depth enviado ao first-party": /sendLogBeacon\(\{[\s\S]{0,120}event_type: 'scroll_depth'/.test(jsContent),
+  "scroll_depth fora do dataLayer": !/dataLayer\.push\(\{[^}]*'event': 'scroll_depth'/.test(jsContent)
+};
+Object.keys(separationChecks).forEach(k => {
+  if (separationChecks[k]) console.log(`  ✅ ${k}`);
+  else { console.error(`  ❌ ${k}`); hasErrors = true; }
+});
+
 // campaign_id configurado no gtag config, agora centralizado no tracking.js
 // (config deferred), NÃO mais duplicado inline em cada página HTML.
 const trackingDeferredOk = jsContent.includes('gtag(\'set\', { campaign_id: \'\' })')

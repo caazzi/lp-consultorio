@@ -9,6 +9,7 @@
     "access-logs": "node scripts/fetch-access-insights.js",
     "ga-metrics": "node scripts/fetch-ga4-metrics.js",
     "weekly-report": "node scripts/weekly-report.js",
+    "product-report": "node scripts/product-report.js",
     "hooks:install": "sh scripts/install-hooks.sh",
     "secret-scan": "gitleaks detect --source . --config .gitleaks.toml --redact --verbose",
     "ads-attribution": "node scripts/fetch-ads-attribution.js",
@@ -25,6 +26,7 @@
     "ads-goals": "node ads/ads-cli.js goals",
     "ads-goals-fix": "node ads/ads-cli.js goals-fix",
     "perf": "node scripts/run-perf.js",
+    "perf:check": "node scripts/perf-check.js",
     "test": "node scripts/test-csp.js"
   },
   "repository": {

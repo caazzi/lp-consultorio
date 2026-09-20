@@ -109,13 +109,29 @@ Pipeline de conversão em duas camadas:
 
 **Comandos da rotina:**
 ```bash
-npm run analyze       # Diagnóstico de performance/Web Vitals
-npm run perf          # Lighthouse mobile (index + cardiologia) p/ validar otimizações
-npm run access-logs   # Métricas first-party de acesso e conversão (produção)
-npm run ga-metrics    # Métricas do Google Analytics 4 (requer GA4_PROPERTY_ID no .env)
-npm run weekly-report # Relatório combinado (first-party + GA4) — corpo do email semanal
-npm run test          # Suíte de testes CSP e integridade do pipeline
+npm run analyze        # Diagnóstico de performance/Web Vitals
+npm run perf           # Lighthouse mobile (index + cardiologia) p/ comparar antes/depois
+npm run perf:check     # Gate de Web Vitals (falha se estourar o orçamento)
+npm run access-logs    # Métricas first-party de acesso e conversão (produção)
+npm run ga-metrics     # Métricas do Google Analytics 4 (requer GA4_PROPERTY_ID no .env)
+npm run weekly-report  # Relatório de conversão (first-party + GA4) - email semanal
+npm run product-report # Relatório de produto (rolagem/atenção) - email mensal
+npm run test           # Suíte de testes CSP e integridade do pipeline
 ```
+
+> **Dois relatórios, dois públicos.** O **semanal** responde "quantos contatos
+> chegaram" (decisão de mídia). O **mensal** responde "como as pessoas usam o
+> site" (decisão de CRO). São separados de propósito: misturar conversão com
+> comportamento confunde a leitura.
+
+### Web Vitals: medidos no CI, não no navegador
+
+Os Core Web Vitals saíram do RUM (GA4) e viraram **gate de CI**
+(`.github/workflows/perf.yml` + `scripts/perf-check.js`). O laboratório é
+determinístico, mede o código do push **antes do deploy** e **falha o build** se
+o orçamento de performance estourar. RUM no navegador disparava a cada
+layout-shift/entrada de LCP (~19x por visita) e poluía a contagem de eventos do
+GA4 sem alimentar nenhuma decisão.
 
 > Observação: as funções `log-access`/`insights` exigem um deploy no Netlify para surtir efeito, e os campos novos (`client_id`, `campaign_label`) valem apenas para eventos ocorridos após o deploy.
 
@@ -142,6 +158,18 @@ workflow. Sem `GA4_CREDENTIALS`, o relatório ainda é enviado só com o first-p
 > **Ads (custo/R$) não entra no email.** O CLI em `ads/` é gitignored e usa OAuth
 > interativo, incompatível com runner. Para o funil com custo, rode
 > `npm run ads-report` na máquina (ver `AGENTS.md`).
+
+### Relatório mensal de produto (GitHub Actions)
+
+O workflow `.github/workflows/monthly-product.yml` roda no **primeiro sábado do
+mês** e envia o relatório de comportamento no site (rolagem, botões, origem da
+atenção). A lógica fica em `scripts/product-report.js`.
+
+Usa os **mesmos secrets de email** do semanal (`MAIL_USERNAME`, `MAIL_PASSWORD`,
+`MAIL_TO`); não precisa de credencial do GA4 (a fonte é o first-party).
+
+> O `scroll_depth` só aparece após o deploy que passou a enviá-lo ao first-party;
+> até lá, o relatório mostra zero nas barras de rolagem.
 
 ---
 

@@ -1,0 +1,86 @@
+# Relatório MENSAL de insights de PRODUTO (comportamento no site).
+#
+# Separado de propósito do email semanal de CONVERSÃO (weekly-metrics.yml):
+#   - semanal  -> "quantos clientes vieram" (público: dono, decisão de mídia)
+#   - mensal   -> "como as pessoas usam o site" (público: você, decisão de CRO)
+# Misturar os dois foi o que gerou confusão antes.
+#
+# Roda no primeiro sábado do mês (BRT) e envia por email. A lógica vive em
+# scripts/product-report.js; este YAML só coleta, escreve os corpos e envia.
+#
+# Secrets necessários (os mesmos do semanal):
+#   MAIL_USERNAME / MAIL_PASSWORD (App Password) / MAIL_TO
+#
+# Escopo (AGENTS.md): os web vitals saíram do navegador e viraram gate de CI
+# (.github/workflows/perf.yml); este relatório cobre scroll/atenção/botões.
+
+name: Monthly Product Report
+
+on:
+  schedule:
+    # Primeiro sábado do mês às 11:00 UTC (08:00 BRT). O cron '0 11 1-7 * 6'
+    # dispara nos dias 1-7 que caíam em sábado — ou seja, só o primeiro sábado.
+    - cron: '0 11 1-7 * 6'
+  workflow_dispatch:
+    inputs:
+      days:
+        description: 'Janela em dias'
+        required: false
+        default: '30'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: monthly-product
+  cancel-in-progress: false
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    env:
+      PRODUCT_REPORT_DAYS: ${{ github.event.inputs.days || '30' }}
+      MONTHLY_OUT_DIR: ${{ github.workspace }}/.product-report
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Gerar relatório
+        id: gen
+        run: |
+          set -euo pipefail
+          mkdir -p "$MONTHLY_OUT_DIR"
+          node scripts/product-report.js --out "$MONTHLY_OUT_DIR" | tee "$RUNNER_TEMP/report.out"
+          test -s "$MONTHLY_OUT_DIR/body.txt" || { echo "corpo de texto vazio"; exit 1; }
+          echo "ok=1" >> "$GITHUB_OUTPUT"
+
+      - name: Enviar email
+        if: ${{ steps.gen.outputs.ok == '1' }}
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          from: Relatório Salustiano <${{ secrets.MAIL_USERNAME }}>
+          to: ${{ secrets.MAIL_TO }}
+          subject: "Como as pessoas usam o site (mês) — Consultório Salustiano"
+          html_body: file://${{ github.workspace }}/.product-report/body.html
+          body: file://${{ github.workspace }}/.product-report/body.txt
+
+      - name: Upload artefato
+        if: ${{ always() && steps.gen.outputs.ok == '1' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: monthly-product-${{ github.run_id }}
+          path: ${{ github.workspace }}/.product-report/
+          retention-days: 90

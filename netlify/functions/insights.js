@@ -114,6 +114,9 @@ exports.handler = async function (event) {
       const bySpecialty = {};
       const bySource = {};
       const byLocation = {};
+      // PRODUCT INSIGHT (não conversão): quantos eventos de rolagem por
+      // profundidade (25/50/75/100). Alimenta o relatório mensal de produto.
+      const byScrollDepth = {};
       const byCampaign = { clicks: {}, leads: {} };
       eventsList.forEach(e => {
         const spec = e.specialty || 'Geral';
@@ -123,6 +126,10 @@ exports.handler = async function (event) {
         if (e.event_type === 'whatsapp_click') {
           const loc = e.button_location || 'Desconhecido';
           byLocation[loc] = (byLocation[loc] || 0) + 1;
+        }
+        if (e.event_type === 'scroll_depth') {
+          const depth = String(e.scroll_depth != null ? e.scroll_depth : 'unknown');
+          byScrollDepth[depth] = (byScrollDepth[depth] || 0) + 1;
         }
       });
 
@@ -138,6 +145,7 @@ exports.handler = async function (event) {
         specialties: bySpecialty,
         sources: bySource,
         button_location: byLocation,
+        scroll_depth: byScrollDepth,
         campaigns: {
           clicks_by_campaign: byCampaign.clicks,
           leads_by_campaign: byCampaign.leads
@@ -166,6 +174,7 @@ exports.handler = async function (event) {
         sources: breakdown.sources,
         specialties: breakdown.specialties,
         button_location: breakdown.button_location,
+        scroll_depth: breakdown.scroll_depth,
         campaigns: breakdown.campaigns,
         events: prodEvents
       })

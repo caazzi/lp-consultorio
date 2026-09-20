@@ -94,9 +94,10 @@ htmlFiles.forEach(file => {
   const fontPreload = content.includes('rel="preload"') && content.includes('woff2');
   console.log(`   ${fontPreload ? '✅' : '⚠️'}  Preload de fontes locais: ${fontPreload ? '\x1b[32mConfigurado\x1b[0m' : '\x1b[31mAusente\x1b[0m'}`);
 
-  // Checagem de RUM Web Vitals Tracking
+  // Checagem do script de tracking (UTMs/conversão). Web Vitals NÃO são mais
+  // medidos no navegador: viraram gate de CI (.github/workflows/perf.yml).
   const trackingScript = content.includes('tracking.js');
-  console.log(`   ${trackingScript ? '✅' : '⚠️'}  Script de Rastreamento (UTMs e RUM Web Vitals): ${trackingScript ? '\x1b[32mPresente\x1b[0m' : '\x1b[31mAusente\x1b[0m'}`);
+  console.log(`   ${trackingScript ? '✅' : '⚠️'}  Script de Rastreamento (UTMs/conversão): ${trackingScript ? '\x1b[32mPresente\x1b[0m' : '\x1b[31mAusente\x1b[0m'}`);
 });
 
 // 3. Tamanho de Imagens no Projeto
