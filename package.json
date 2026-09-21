@@ -20,6 +20,7 @@
     "ads-funnel": "node ads/ads-cli.js funnel",
     "ads-report": "node ads/ads-cli.js report",
     "ads-slices": "node ads/ads-cli.js slices",
+    "ads-creatives": "node ads/ads-cli.js creatives",
     "ads-audit": "node ads/ads-cli.js audit-attribution",
     "ads-negatives": "node ads/ads-cli.js negatives",
     "ads-pause": "node ads/ads-cli.js pause-keywords",
