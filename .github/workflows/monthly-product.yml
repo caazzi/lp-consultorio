@@ -18,9 +18,9 @@ name: Monthly Product Report
 
 on:
   schedule:
-    # Primeiro sábado do mês às 11:00 UTC (08:00 BRT). O cron '0 11 1-7 * 6'
-    # dispara nos dias 1-7 que caíam em sábado — ou seja, só o primeiro sábado.
-    - cron: '0 11 1-7 * 6'
+    # Todo sábado às 11:00 UTC (08:00 BRT).
+    # A validação se é o PRIMEIRO sábado do mês ocorre via script no step de geração.
+    - cron: '0 11 * * 6'
   workflow_dispatch:
     inputs:
       days:
@@ -57,6 +57,17 @@ jobs:
         id: gen
         run: |
           set -euo pipefail
+          
+          # Trava de segurança: como o cron roda todo sábado, abortamos
+          # silenciosamente se for schedule e não for o primeiro sábado do mês (dias 1 a 7).
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            DAY=$(date +%d | sed 's/^0*//')
+            if [ "$DAY" -gt 7 ]; then
+              echo "Hoje é sábado, mas não é o primeiro do mês (dia $DAY). Encerrando sem gerar o relatório."
+              exit 0
+            fi
+          fi
+
           mkdir -p "$MONTHLY_OUT_DIR"
           node scripts/product-report.js --out "$MONTHLY_OUT_DIR" | tee "$RUNNER_TEMP/report.out"
           test -s "$MONTHLY_OUT_DIR/body.txt" || { echo "corpo de texto vazio"; exit 1; }
