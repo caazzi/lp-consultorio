@@ -94,4 +94,5 @@ jobs:
         with:
           name: monthly-product-${{ github.run_id }}
           path: ${{ github.workspace }}/.product-report/
+          include-hidden-files: true
           retention-days: 90

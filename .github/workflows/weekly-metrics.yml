@@ -99,10 +99,39 @@ jobs:
           body: file://${{ github.workspace }}/.weekly-report/body.txt
 
       # Sempre disponibiliza o relatório como artefato, mesmo se o email falhar.
+      # `include-hidden-files` é OBRIGATÓRIO: o diretório `.weekly-report` começa com
+      # ponto e o upload-artifact@v4 ignora arquivos/dirs ocultos por padrão — sem
+      # isso o step "passa" e não envia nada.
       - name: Upload artefato
         if: ${{ always() && steps.gen.outputs.ok == '1' }}
         uses: actions/upload-artifact@v4
         with:
           name: weekly-report-${{ github.run_id }}
           path: ${{ github.workspace }}/.weekly-report/
+          include-hidden-files: true
           retention-days: 30
+
+      # Alerta de falha. Sem isso um job quebrado é SILENCIOSO: o relatório apenas
+      # não chega e ninguém sabe — foi exatamente o que aconteceu em 2026-10-24
+      # (insights 504 por timeout do Netlify). Usa os mesmos secrets do envio normal.
+      - name: Avisar falha por email
+        if: ${{ failure() }}
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          from: Relatório Salustiano <${{ secrets.MAIL_USERNAME }}>
+          to: ${{ secrets.MAIL_TO }}
+          subject: "Atenção: o relatório de métricas desta semana não foi gerado"
+          body: |
+            O relatório automático de métricas desta semana NÃO foi gerado.
+
+            O que fazer: abrir o run abaixo e conferir o step "Gerar relatório".
+            Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+            Nenhum número foi perdido: os eventos ficam guardados no Netlify Blobs e
+            podem ser relidos com `npm run access-logs`, ou o workflow pode ser
+            reexecutado depois da correção.
