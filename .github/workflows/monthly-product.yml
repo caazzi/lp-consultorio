@@ -1,30 +1,30 @@
-# Relatório MENSAL de insights de PRODUTO (comportamento no site).
+# MONTHLY PRODUCT-insights report (behaviour on the site).
 #
-# Separado de propósito do email semanal de CONVERSÃO (weekly-metrics.yml):
-#   - semanal  -> "quantos clientes vieram" (público: dono, decisão de mídia)
-#   - mensal   -> "como as pessoas usam o site" (público: você, decisão de CRO)
-# Misturar os dois foi o que gerou confusão antes.
+# Deliberately separate from the weekly CONVERSION email (weekly-metrics.yml):
+#   - weekly  -> "how many customers came" (audience: the owner, media decisions)
+#   - monthly -> "how people use the site" (audience: you, CRO decisions)
+# Mixing the two is what caused confusion before.
 #
-# Roda no primeiro sábado do mês (BRT) e envia por email. A lógica vive em
-# scripts/product-report.js; este YAML só coleta, escreve os corpos e envia.
+# Runs on the first Saturday of the month (BRT) and emails the result. The logic
+# lives in scripts/product-report.js; this YAML only collects, writes and sends.
 #
-# Secrets necessários (os mesmos do semanal):
+# Required secrets (the same as the weekly job):
 #   MAIL_USERNAME / MAIL_PASSWORD (App Password) / MAIL_TO
 #
-# Escopo (AGENTS.md): os web vitals saíram do navegador e viraram gate de CI
-# (.github/workflows/perf.yml); este relatório cobre scroll/atenção/botões.
+# Scope (AGENTS.md): web vitals left the browser and became a CI gate
+# (.github/workflows/perf.yml); this report covers scroll/attention/buttons.
 
 name: Monthly Product Report
 
 on:
   schedule:
-    # Todo sábado às 11:00 UTC (08:00 BRT).
-    # A validação se é o PRIMEIRO sábado do mês ocorre via script no step de geração.
+    # Every Saturday at 11:00 UTC (08:00 BRT).
+    # The "first Saturday of the month" check runs inside the generation step.
     - cron: '0 11 * * 6'
   workflow_dispatch:
     inputs:
       days:
-        description: 'Janela em dias'
+        description: 'Window in days'
         required: false
         default: '30'
 
@@ -53,17 +53,17 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Gerar relatório
+      - name: Generate report
         id: gen
         run: |
           set -euo pipefail
           
-          # Trava de segurança: como o cron roda todo sábado, abortamos
-          # silenciosamente se for schedule e não for o primeiro sábado do mês (dias 1 a 7).
+          # Safety catch: the cron runs every Saturday, so abort silently when this is
+          # a scheduled run that is not the first Saturday of the month (days 1-7).
           if [ "${{ github.event_name }}" = "schedule" ]; then
             DAY=$(date +%d | sed 's/^0*//')
             if [ "$DAY" -gt 7 ]; then
-              echo "Hoje é sábado, mas não é o primeiro do mês (dia $DAY). Encerrando sem gerar o relatório."
+              echo "Today is a Saturday but not the first of the month (day $DAY). Exiting without generating the report."
               exit 0
             fi
           fi
@@ -73,7 +73,7 @@ jobs:
           test -s "$MONTHLY_OUT_DIR/body.txt" || { echo "corpo de texto vazio"; exit 1; }
           echo "ok=1" >> "$GITHUB_OUTPUT"
 
-      - name: Enviar email
+      - name: Send email
         if: ${{ steps.gen.outputs.ok == '1' }}
         uses: dawidd6/action-send-mail@v3
         with:
@@ -82,13 +82,13 @@ jobs:
           secure: true
           username: ${{ secrets.MAIL_USERNAME }}
           password: ${{ secrets.MAIL_PASSWORD }}
-          from: Relatório Salustiano <${{ secrets.MAIL_USERNAME }}>
+          from: Relatório Salustiano <${{ secrets.MAIL_USERNAME }}>  # lang:allow (email sender)
           to: ${{ secrets.MAIL_TO }}
-          subject: "Como as pessoas usam o site (mês) — Consultório Salustiano"
+          subject: "Como as pessoas usam o site (mês) — Consultório Salustiano"  # lang:allow (email subject)
           html_body: file://${{ github.workspace }}/.product-report/body.html
           body: file://${{ github.workspace }}/.product-report/body.txt
 
-      - name: Upload artefato
+      - name: Upload artifact
         if: ${{ always() && steps.gen.outputs.ok == '1' }}
         uses: actions/upload-artifact@v4
         with:

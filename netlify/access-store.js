@@ -230,7 +230,7 @@ function knownCampaignIdFromReferer(referer) {
  *   2. known campaign id recovered from the referer querystring (gad_campaignid)
  *   3. utms.campaign
  *   4. utms.source
- *   5. 'Direto / Orgânico'
+ *   5. 'Direct / Organic'
  */
 function resolveCampaignLabelFromEvent(e) {
   const utms = e.utms || {};
@@ -240,7 +240,7 @@ function resolveCampaignLabelFromEvent(e) {
   if (refererCampaignId) return CAMPAIGN_LABELS[refererCampaignId];
   if (utms.campaign) return utms.campaign;
   if (utms.source) return utms.source;
-  return 'Direto / Orgânico';
+  return 'Direct / Organic';
 }
 
 /**
@@ -252,9 +252,9 @@ function resolveCampaignLabelFromEvent(e) {
  * Paid-click nuance: an explicit Google Ads first-landing arrives with the page's own
  * URL as referer (`consultoriosalustiano.com.br/?gad_source=1&gad_campaignid=<id>&gclid=...`).
  * When that referer carries a KNOWN campaign id we surface the readable campaign label
- * (e.g. "Infectologia") as the source rather than collapsing to "Direto / Orgânico" —
+ * (e.g. "Infectologia") as the source rather than collapsing to "Direct / Organic" —
  * otherwise paid volume is measured as direct. A bare `gclid` with no KNOWN campaign id
- * stays "Direto / Orgânico" (genuinely ambiguous: the id alone encodes no readable source,
+ * stays "Direct / Organic" (genuinely ambiguous: the id alone encodes no readable source,
  * and raw gclid must never leak).
  */
 function canonicalSourceFromEvent(e) {
@@ -265,7 +265,7 @@ function canonicalSourceFromEvent(e) {
   const referer = e.referer || '';
   if (isPreviewReferer(referer)) return '__preview__';
 
-  if (!referer) return 'Direto / Orgânico';
+  if (!referer) return 'Direct / Organic';
 
   try {
     const host = new URL(referer).hostname.replace(/^www\./, '');
@@ -274,15 +274,15 @@ function canonicalSourceFromEvent(e) {
     if (!host || host === 'consultoriosalustiano.com.br') {
       const refCampaignId = knownCampaignIdFromReferer(referer);
       if (refCampaignId) return CAMPAIGN_LABELS[refCampaignId];
-      return 'Direto / Orgânico';
+      return 'Direct / Organic';
     }
     return host;
   } catch {
     // Unparseable referer (rare). Fall back to the path root, stripped of query.
     const noQuery = referer.split(/[?#]/)[0];
-    if (!noQuery) return 'Direto / Orgânico';
+    if (!noQuery) return 'Direct / Organic';
     const bare = noQuery.replace(/^https?:\/\//, '').split('/')[0] || '';
-    return bare || 'Direto / Orgânico';
+    return bare || 'Direct / Organic';
   }
 }
 

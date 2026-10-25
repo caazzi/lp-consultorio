@@ -1,13 +1,13 @@
-# Secret scanning no CI — defesa em profundidade sobre o Secret Scanning nativo.
+# Secret scanning in CI — defence in depth on top of GitHub's native Secret Scanning.
 #
-# O GitHub já tem Secret Scanning + Push Protection ligados neste repo público
-# (detecta padrões de ~200 provedores, inclusive antes do push). Este workflow
-# adiciona uma segunda opinião independente que:
-#   - roda em todo push/PR (inclusive de forks, onde push protection não age);
-#   - varre o HISTÓRICO COMPLETO semanalmente (segredos antigos/rotacionados);
-#   - usa a base de regras + entropia do gitleaks, complementar à do GitHub.
+# GitHub Secret Scanning + Push Protection are already enabled on this public repo
+# (~200 providers, including before the push). This workflow adds a second,
+# independent opinion that:
+#   - runs on every push/PR (including forks, where push protection does not act);
+#   - scans the FULL HISTORY weekly (old/rotated secrets);
+#   - uses gitleaks' rule set + entropy, complementary to GitHub's.
 #
-# Não consome secrets (roda com o token efêmero do runner). Sem dependências npm.
+# Consumes no secrets (runs with the runner's ephemeral token). No npm dependencies.
 
 name: Secret Scan
 
@@ -16,7 +16,7 @@ on:
     branches: [main]
   pull_request:
   schedule:
-    # Segundas 03:00 UTC — varredura do histórico, independente de commits.
+    # Mondays 03:00 UTC — full-history scan, independent of commits.
     - cron: '0 3 * * 1'
   workflow_dispatch:
 
@@ -33,13 +33,13 @@ jobs:
     timeout-minutes: 10
 
     steps:
-      - name: Checkout (histórico completo)
+      - name: Checkout (full history)
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      # Binário oficial fixado por versão + verificação de checksum (supply-chain).
-      - name: Instalar gitleaks
+      # Official binary pinned by version + checksum verification (supply chain).
+      - name: Install gitleaks
         env:
           GITLEAKS_VERSION: '8.24.3'
         run: |
@@ -52,9 +52,9 @@ jobs:
           sudo install -m 0755 /tmp/gitleaks /usr/local/bin/gitleaks
           gitleaks version
 
-      # Scan do histórico inteiro. `--redact` evita imprimir o segredo no log
-      # público do Actions (o alerta continua indicando arquivo/linha/regra).
-      - name: Varredura de segredos (histórico completo)
+      # Full-history scan. `--redact` keeps the secret out of the public Actions log
+      # (the alert still reports file/line/rule).
+      - name: Secret scan (full history)
         run: |
           set -euo pipefail
           gitleaks detect \

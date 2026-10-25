@@ -38,11 +38,11 @@ exports.handler = async function (event, context) {
       utms: payload.utms || {}
     };
 
-    // TODO(confirmed-lead): quando a integração com a WhatsApp Business API / webhooks
-    // estiver disponível, derivar um evento `lead` (confirmado) a partir do message_sent
-    // + confirmação de entrega do WhatsApp. Hoje `message_sent` é apenas um proxy (tab hidden).
+    // TODO(confirmed-lead): once the WhatsApp Business API / webhook integration is
+    // available, derive a `lead` (confirmed) event from message_sent + delivery
+    // confirmation. Today `message_sent` is only a proxy (tab hidden).
 
-    // Persiste no Netlify Blobs (durable, sobrevive a deploys)
+    // Persist to Netlify Blobs (durable, survives deploys)
     const key = makeKey(logEntry);
     await getStoreInstance(event).setJSON(key, logEntry);
 
