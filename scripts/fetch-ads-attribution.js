@@ -29,19 +29,19 @@ function pad(s, n) { return String(s).padEnd(n); }
 
 function banner() {
   console.log('\x1b[36m%s\x1b[0m', '='.repeat(70));
-  console.log('\x1b[36m%s\x1b[0m', ' 📢 ATRIBUIÇÃO DE GOOGLE ADS — GA4 × FIRST-PARTY (via motor compartilhado)');
+  console.log('\x1b[36m%s\x1b[0m', ' 📢 GOOGLE ADS ATTRIBUTION — GA4 × FIRST-PARTY (shared engine)');
   console.log('\x1b[36m%s\x1b[0m', '='.repeat(70) + '\n');
 }
 
 async function main() {
   banner();
-  console.log(`🗄️  First-party (${DAYS} dias) | ${firstparty.DEFAULT_INSIGHTS_URL}\n`);
+  console.log(`🗄️  First-party (${DAYS} days) | ${firstparty.DEFAULT_INSIGHTS_URL}\n`);
 
   let api;
   try {
     api = await firstparty.fetchInsights({ days: DAYS });
   } catch (err) {
-    console.error(`\x1b[31m❌ Falha no first-party: ${err.message}\x1b[0m`);
+    console.error(`\x1b[31m❌ First-party failed: ${err.message}\x1b[0m`);
     process.exitCode = 1;
     return;
   }
@@ -49,36 +49,36 @@ async function main() {
   const audit = reportLib.auditFirstParty(api);
 
   console.log('\x1b[33m%s\x1b[0m', '1. FIRST-PARTY (Netlify Blobs)');
-  console.log(` - Eventos limpos : ${audit.counts.clean} (teste: ${audit.counts.testEvents} | preview: ${audit.counts.previewEvents})`);
-  console.log(` - Pagos          : ${audit.counts.paid}`);
-  console.log(` - utm_source vazio em pago : ${audit.utmSourceEmptyOnPaid} (esperado: Ads manda gad_*, não utm_*)`);
+  console.log(` - Clean events : ${audit.counts.clean} (test: ${audit.counts.testEvents} | preview: ${audit.counts.previewEvents})`);
+  console.log(` - Paid         : ${audit.counts.paid}`);
+  console.log(` - empty utm_source on paid : ${audit.utmSourceEmptyOnPaid} (expected: Ads sends gad_*, not utm_*)`);
 
-  console.log('\n\x1b[33m%s\x1b[0m', '2. COBERTURA DE PARÂMETROS (eventos limpos)');
+  console.log('\n\x1b[33m%s\x1b[0m', '2. PARAMETER COVERAGE (clean events)');
   Object.entries(audit.coverage).forEach(([k, n]) => console.log(` - ${pad(k, 16)}: ${n}/${audit.counts.clean}`));
 
-  console.log('\n\x1b[33m%s\x1b[0m', '3. CHAVE DE JOIN (utms vs referer)');
+  console.log('\n\x1b[33m%s\x1b[0m', '3. JOIN KEY (utms vs referer)');
   console.log(` - via utms.gad_campaignid : ${audit.joinKey.viaUtmId}`);
   console.log(` - via referer (fallback)  : ${audit.joinKey.viaReferer}`);
-  console.log(` - não resolvido           : ${audit.joinKey.unresolved}`);
+  console.log(` - unresolved              : ${audit.joinKey.unresolved}`);
 
   if (audit.gadCampaignIdSuspects.length) {
-    console.log('\n\x1b[31m%s\x1b[0m', `⚠️  ${audit.gadCampaignIdSuspects.length} evento(s) com gad_campaignid inválido (contaminação gad_source).`);
+    console.log('\n\x1b[31m%s\x1b[0m', `⚠️  ${audit.gadCampaignIdSuspects.length} event(s) with an invalid gad_campaignid (gad_source contamination).`);
   }
 
-  console.log('\n\x1b[33m%s\x1b[0m', '4. FUNIL POR CAMPANHA (first-party, sem teste/preview)');
+  console.log('\n\x1b[33m%s\x1b[0m', '4. FUNNEL BY CAMPAIGN (first-party, test/preview excluded)');
   const fp = firstparty.summarize(api, { paidOnly: false });
   Object.values(fp.byCampaign)
     .sort((a, b) => b.pageViews - a.pageViews)
     .forEach((c) => {
-      const id = c.campaignId || '(sem campanha)';
-      console.log(` - ${pad(id, 16)} ${pad(c.label, 16)}: ${c.pageViews} pv | ${c.whatsappClicks} cliques | ${c.messagesSent} msg`);
+      const id = c.campaignId || '(no campaign)';
+      console.log(` - ${pad(id, 16)} ${pad(c.label, 16)}: ${c.pageViews} pv | ${c.whatsappClicks} clicks | ${c.messagesSent} msg`);
     });
 
   console.log('\n\x1b[36m%s\x1b[0m', '-------------------------------------------------------');
-  console.log('\x1b[33m%s\x1b[0m', ' Para o cruzamento completo com GA4, use:');
+  console.log('\x1b[33m%s\x1b[0m', ' For the full GA4 cross-check, use:');
   console.log('\x1b[33m%s\x1b[0m', '   npm run ads-audit -- --days 90');
   console.log('\x1b[36m%s\x1b[0m', '-------------------------------------------------------\n');
-  console.log(`Campanha paga: ${campaignsLib.PAID_CAMPAIGN_IDS.map(campaignsLib.labelForId).join(', ')}`);
+  console.log(`Paid campaign: ${campaignsLib.PAID_CAMPAIGN_IDS.map(campaignsLib.labelForId).join(', ')}`);
 }
 
 main();

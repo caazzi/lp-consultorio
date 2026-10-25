@@ -1,12 +1,12 @@
 # gitleaks configuration — https://github.com/gitleaks/gitleaks
 #
-# Estende as regras padrão (que já pegam Google service accounts, OAuth client
-# secrets, AWS keys, etc.) e adiciona uma allowlist EXPLÍCITA para os falsos
-# positivos conhecidos deste repositório.
+# Extends the default rules (which already catch Google service accounts, OAuth
+# client secrets, AWS keys, etc.) and adds an EXPLICIT allowlist for this
+# repository's known false positives.
 #
-# Princípio: allowlist MÍNIMA e por REGEX (não por PATH). Nunca liberar um arquivo
-# inteiro — um arquivo que hoje só cita nome de campo pode amanhã receber uma
-# chave real, e uma allowlist por path esconderia exatamente esse caso.
+# Principle: MINIMAL allowlist by REGEX (never by PATH). Never whitelist a whole
+# file — a file that only mentions a field name today may hold a real key
+# tomorrow, and a path allowlist would hide exactly that case.
 
 title = "lp-consultorio"
 
@@ -14,15 +14,15 @@ title = "lp-consultorio"
 useDefault = true
 
 [allowlist]
-description = "Falsos positivos conhecidos do site (não são credenciais)"
+description = "Known false positives for this site (not credentials)"
 
-# `client_id` aqui é o UUID efêmero por page-load usado pelo pipeline first-party
-# (netlify/access-store.js) — identidade de visitante, sem cookie. NÃO é o
-# client_id de um OAuth client. A regex exige UUID v4 com hífens para não abrir
-# espaço a segredos de formato livre.
+# The `client_id` here is the ephemeral per-page-load UUID used by the first-party
+# pipeline (netlify/access-store.js) — cookie-less visitor identity. It is NOT an
+# OAuth client id. The regex requires a hyphenated UUID v4 so it never opens room
+# for free-form secrets.
 regexes = [
   '''client_id['":\s]+[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}''',
   '''window\.__clientId''',
-  # Marcador literal de smoke test (QA), documentado em AGENTS.md/test-csp.
+  # Literal smoke-test marker (QA), documented in AGENTS.md/test-csp.
   '''TESTGCLID'''
 ]

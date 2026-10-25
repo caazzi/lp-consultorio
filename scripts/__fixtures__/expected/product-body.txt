@@ -1,0 +1,24 @@
+COMPORTAMENTO NO SITE (MÊS) | Consultório Salustiano
+Mês encerrado em 25/10/2026
+
+Uma leitura sobre COMO as pessoas usam o site. Não é sobre quantos clientes vieram (isso fica no email semanal).
+
+ATÉ ONDE AS PESSOAS ROLAM A PÁGINA
+- Chegaram a 25% da página: 140 visitas (83.8%)
+- Chegaram a 50% da página: 90 visitas (53.9%)
+- Chegaram a 75% da página: 40 visitas (24%)
+- Chegaram a 100% da página: 12 visitas (7.2%)
+
+ONDE AS PESSOAS TOCAM NO WHATSAPP
+- Botão flutuante (fixo na tela): 9 toques
+- Botão principal do topo da página: 7 toques
+- Botão no cabeçalho: 5 toques
+
+DE ONDE VEM A ATENÇÃO
+- Quem já conhece o site (busca no Google ou digita o endereço): 120 visitas
+- Anúncios pagos no Google (Infectologia): 47 visitas
+
+COMO USAR ISTO
+- Pouca gente passando de 50%? O conteúdo/CTA importante pode estar baixo demais.
+- Muitos toques no botão flutuante? Ele está funcionando como CTA principal.
+- Isto orienta onde mexer na página. Resultado de conversão, veja no email semanal.

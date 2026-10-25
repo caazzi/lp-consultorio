@@ -1,0 +1,46 @@
+# Tests and language policy — runs on every push/PR.
+#
+# Why a dedicated workflow: `npm test` (CSP/structure + email goldens) and
+# `npm run lang:check` existed only on the developer machine. A rule that is never
+# enforced in CI is a suggestion, so the language policy (PT-BR only in the UI and
+# in emails) now fails the build like any other test.
+#
+# Offline: no secrets, no network calls (the retry test uses a loopback server).
+
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci --omit=dev
+
+      - name: Security, structure and pipeline tests
+        run: npm test
+
+      - name: Language policy (PT-BR only in UI and emails)
+        run: npm run lang:check

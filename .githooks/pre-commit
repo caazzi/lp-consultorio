@@ -1,31 +1,31 @@
 #!/usr/bin/env sh
 #
-# pre-commit — bloqueia commit que introduza segredo.
+# pre-commit — blocks a commit that introduces a secret.
 #
-# Camada LOCAL (antes de o segredo sair da máquina). Complementa o Secret
-# Scanning + Push Protection do GitHub, que só agem no push e não pegam padrões
-# genéricos/entropia. Instale com: npm run hooks:install
+# LOCAL layer (before the secret leaves the machine). Complements GitHub's Secret
+# Scanning + Push Protection, which only act on push and miss generic/entropy
+# patterns. Install with: npm run hooks:install
 #
-# Comportamento quando o gitleaks NÃO está instalado: avisa e deixa passar
-# (fail-open). O CI (.github/workflows/gitleaks.yml) é a rede de segurança
-# obrigatória; o hook é conveniência, não deve travar quem não tem a ferramenta.
+# Behaviour when gitleaks is NOT installed: warn and let it through (fail-open).
+# CI (.github/workflows/gitleaks.yml) is the mandatory safety net; this hook is a
+# convenience and must not block people who do not have the tool.
 
 set -eu
 
 if ! command -v gitleaks >/dev/null 2>&1; then
-  echo "⚠️  pre-commit: gitleaks não encontrado — pulando scan local."
-  echo "    Instale: https://github.com/gitleaks/gitleaks#installing"
-  echo "    (o CI continua varrendo; veja .github/workflows/gitleaks.yml)"
+  echo "⚠️  pre-commit: gitleaks not found — skipping the local scan."
+  echo "    Install: https://github.com/gitleaks/gitleaks#installing"
+  echo "    (CI keeps scanning; see .github/workflows/gitleaks.yml)"
   exit 0
 fi
 
-# `--staged` varre apenas o que está prestes a ser commitado (rápido).
-# `--redact` evita imprimir o valor do segredo no terminal/log.
+# `--staged` scans only what is about to be committed (fast).
+# `--redact` avoids printing the secret value to the terminal/log.
 if ! gitleaks protect --staged --redact --config .gitleaks.toml --verbose; then
   echo ""
-  echo "❌ Commit bloqueado: possível segredo detectado nos arquivos staged."
-  echo "   Revise o(s) arquivo(s) acima. Se for falso positivo, ajuste a"
-  echo "   allowlist em .gitleaks.toml (com justificativa) ou use:"
+  echo "❌ Commit blocked: a possible secret was detected in the staged files."
+  echo "   Review the file(s) above. If it is a false positive, adjust the"
+  echo "   allowlist in .gitleaks.toml (with a justification) or use:"
   echo "     git commit --no-verify"
   exit 1
 fi

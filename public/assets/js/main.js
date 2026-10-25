@@ -1,11 +1,11 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Atualizar o ano atual no rodapé
+    // Update the current year in the footer
     const currentYearEl = document.getElementById('current-year');
     if (currentYearEl) {
         currentYearEl.textContent = new Date().getFullYear();
     }
 
-    // Intersection Observer para Scroll Reveal
+    // Intersection Observer for scroll reveal
     const observerOptions = {
         threshold: 0.1,
         rootMargin: '0px 0px -50px 0px'

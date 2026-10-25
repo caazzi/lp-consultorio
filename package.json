@@ -28,7 +28,9 @@
     "ads-goals-fix": "node ads/ads-cli.js goals-fix",
     "perf": "node scripts/run-perf.js",
     "perf:check": "node scripts/perf-check.js",
-    "test": "node scripts/test-csp.js"
+    "test": "node scripts/test-csp.js && node scripts/test-reports.js",
+    "test:reports": "node scripts/test-reports.js",
+    "lang:check": "node scripts/lang-check.js"
   },
   "repository": {
     "type": "git",

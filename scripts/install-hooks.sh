@@ -1,10 +1,10 @@
 #!/usr/bin/env sh
 #
-# install-hooks.sh — ativa os hooks versionados deste repo (npm run hooks:install).
+# install-hooks.sh — enables this repo's versioned hooks (npm run hooks:install).
 #
-# Por que `core.hooksPath` em vez de copiar para .git/hooks: os hooks ficam
-# versionados em .githooks/ e passam a valer (e a ser revisados) como qualquer
-# outro código. Um hook copiado fica invisível no git e some a cada clone.
+# Why `core.hooksPath` instead of copying into .git/hooks: hooks stay versioned in
+# .githooks/ and are therefore reviewed like any other code. A copied hook is
+# invisible to git and disappears on every clone.
 
 set -eu
 
@@ -14,11 +14,11 @@ cd "$repo_root"
 git config core.hooksPath .githooks
 chmod +x .githooks/* 2>/dev/null || true
 
-echo "✅ Hooks instalados: core.hooksPath=$(git config --get core.hooksPath)"
-echo "   - pre-commit: gitleaks protect --staged (pula se gitleaks ausente)"
+echo "✅ Hooks installed: core.hooksPath=$(git config --get core.hooksPath)"
+echo "   - pre-commit: gitleaks protect --staged (skipped when gitleaks is missing)"
 
 if ! command -v gitleaks >/dev/null 2>&1; then
   echo ""
-  echo "⚠️  gitleaks não está no PATH. O hook vai pular o scan local."
-  echo "    Instale para proteção completa: https://github.com/gitleaks/gitleaks#installing"
+  echo "⚠️  gitleaks is not on PATH. The hook will skip the local scan."
+  echo "    Install it for full protection: https://github.com/gitleaks/gitleaks#installing"
 fi

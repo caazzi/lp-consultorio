@@ -1,5 +1,5 @@
-// 🏥 Arquivo de Rastreamento Avançado - lp-consultorio
-// Este script centraliza a lógica de UTMs, disparos de conversão, RUM e inteligência de acessos.
+// 🏥 Advanced tracking - lp-consultorio
+// Centralizes UTM handling, conversion events and access intelligence.
 
 // Consent-light first-party client identity: a per-visit UUID held only in memory
 // (no cookies, no persistent storage). Lets Access events be merged into users/sessions
@@ -27,36 +27,36 @@ function resolveCampaignLabel(utms) {
     if (campaignId && CAMPAIGN_LABELS[campaignId]) return CAMPAIGN_LABELS[campaignId];
     if (utms.campaign) return utms.campaign;
     if (utms.source) return utms.source;
-    return 'Direto / Orgânico';
+    return 'Direct / Organic';
 }
 
 // =============================================================================
 // GA4 / Google Ads (gtag.js) — CARREGAMENTO DEFERRED (somente por gesto)
 // -----------------------------------------------------------------------------
-// Objetivo: remover o ~3.5s de trabalho no main-thread (config/GA4 + integração
-// com Google Ads) do caminho crítico da página. O gtag real é injetado apenas no
-// primeiro gesto do usuário (pointerdown/keydown/scroll/touchstart). NÃO há
-// fallback por ociosidade: em página ocupada o timeout disparava dentro da janela
+// Goal: keep ~3.5s of main-thread work (gtag config/GA4 + Google Ads integration)
+// off the page's critical path. The real gtag is injected only on the user's first
+// gesture (pointerdown/keydown/scroll/touchstart). There is NO idle fallback: on a
+// busy page the old timeout fired inside the TBT window (see below).
 // do TBT (long task de ~1.2s), derrubando o gate de Web Vitals. O placeholder
-// síncrono abaixo garante que comandos de conversão nunca se percam mesmo antes
-// do gtag real existir: o Googletagmanager processa o dataLayer logo que inicializa.
-// Segurança de conversão mantida: garantir que um clique no WhatsApp FORÇA a
-// injeção do gtag imediatamente (ver ensureGtagLoaded abaixo).
+// The synchronous placeholder below guarantees conversion commands are never lost
+// before the real gtag exists: Googletagmanager processes the dataLayer as soon as
+// it initializes. Conversion safety is preserved: a WhatsApp click FORCES the gtag
+// injection immediately (see ensureGtagLoaded below).
 // =============================================================================
 const GA4_MEASUREMENT_ID = 'G-1Q50PEEMVX';
 
-// Placeholder síncrono (criado sempre; nunca é pesado). Garante que window.gtag
-// exista para RUM/web_vitals e para o dataLayer, sem esperar o gtag real.
+// Synchronous placeholder (always created; never heavy). Guarantees window.gtag
+// exists for the dataLayer without waiting for the real gtag.
 window.dataLayer = window.dataLayer || [];
 if ('function' !== typeof window.gtag) {
     window.gtag = function () { window.dataLayer.push(arguments); };
 }
 
-// Cria o script real do gtag e dispara o config. Idempotente: só pode rodar uma vez.
+// Creates the real gtag script and fires the config. Idempotent: runs at most once.
 function injectGtagAndConfigure() {
     if (window.__gtagInjected) return;
     if (document.querySelector('script[src*="googletagmanager.com/gtag/js"]')) {
-        // Já existe um <script> do gtag no documento (ex.: injetado antes).
+        // A gtag <script> already exists in the document (e.g. injected earlier).
         window.__gtagInjected = true;
         return;
     }
@@ -79,14 +79,14 @@ function injectGtagAndConfigure() {
     document.head.appendChild(g);
 }
 
-// Injeta o gtag real SOMENTE no primeiro gesto do usuário (pointerdown/keydown/
-// scroll/touchstart), nunca por ociosidade. O gtag só é necessário para medir
-// GA4/Ads, e quem não interage não gera sessão que importe: forçar o load num
-// instante ocioso após o `load` fazia o fallback de timeout disparar em páginas
-// ocupadas (Lighthouse mobile), injetando o gtag em ~4s e criando uma long task
+// Injects the real gtag ONLY on the user's first gesture (pointerdown/keydown/
+// scroll/touchstart), never on idle. gtag only matters for GA4/Ads measurement, and
+// a visitor who never interacts does not produce a session worth measuring: forcing
+// the load at an idle moment after `load` made the timeout fallback fire on busy
+// pages (Lighthouse mobile), injecting gtag at ~4s and creating a long task that
 // de ~1.2s na janela do TBT.
-// Conversão continua garantida: o clique no WhatsApp chama ensureGtagLoaded(),
-// que injeta NA HORA — o placeholder buffa o dataLayer e o gtag o reprocessa.
+// Conversion stays safe: a WhatsApp click calls ensureGtagLoaded(), which injects
+// IMMEDIATELY — the placeholder buffers the dataLayer and gtag replays it.
 (function armDeferredGtag() {
     var EVENTS = ['pointerdown', 'keydown', 'scroll', 'touchstart'];
     var done = false;
@@ -109,12 +109,12 @@ function injectGtagAndConfigure() {
     });
 })();
 
-// Garante que o gtag REAL esteja pronto antes de disparar um evento de conversão.
-// Se ainda não carregou (nenhum gesto), injeta NA HORA — assim um clique direto
-// no WhatsApp sem qualquer interação prévia nunca perde o generate_lead.
+// Ensures the REAL gtag is ready before firing a conversion event. If it has not
+// loaded yet (no gesture), inject it NOW — so a direct WhatsApp click with no prior
+// interaction never loses generate_lead.
 function ensureGtagLoaded(onReady) {
     if (window.__gtagReady) { onReady(); return; }
-    // Força a injeção agora (cobrir clique direto sem gesto prévio).
+    // Force the injection now (covers a direct click with no prior gesture).
     injectGtagAndConfigure();
     var tries = 0;
     var timer = setInterval(function () {
@@ -125,7 +125,7 @@ function ensureGtagLoaded(onReady) {
     }, 100);
 }
 
-// Envia um evento de conversão ao GA4 de forma confiável (placeholder ou real).
+// Sends a conversion event to GA4 reliably (placeholder or real gtag).
 function sendGtagConversion(eventName, params) {
     ensureGtagLoaded(function () {
         try {
@@ -138,13 +138,12 @@ function sendGtagConversion(eventName, params) {
 // 1. Armazenar UTMs na SessionStorage (Executa no carregamento)
 (function storeUTMs() {
     const urlParams = new URLSearchParams(window.location.search);
-    // `gad_source`/`gad_campaignid` são enviados pelo Google Ads no clique pago mesmo
-    // sem passagem manual de utm_*. Persisti-los aqui (como o gclid) garante que
-    // beacons de conversão disparados em navegações posteriores (cliques/message_sent)
-    // mantenham a atribuição quando a querystring da URL de aterrissagem já se perdeu.
-    // `gbraid`/`wbraid` são os identificadores de clique do iOS (quando o app não
-    // manda `gclid`, por App Tracking Transparency) e do web-to-app; sem persisti-los
-    // o tráfego pago de iOS chega sem atribuição.
+    // `gad_source`/`gad_campaignid` are sent by Google Ads on paid clicks even without
+    // manual utm_*. Persisting them here (like gclid) keeps conversion beacons fired on
+    // later navigations (clicks/message_sent) attributable after the landing querystring
+    // is gone. `gbraid`/`wbraid` are the iOS click ids (when the app cannot send `gclid`
+    // because of App Tracking Transparency) and the web-to-app ids; without persisting
+    // them, paid iOS traffic arrives unattributed.
     const utms = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'gclid', 'gbraid', 'wbraid', 'gad_source', 'gad_campaignid'];
 
     utms.forEach(param => {
@@ -154,11 +153,11 @@ function sendGtagConversion(eventName, params) {
     });
 })();
 
-// 2. Inicialização do DataLayer
+// 2. DataLayer initialization
 window.dataLayer = window.dataLayer || [];
 
 /**
- * Dispara notificação silenciosa de log (Serverless Beacon)
+ * Fires a silent log notification (serverless beacon)
  */
 function sendLogBeacon(data) {
     try {
@@ -181,11 +180,11 @@ function sendLogBeacon(data) {
 }
 
 /**
- * Dispara evento de conversão para o GTM, GA4 e Serverless Access Log
- * @param {string} location - Identificador de onde o clique ocorreu (ex: 'Header', 'Hero')
+ * Fires a conversion event to the dataLayer, GA4 and the access log
+ * @param {string} location - where the click happened (e.g. 'Header', 'Hero')
  */
-// Converte as UTMs salvas em querystring para anexar ao link do WhatsApp,
-// permitindo que o atendente (e o GA4) atribuam cada conversa à campanha certa.
+// Turns the stored UTMs into a querystring to append to the WhatsApp link, so the
+// attendant (and GA4) can attribute each conversation to the right campaign.
 function buildWhatsAppUrlWithUtm(baseUrl, locationOverride) {
     const utmParams = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'gclid', 'gbraid', 'wbraid', 'gad_source', 'gad_campaignid'];
     const parts = [];
@@ -194,12 +193,12 @@ function buildWhatsAppUrlWithUtm(baseUrl, locationOverride) {
         if (v) parts.push(`${encodeURIComponent(p)}=${encodeURIComponent(v)}`);
     });
     if (parts.length === 0) return baseUrl;
-    // O WhatsApp usa '&text=' já presente na baseUrl (ou para sticky, usamos locationOverride).
+    // WhatsApp already carries '&text=' in baseUrl (or, for the sticky button, we use locationOverride).
     return baseUrl + (baseUrl.includes('?') ? '&' : '?') + parts.join('&');
 }
 
-// Verifica se a URL aponta para o host oficial do WhatsApp (host exato, não substring),
-// evitando open redirect / concatenação de UTMs em domínios arbitrários.
+// Checks that the URL points to the official WhatsApp host (exact match, not
+// substring), preventing open redirects / UTM concatenation onto arbitrary domains.
 function isTrustedWhatsAppUrl(url) {
     try {
         const parsed = new URL(url || '');
@@ -251,13 +250,13 @@ function trackWhatsAppClick(location, element) {
     const timeOnPageSec = Math.round((Date.now() - startTime) / 1000);
     const utms = collectUtmPayload();
 
-    // Anexa UTMs ao link real que será aberto, para o atendente ver a origem.
-    // Valida o host exato (não substring) para não concatenar UTMs em URLs arbitrárias.
+    // Appends UTMs to the link that will actually open, so the attendant sees the source.
+    // Validates the exact host (not substring) to avoid UTM concatenation on arbitrary URLs.
     if (element && isTrustedWhatsAppUrl(element.href)) {
         element.href = buildWhatsAppUrlWithUtm(element.href, location);
     }
 
-    // Disparo para o GTM (DataLayer)
+    // Push to the dataLayer
     window.dataLayer.push({
         'event': 'generate_lead',
         'button_location': location,
@@ -269,12 +268,11 @@ function trackWhatsAppClick(location, element) {
         'gclid': utms.gclid
     });
 
-    // Disparo direto para o gtag.js com dimensões customizadas para CVR por campanha.
-    // Garante o load do gtag real antes de enviar (evita corrida com o load lazy e
-    // perda de conversão em navegações rápidas para o WhatsApp).
-    // Atribuição completa: além de campaign_id, envia gclid/gad_campaignid e o tempo
-    // na página — permite cruzar a conversão com a campanha no GA4 sem depender do
-    // beacon first-party (útil quando o Ads/GA4 estão disponíveis e o Blob não).
+    // Direct gtag.js event with custom dimensions for per-campaign CVR. Ensures the
+    // real gtag is loaded before sending (avoids a race with the lazy load and lost
+    // conversions on fast navigations to WhatsApp). Full attribution: besides
+    // campaign_id it sends gclid/gad_campaignid and time on page — enough to cross the
+    // conversion with the campaign in GA4 without relying on the first-party beacon.
     const label = isCardio ? 'WhatsApp Dra Anabel ' + location : 'WhatsApp ' + location;
     sendGtagConversion('generate_lead', {
         'event_category': 'conversion',
@@ -290,7 +288,7 @@ function trackWhatsAppClick(location, element) {
         'time_on_page_sec': timeOnPageSec
     });
 
-    // Registra log de conversão no servidor Netlify
+    // Record the conversion in the Netlify function log
     sendLogBeacon({
         event_type: 'whatsapp_click',
         specialty: specialty,
@@ -307,7 +305,7 @@ function trackWhatsAppClick(location, element) {
     const isCardio = window.location.pathname.includes('/cardiologia');
     const specialty = isCardio ? 'Cardiologia' : 'Infectologia';
 
-    // Log de visualização de página
+    // Page-view log
     sendLogBeacon({
         event_type: 'page_view',
         specialty: specialty,
@@ -316,9 +314,9 @@ function trackWhatsAppClick(location, element) {
     });
 
     // Profundidade de rolagem (25/50/75/100%). INSIGHT DE PRODUTO (CRO: onde
-    // posicionar o CTA), não conversão. Por isso vai ao first-party (Blobs) e é
-    // lido pelo relatório mensal de produto, nunca pelo funil de Ads/email de
-    // conversão. Sem dataLayer: não há GTM instalado, então seria inerte.
+    // where to place the CTA), not conversion. That is why it goes to the first-party
+    // store (Blobs) and is read by the monthly product report, never by the Ads funnel /
+    // conversion email. No dataLayer: GTM is not installed, so it would be inert.
     let trackedDepths = {};
     window.addEventListener('scroll', function() {
         const docHeight = document.documentElement.scrollHeight - window.innerHeight;
@@ -339,29 +337,27 @@ function trackWhatsAppClick(location, element) {
     }, { passive: true });
 })();
 
-// 4. Web Vitals: medidos no CI (.github/workflows/perf.yml via Lighthouse), não
-// mais como RUM no GA4. A telemetria no navegador disparava a cada layout-shift/
-// entrada de LCP (~19x por visita), poluindo a contagem de eventos do GA4 sem
-// alimentar nenhuma decisão de conversão. O laboratório do CI é determinístico
-// (mesmo runner, mesmo throttle), roda sobre o código do push antes do deploy e
-// falha o build se o orçamento de performance for estourado. Ver
+// 4. Web Vitals: measured in CI (.github/workflows/perf.yml via Lighthouse), no
+// longer as RUM in GA4. Browser telemetry fired on every layout-shift/LCP entry
+// (~19x per visit), polluting the GA4 event count without feeding any conversion
+// decision. The CI lab is deterministic (same runner, same throttling), runs on the
+// pushed code before deploy and fails the build when the budget is exceeded. See
 // scripts/perf-check.js e scripts/lib/perf.js.
 
 // 5. Sistema de Event Listeners (Removendo onclick do HTML)
 document.addEventListener('DOMContentLoaded', () => {
-    // Proxy de "message_sent": quando o usuário sai da página para o WhatsApp
-    // logo após clicar em um CTA, sabemos que ele abriu a conversa com o atendente.
-    // (A confirmação definitiva de envio de mensagem depende de integração com a
-    // API do WhatsApp / webhooks, que hoje está fora do nosso escopo.)
+    // "message_sent" proxy: when the user leaves the page for WhatsApp right after
+    // clicking a CTA, we know the conversation was opened. (Definitive send
+    // confirmation needs the WhatsApp Business API / webhooks, out of scope today.)
     //
-    // Cada clique no botão vira uma "rodada" (geração). O message_sent só pode ser
+    // Each button click becomes a "round" (generation). message_sent may only be
     // emitido UMA vez por rodada. DUAS garantias importantes:
-    //  1. A rodada é armada no PRÓPRIO handler de click do botão — a mesma origem
+    //  1. The round is armed in the button's click handler itself — the same origin
     //     do whatsapp_click. Antes era armada num listener global de pointerdown,
-    //     que disparava sem o clique correspondente e gerava message_sent órfão
-    //     (message_sent > whatsapp_click, impossível por definição).
-    //  2. Consumo atômico: pagehide + visibilitychange disparam os dois na mesma
-    //     saída; o guard booleano antigo não era atômico e contava duas vezes.
+    //     it used to fire without a matching click, producing orphan message_sent
+    //     (message_sent > whatsapp_click, impossible by definition).
+    //  2. Atomic consumption: pagehide + visibilitychange both fire on the same exit;
+    //     the old boolean guard was not atomic and counted twice.
     let clickGeneration = 0;
     let consumedGeneration = -1;
 
@@ -377,8 +373,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function maybeFireMessageSent() {
-        // Consome a rodada de forma atômica: se já foi consumida, não re-emite.
-        // A checagem e a marcação ficam adjacentes, antes de qualquer await/trabalho.
+        // Consume the round atomically: if already consumed, do not re-emit.
+        // The check and the flag update are adjacent, before any await/work.
         if (clickGeneration === 0 || clickGeneration === consumedGeneration) return;
         consumedGeneration = clickGeneration;
         if (document.hidden) {
@@ -387,11 +383,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const utms = collectUtmPayload();
             const timeOnPageSec = Math.round((Date.now() - (window.__pageStartTime || Date.now())) / 1000);
 
-            // Dispara via caminho confiável (garante load do gtag real antes de enviar).
-            // Em pagehide/visibilitychange o beacom nativo (sendBeacon) é preferível,
-            // então registramos o parâmetro e deixamos o sendGtagLead disparar via fetch.
-            // Atribuição completa (espelha generate_lead): gclid/gbraid/wbraid/gad_campaignid
-            // deixam o proxy de envio cruzável por campanha no GA4.
+            // Fire through the reliable path (loads the real gtag before sending).
+            // On pagehide/visibilitychange the native beacon (sendBeacon) is preferable,
+            // so we record the parameter and let sendGtagLead fire through fetch.
+            // Full attribution (mirrors generate_lead): gclid/gbraid/wbraid/gad_campaignid
+            // make the send proxy crossable by campaign in GA4.
             sendGtagConversion('message_sent', {
                 'event_category': 'conversion',
                 'event_label': isCardio ? 'Mensagem Dra Anabel' : 'Mensagem Dr Gilberto',
@@ -419,16 +415,16 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') maybeFireMessageSent(); });
 });
 
-// 6. Botão de WhatsApp Flutuante Sticky (CRO: Sempre visível enquanto rola a página)
+// 6. Floating sticky WhatsApp button (CRO: always visible while scrolling)
 (function initStickyWhatsApp() {
     const isCardio = window.location.pathname.includes('/cardiologia');
     const specialty = isCardio ? 'Cardiologia' : 'Infectologia';
     const waNumber = '5582999900844';
     const waText = isCardio
-        ? 'Olá,%20gostaria%20de%20verificar%20disponibilidade%20para%20uma%20consulta%20com%20a%20Dra.%20Anabel.'
-        : 'Olá,%20gostaria%20de%20verificar%20horários%20disponíveis%20para%20uma%20consulta%20com%20o%20Dr.%20Gilberto.';
+        ? 'Olá,%20gostaria%20de%20verificar%20disponibilidade%20para%20uma%20consulta%20com%20a%20Dra.%20Anabel.' // lang:allow (user-visible copy)
+        : 'Olá,%20gostaria%20de%20verificar%20horários%20disponíveis%20para%20uma%20consulta%20com%20o%20Dr.%20Gilberto.'; // lang:allow (user-visible copy)
 
-    // Injetar estilos CSS do botão flutuante
+    // Inject the floating button's CSS
     const style = document.createElement('style');
     style.textContent = `
         #wa-sticky-btn {
@@ -489,14 +485,17 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
     document.head.appendChild(style);
 
-    // Criar o elemento do botão flutuante
+    // Create the floating button element
     const btn = document.createElement('a');
     btn.id = 'wa-sticky-btn';
     btn.href = `https://api.whatsapp.com/send?phone=${waNumber}&text=${waText}`;
     btn.target = '_blank';
     btn.rel = 'noopener';
     btn.setAttribute('data-track-location', 'Floating_Sticky');
-    btn.setAttribute('aria-label', 'Agendar consulta pelo WhatsApp');
+    btn.setAttribute('aria-label', 'Agendar consulta pelo WhatsApp'); // lang:allow (user-visible copy)
+    // User-visible copy (PT-BR is allowed in the UI).
+    const stickyLabel = 'Disponível agora'; // lang:allow (user-visible copy)
+
     btn.innerHTML = `
         <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.487 5.235 3.487 8.417 0 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.273-.099-.471-.148-.67.15-.197.297-.768.967-.941 1.164-.173.197-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.67-1.611-.916-2.206-.242-.579-.487-.501-.67-.51-.173-.008-.371-.01-.57-.01s-.521.074-.795.372c-.273.296-1.043 1.016-1.043 2.479 0 1.462 1.067 2.869 1.216 3.067.148.198 2.096 3.2 5.077 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
@@ -505,17 +504,17 @@ document.addEventListener('DOMContentLoaded', () => {
             Agendar consulta
             <span class="wa-sticky-status">
                 <span class="wa-sticky-dot"></span>
-                Disponível agora
+                ${stickyLabel}
             </span>
         </span>
     `;
     document.body.appendChild(btn);
 
-    // O botão flutuante possui data-track-location="Floating_Sticky" e é capturado
-    // pelo seletor genérico do bloco de event listeners; o listener direto foi removido
-    // para evitar disparo duplicado de rastreamento.
+    // The floating button carries data-track-location="Floating_Sticky" and is caught
+    // by the generic selector in the listener block; the direct listener was removed
+    // to avoid duplicate tracking.
 
-    // Mostrar botão após scroll de 150px (usuário rolou além do Hero)
+    // Show the button after 150px of scroll (the user moved past the hero)
     let stickyVisible = false;
     window.addEventListener('scroll', function () {
         const shouldShow = window.scrollY > 150;

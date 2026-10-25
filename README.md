@@ -1,212 +1,248 @@
-# 🏥 Landing Page Médica de Alta Performance
+# 🏥 High-Performance Medical Landing Page
 
-> **Projeto Premium** | Consultório Dr. Gilberto Salustiano & Dra. Anabel Lima
-> *Maceió, AL - Brasil*
+> **Premium project** | Dr. Gilberto Salustiano & Dra. Anabel Lima practice
+> *Maceió, AL - Brazil*
 
 [![Live Demo](https://img.shields.io/badge/URL-consultoriosalustiano.com.br-blue?style=for-the-badge&logo=google-chrome&logoColor=white)](https://consultoriosalustiano.com.br/)
 [![Hosting: Netlify](https://img.shields.io/badge/Netlify-00AD9F?style=for-the-badge&logo=netlify&logoColor=white)](https://www.netlify.com/)
 [![Aesthetics: Premium](https://img.shields.io/badge/Design-Glassmorphism-teal?style=for-the-badge)](https://consultoriosalustiano.com.br/)
 
-Esta solução JAMstack de alta performance foi desenvolvida para um consultório médico de elite, focada na conversão direta de tráfego vindo de campanhas do **Google Ads** em agendamentos via **WhatsApp**.
+A high-performance JAMstack site built for a private medical practice, focused on
+converting **Google Ads** traffic into bookings through **WhatsApp**.
 
 ---
 
-## 🎯 Objetivo Estratégico
-O projeto resolve a necessidade de uma presença digital que transmita **autoridade (40 anos de experiência)** e **confiança**, garantindo um carregamento instantâneo em conexões móveis (3G/4G).
+## 🎯 Strategic goal
+The project delivers a digital presence that conveys **authority (40 years of
+experience)** and **trust**, while loading instantly on mobile connections (3G/4G).
 
-- **Foco em Conversão:** Layout otimizado para o "Golden Path" do paciente.
-- **UX Particular:** Filtragem de leads para atendimento exclusivo/particular.
-- **Identidade:** Cores baseadas no "Turquesa Maceió" e estética minimalista/hospitalar.
+- **Conversion-focused:** layout optimised for the patient's "golden path".
+- **Private practice UX:** filters leads towards private appointments.
+- **Identity:** palette based on "Turquesa Maceió" with a minimalist clinical look.
 
-## 🚀 Arquitetura e Performance
-Para atingir scores de 95+ no Lighthouse e garantir custo zero de escala, a arquitetura utiliza:
+## 🚀 Architecture and performance
+To reach Lighthouse scores of 95+ at zero scaling cost, the architecture uses:
 
-- **Frontend Core:** HTML5 Semântico + Tailwind CSS 3.4.
-- **Asset Optimization:**
-  - Imagens em formato **WebP** otimizadas (`cardiologia.webp` reduzido para 15 KB / -71% de payload LCP).
-  - **LCP Preload** com `fetchpriority="high"` para imagens de hero acima da dobra.
-  - **Elfsight Reviews Lazy-Loading:** Carregamento sob demanda do widget do Google Reviews via `IntersectionObserver` apenas quando o usuário se aproxima da seção, eliminando o bloqueio inicial da thread principal (TBT).
-  - **gtag.js Deferred Loading:** O rastreamento do Google (GA4/Ads) é inicializado fora do caminho crítico — apenas no primeiro gesto do usuário (pointerdown/scroll/touch/teclado). Não há fallback por ociosidade: em página ocupada o timeout injetava o gtag dentro da janela do TBT (~1.2s de long task em mobile). Um clique no WhatsApp força a injeção na hora (`ensureGtagLoaded`), preservando a confiabilidade de `generate_lead` mesmo sem gesto prévio.
-- **Security First:** 
-  - Content Security Policy (CSP) rigorosa via `netlify.toml`.
-  - HSTS, X-Frame-Options e Permissions Policy configurados.
-- **Analytics:** Rastreamento via `gtag.js` + `dataLayer` com pipeline duplo para cliques no WhatsApp: eventos de conversão (`generate_lead`) no GA4 e persistência **first-party** durável em Netlify Blobs (sobrevive a ad-blockers). Captura UTMs, `gclid`/`gad_campaignid` e resolve IDs do Google Ads para nomes de campanha legíveis.
+- **Frontend core:** semantic HTML5 + Tailwind CSS 3.4.
+- **Asset optimisation:**
+  - **WebP** images (`cardiologia.webp` down to 15 KB / -71% LCP payload).
+  - **LCP preload** with `fetchpriority="high"` for above-the-fold hero images.
+  - **Elfsight reviews lazy-loading:** the Google Reviews widget loads on demand
+    via `IntersectionObserver` only as the user approaches the section, keeping the
+    initial main-thread work (TBT) clean.
+  - **Deferred gtag.js:** Google tracking (GA4/Ads) is initialised off the critical
+    path — only on the user's first gesture (pointerdown/scroll/touch/keyboard).
+    There is no idle fallback: on a busy page the timeout used to inject gtag inside
+    the TBT window (~1.2 s long task on mobile). A WhatsApp click forces the
+    injection immediately (`ensureGtagLoaded`), so `generate_lead` stays reliable
+    even with no prior gesture.
+- **Security first:**
+  - Strict Content Security Policy (CSP) via `netlify.toml`.
+  - HSTS, X-Frame-Options and Permissions Policy configured.
+- **Analytics:** `gtag.js` + `dataLayer` tracking with a dual pipeline for WhatsApp
+  clicks: conversion events (`generate_lead`) in GA4 and a durable **first-party**
+  record in Netlify Blobs (survives ad-blockers). Captures UTMs,
+  `gclid`/`gad_campaignid` and resolves Google Ads ids into readable campaign names.
 
-## 🛠️ Stack Tecnológica
-- **Linguagens:** HTML5, CSS3, JavaScript (Vanilla).
-- **Estilização:** Tailwind CSS (Compilado & Minificado).
+## 🛠️ Technology stack
+- **Languages:** HTML5, CSS3, JavaScript (vanilla).
+- **Styling:** Tailwind CSS (compiled and minified).
 - **Deployment:** CI/CD via Netlify.
 - **Widgets:** Elfsight (Google Reviews integration).
-- **Tracking:** gtag.js (GA4) + Netlify Functions/Blobs para métricas first-party.
+- **Tracking:** gtag.js (GA4) + Netlify Functions/Blobs for first-party metrics.
 
 ---
 
-## 📂 Estrutura do Repositório
+## 📂 Repository layout
 ```bash
 .
-├── public/                 # Assets públicos e páginas prontas (Production Root)
-│   ├── cardiologia/        # LP Especializada - Dra. Anabel Lima
-│   ├── assets/             # Recursos estáticos (CSS compilado, Imagens, JS)
-│   ├── 404.html            # Error page customizada
-│   ├── index.html          # LP Principal - Dr. Gilberto (Infectologia)
-│   ├── llms.txt            # AI Agents summary mapping
-│   └── sitemap.xml         # SEO Indexing
+├── public/                 # Public assets and built pages (production root)
+│   ├── cardiologia/        # Specialised LP - Dra. Anabel Lima
+│   ├── assets/             # Static assets (compiled CSS, images, JS)
+│   ├── 404.html            # Custom error page
+│   ├── index.html          # Main LP - Dr. Gilberto (infectiology)
+│   ├── llms.txt            # AI agent summary mapping
+│   └── sitemap.xml         # SEO indexing
 ├── src/                    # Source files
 │   └── css/input.css       # Tailwind entry point
-├── netlify/                # Funções serverless (Netlify Functions)
-│   └── functions/          # log-access (coleta) e insights (agregação) via Blobs
-├── scripts/                # Automação CLI de diagnóstico e relatórios
+├── netlify/                # Serverless functions (Netlify Functions)
+│   └── functions/          # log-access (collection) and insights (aggregation)
+├── scripts/                # CLI diagnostics and reports
 │   ├── analyze-performance.js   # npm run analyze
-│   ├── run-perf.js              # npm run perf (Lighthouse mobile)
+│   ├── run-perf.js              # npm run perf (mobile Lighthouse)
 │   ├── fetch-ga4-metrics.js     # npm run ga-metrics
 │   ├── fetch-access-insights.js # npm run access-logs
-│   ├── weekly-report.js         # npm run weekly-report (email do GHA)
+│   ├── weekly-report.js         # npm run weekly-report (GHA email)
 │   └── test-csp.js              # npm run test
-├── netlify.toml            # Configuração de Headers, Security & Build
-├── package.json            # Scripts de automação
-└── tailwind.config.js      # Customização do design system (Cores & Fonts)
+├── netlify.toml            # Headers, security and build config
+├── package.json            # Automation scripts
+└── tailwind.config.js      # Design-system customisation (colours and fonts)
 ```
 
 ---
 
-## ⚙️ Workflow de Desenvolvimento
+## ⚙️ Development workflow
 
-### 1. Instalação
+### 1. Install
 ```bash
 npm install
-npm run hooks:install   # ativa o pre-commit de secret scan (.githooks)
+npm run hooks:install   # enables the secret-scan pre-commit (.githooks)
 ```
 
-### 2. Build de Produção (CSS)
-Gera o arquivo otimizado e minificado para `public/assets/css/style.css`:
+### 2. Production build (CSS)
+Writes the optimised, minified file to `public/assets/css/style.css`:
 ```bash
 npm run build:css
 ```
 
-### 3. Preview Local
-Recomendado usar o `serve` ou a CLI do Netlify:
+### 3. Local preview
+`serve` or the Netlify CLI both work:
 ```bash
 npx serve public
 ```
 
 ---
 
-## 📊 Rotina de Métricas e Logs
+## 📊 Metrics and log routine
 
-Pipeline de conversão em duas camadas:
+Two-layer conversion pipeline:
 
-- **First-party (fonte de verdade confiável):** cliques no WhatsApp e visualizações são enviados via `navigator.sendBeacon` para a função Netlify `log-access`, persistidos de forma durável em **Netlify Blobs** (imune a ad-blockers) e lidos pela função `insights`.
-- **Google (GA4):** o mesmo clique dispara `generate_lead` via `gtag.js` para atribuição e otimização de campanhas no Google Ads. Requer configuração no Admin do GA4 (marcar `generate_lead` como conversão e registrar a dimensão `campaign_id`).
+- **First-party (trustworthy source of truth):** WhatsApp clicks and page views are
+  sent via `navigator.sendBeacon` to the Netlify function `log-access`, persisted
+  durably in **Netlify Blobs** (ad-blocker proof) and read by `insights`.
+- **Google (GA4):** the same click fires `generate_lead` through `gtag.js` for
+  attribution and Google Ads optimisation. Requires GA4 Admin setup (mark
+  `generate_lead` as a conversion and register the `campaign_id` dimension).
 
-**Identidade first-party consent-light:** cada visita gera um UUID mantido apenas em memória (sem cookies), permitindo unir eventos em usuários/sessões sem exigir consentimento de cookies.
+**Consent-light first-party identity:** each visit gets a UUID kept in memory only
+(no cookies), so events can be joined into users/sessions without a cookie banner.
 
-**Métricas honestas do funil (relatório `access-logs`):**
-- `Engajamento` = cliques no WhatsApp / visualizações (taxa de clique, não conversão).
-- `Taxa de Lead (proxy)` = saídas p/ WhatsApp (`message_sent`, tab-hidden) / visualizações.
-- `Usuários Únicos` via `client_id`; cliques e leads por campanha/especialidade com nomes legíveis.
-- `Estimativa de Visitantes` (`estimated_visitors`): como `client_id` é um UUID por page-load, ele super-conta revisitantes. A estimativa agrupa eventos por uma chave **fraca e não durável** derivada server-side de `ip + user_agent + janela de 24h` (hash opaco), apenas no relatório — sem cookie, sem JS novo, sem alteração de CSP, e sem virar um identificador estável de dispositivo. É uma estimativa, não identidade: IP compartilhado/UA igual pode juntar pessoas distintas; fora da janela o mesmo visitante re-conta de propósito.
-- Fontes e campanhas são **canonicalizadas server-side** (labels legíveis dos IDs do Google Ads; sem referers crus com `gclid`). Tráfego de **deploy-preview/teste** é agrupado à parte e excluído do funil de produção.
+**Honest funnel metrics (`access-logs` report):**
+- `Engagement` = WhatsApp clicks / page views (a click-through rate, not a conversion rate).
+- `Lead rate (proxy)` = WhatsApp exits (`message_sent`, tab-hidden) / page views.
+- `Unique users` by `client_id`; clicks and leads per campaign/specialty with readable names.
+- `Estimated visitors` (`estimated_visitors`): because `client_id` is a per-page-load
+  UUID, it over-counts returning visitors. The estimate groups events by a **weak,
+  non-durable** server-side key derived from `ip + user_agent + 24h window` (opaque
+  hash), for reporting only — no cookie, no new JS, no CSP change, and it never
+  becomes a stable device identifier. It is an estimate, not identity: a shared IP
+  with the same UA can merge different people; outside the window the same visitor
+  is counted again on purpose.
+- Sources and campaigns are **canonicalized server-side** (readable labels for
+  Google Ads ids; no raw referers carrying `gclid`). **Deploy-preview/test** traffic
+  is bucketed separately and excluded from the production funnel.
 
-**Comandos da rotina:**
+**Routine commands:**
 ```bash
-npm run analyze        # Diagnóstico de performance/Web Vitals
-npm run perf           # Lighthouse mobile (index + cardiologia) p/ comparar antes/depois
-npm run perf:check     # Gate de Web Vitals (falha se estourar o orçamento)
-npm run access-logs    # Métricas first-party de acesso e conversão (produção)
-npm run ga-metrics     # Métricas do Google Analytics 4 (requer GA4_PROPERTY_ID no .env)
-npm run weekly-report  # Relatório de conversão (first-party + GA4) - email semanal
-npm run product-report # Relatório de produto (rolagem/atenção) - email mensal
-npm run test           # Suíte de testes CSP e integridade do pipeline
+npm run analyze        # performance / Web Vitals diagnostics
+npm run perf           # mobile Lighthouse (index + cardiologia) for before/after
+npm run perf:check     # Web Vitals gate (fails when the budget is exceeded)
+npm run access-logs    # first-party access and conversion metrics (production)
+npm run ga-metrics     # Google Analytics 4 metrics (requires GA4_PROPERTY_ID in .env)
+npm run weekly-report  # conversion report (first-party + GA4) - weekly email
+npm run product-report # product report (scroll/attention) - monthly email
+npm run test           # CSP and pipeline-integrity test suite
 ```
 
-> **Dois relatórios, dois públicos.** O **semanal** responde "quantos contatos
-> chegaram" (decisão de mídia). O **mensal** responde "como as pessoas usam o
-> site" (decisão de CRO). São separados de propósito: misturar conversão com
-> comportamento confunde a leitura.
+> **Two reports, two audiences.** The **weekly** one answers "how many contacts
+> arrived" (media decisions). The **monthly** one answers "how people use the site"
+> (CRO decisions). They are separate on purpose: mixing conversion with behaviour
+> makes both harder to read.
 
-### Web Vitals: medidos no CI, não no navegador
+### Web Vitals: measured in CI, not in the browser
 
-Os Core Web Vitals saíram do RUM (GA4) e viraram **gate de CI**
-(`.github/workflows/perf.yml` + `scripts/perf-check.js`). O laboratório é
-determinístico, mede o código do push **antes do deploy** e **falha o build** se
-o orçamento de performance estourar. RUM no navegador disparava a cada
-layout-shift/entrada de LCP (~19x por visita) e poluía a contagem de eventos do
-GA4 sem alimentar nenhuma decisão.
+Core Web Vitals left RUM (GA4) and became a **CI gate**
+(`.github/workflows/perf.yml` + `scripts/perf-check.js`). The lab is deterministic,
+measures the pushed code **before deploy** and **fails the build** when the
+performance budget is exceeded. Browser RUM fired on every layout-shift/LCP entry
+(~19x per visit) and polluted the GA4 event count without feeding any decision.
 
-> Observação: as funções `log-access`/`insights` exigem um deploy no Netlify para surtir efeito, e os campos novos (`client_id`, `campaign_label`) valem apenas para eventos ocorridos após o deploy.
+> Note: the `log-access`/`insights` functions require a Netlify deploy to take
+> effect, and the newer fields (`client_id`, `campaign_label`) only apply to events
+> recorded after that deploy.
 
-### Relatório semanal automático (GitHub Actions)
+### Automatic weekly report (GitHub Actions)
 
-O workflow `.github/workflows/weekly-metrics.yml` roda **todo sábado às 08:00 (BRT)**
-e envia por email o relatório de funil first-party + GA4. A lógica fica em
-`scripts/weekly-report.js`; o YAML só coleta, escreve os corpos e envia.
+`.github/workflows/weekly-metrics.yml` runs **every Saturday at 08:00 (BRT)** and
+emails the first-party + GA4 funnel report. The logic lives in
+`scripts/weekly-report.js`; the YAML only collects, writes the bodies and sends.
 
-**Secrets necessários** (Settings → Secrets and variables → Actions):
+**Required secrets** (Settings → Secrets and variables → Actions):
 
-| Secret | Descrição |
+| Secret | Description |
 |---|---|
-| `MAIL_USERNAME` | Endereço Gmail remetente (ex.: `voce@gmail.com`) |
-| `MAIL_PASSWORD` | **App Password** de 16 dígitos (requer 2FA ativo no Google) |
-| `MAIL_TO` | Destinatário (pode ser o mesmo do remetente) |
-| `GA4_CREDENTIALS` | Conteúdo **completo** do `ga-credentials.json` (service account) |
+| `MAIL_USERNAME` | sender Gmail address (e.g. `you@gmail.com`) |
+| `MAIL_PASSWORD` | 16-character **App Password** (Google 2FA required) |
+| `MAIL_TO` | recipient (may be the sender) |
+| `GA4_CREDENTIALS` | **full** content of `ga-credentials.json` (service account) |
 
-`GA4_PROPERTY_ID` (`493028300`) e a janela não são segredo — estão no `env` do
-workflow. Sem `GA4_CREDENTIALS`, o relatório ainda é enviado só com o first-party
-(o endpoint `insights` é público). O workflow também publica o relatório como
-**artefato** (30 dias), então falha de email não perde os números.
+`GA4_PROPERTY_ID` (`493028300`) and the window are not secrets — they live in the
+workflow `env`. Without `GA4_CREDENTIALS` the report is still sent first-party only
+(the `insights` endpoint is public). The workflow also publishes the report as an
+**artifact** (30 days), so an email failure does not lose the numbers.
 
-> **Ads (custo/R$) não entra no email.** O CLI em `ads/` é gitignored e usa OAuth
-> interativo, incompatível com runner. Para o funil com custo, rode
-> `npm run ads-report` na máquina (ver `AGENTS.md`).
+> **Ads (cost/BRL) is not part of the email.** The CLI in `ads/` is gitignored and
+> uses interactive OAuth, incompatible with a runner. For the funnel with cost, run
+> `npm run ads-report` locally (see `AGENTS.md`).
 
-### Relatório mensal de produto (GitHub Actions)
+### Monthly product report (GitHub Actions)
 
-O workflow `.github/workflows/monthly-product.yml` roda no **primeiro sábado do
-mês** e envia o relatório de comportamento no site (rolagem, botões, origem da
-atenção). A lógica fica em `scripts/product-report.js`.
+`.github/workflows/monthly-product.yml` runs on the **first Saturday of the month**
+and emails the on-site behaviour report (scroll depth, buttons, attention sources).
+The logic lives in `scripts/product-report.js`.
 
-Usa os **mesmos secrets de email** do semanal (`MAIL_USERNAME`, `MAIL_PASSWORD`,
-`MAIL_TO`); não precisa de credencial do GA4 (a fonte é o first-party).
+It uses the **same email secrets** as the weekly job (`MAIL_USERNAME`,
+`MAIL_PASSWORD`, `MAIL_TO`) and needs no GA4 credential (the source is first-party).
 
-> O `scroll_depth` só aparece após o deploy que passou a enviá-lo ao first-party;
-> até lá, o relatório mostra zero nas barras de rolagem.
+> `scroll_depth` only appears after the deploy that started sending it to the
+> first-party store; until then the report shows zero in the scroll bars.
 
 ---
 
-## 🔐 Segurança e Boas Práticas
-O projeto segue as recomendações da **OWASP** para sites estáticos, implementando cabeçalhos de segurança que mitigam ataques de Clickjacking e XSS, garantindo que o site seja um ambiente seguro para informações médicas.
+## 🔐 Security and good practices
+The project follows **OWASP** guidance for static sites, implementing headers that
+mitigate clickjacking and XSS so the site is a safe environment for medical
+information.
 
-**Implementações Recentes de Hardening & SEO:**
-- **Otimização de SEO & Metadados local**: Inclusão de blocos estruturados de FAQPage e seções de FAQ visuais baseadas em componentes HTML `<details>`. Configuração de Twitter Cards completos e metadados Open Graph.
-- **Integração com Agentes de IA (`llms.txt`)**: Adicionado o resumo de serviços estruturado em Markdown (`public/llms.txt`) para facilitação de leituras por LLMs e robôs de busca modernos.
-- **CSP (Content Security Policy) Otimizada:** Separação do Javascript de UI (Observer, Footer Year) em arquivo externo (`public/assets/js/main.js`), limpando o markup HTML e organizando as diretivas de segurança, enquanto se mantém a compatibilidade vital com ferramentas de marketing (gtag.js/GA4 e Google Ads).
-- **HSTS Estrito (Preload):** `Strict-Transport-Security` configurado para 1 ano (`max-age=31536000`) com a flag `preload`, instruindo navegadores modernos a forçarem a conexão segura antes mesmo da primeira requisição de rede ser despachada.
+**Recent hardening and SEO work:**
+- **SEO and local metadata:** FAQPage structured data plus visible FAQ sections
+  built on native `<details>` elements. Complete Twitter Cards and Open Graph
+  metadata.
+- **AI agent integration (`llms.txt`):** structured service summary in Markdown
+  (`public/llms.txt`) to make life easier for LLMs and modern search bots.
+- **Tightened CSP:** UI JavaScript (observer, footer year) moved to an external file
+  (`public/assets/js/main.js`), cleaning up the HTML markup and organising the
+  security directives, while keeping the marketing stack working (gtag.js/GA4 and
+  Google Ads).
+- **Strict HSTS (preload):** `Strict-Transport-Security` set to one year
+  (`max-age=31536000`) with the `preload` flag, telling modern browsers to force the
+  secure connection before the first request is even dispatched.
 
-### Proteção de credenciais (secret scanning)
+### Credential protection (secret scanning)
 
-Segredos nunca devem chegar ao Git. A defesa é em **três camadas independentes**:
+Secrets must never reach Git. Defence is in **three independent layers**:
 
-| Camada | Ferramenta | Onde age | Cobre |
+| Layer | Tool | Where it acts | Covers |
 |---|---|---|---|
-| 1. GitHub | Secret Scanning + Push Protection | remoto | ~200 padrões de provedores; **bloqueia o push** |
-| 2. CI | `gitleaks` (`.github/workflows/gitleaks.yml`) | push/PR + semanal | histórico completo; regras + entropia; PRs de fork |
-| 3. Local | `gitleaks` pre-commit (`.githooks/`) | antes do commit | o que ainda nem saiu da máquina |
+| 1. GitHub | Secret Scanning + Push Protection | remote | ~200 provider patterns; **blocks the push** |
+| 2. CI | `gitleaks` (`.github/workflows/gitleaks.yml`) | push/PR + weekly | full history; rules + entropy; fork PRs |
+| 3. Local | `gitleaks` pre-commit (`.githooks/`) | before commit | whatever has not left the machine yet |
 
-> O **Dependabot** cobre dependências (CVEs), **não** segredos. As camadas acima é
-> que tratam credenciais vazadas.
+> **Dependabot** covers dependencies (CVEs), **not** secrets. The layers above are
+> what handle leaked credentials.
 
-**Setup local (uma vez):**
+**Local setup (once):**
 ```bash
 npm run hooks:install     # core.hooksPath=.githooks
-# opcional, proteção completa no commit:
-# instale o gitleaks -> https://github.com/gitleaks/gitleaks#installing
-npm run secret-scan       # varredura manual do histórico
+# optional, full protection at commit time:
+# install gitleaks -> https://github.com/gitleaks/gitleaks#installing
+npm run secret-scan       # manual full-history scan
 ```
 
-A allowlist de falsos positivos fica em **`.gitleaks.toml`** — é mínima e por
-**regex** (ex.: o `client_id` UUID de visitante do first-party, que não é
-credencial). Nunca libere um arquivo inteiro: um arquivo que hoje só cita nome de
-campo pode amanhã receber uma chave real.
+The false-positive allowlist lives in **`.gitleaks.toml`** — it is minimal and
+**regex-based** (e.g. the first-party visitor UUID `client_id`, which is not a
+credential). Never whitelist a whole file: a file that only mentions a field name
+today may hold a real key tomorrow.
 
 ---
-*Desenvolvido com foco em resultados reais e excelência técnica.*
+*Built with a focus on real results and technical excellence.*

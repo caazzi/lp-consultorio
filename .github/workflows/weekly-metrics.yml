@@ -1,33 +1,33 @@
-# Relatório semanal de métricas — Consultório Salustiano
+# Weekly metrics report — Consultório Salustiano
 #
-# Roda todo sábado de manhã (BRT) e envia por email o funil first-party
-# (Netlify Blobs) + overlay do GA4. A lógica de números vive em
-# scripts/weekly-report.js; este YAML só coleta, escreve os corpos e envia.
+# Runs every Saturday morning (BRT) and emails the first-party funnel
+# (Netlify Blobs) plus the GA4 overlay. The number logic lives in
+# scripts/weekly-report.js; this YAML only collects, writes the bodies and sends.
 #
-# Secrets necessários (Settings > Secrets and variables > Actions):
-#   MAIL_USERNAME     seu endereço Gmail (ex.: voce@gmail.com)
-#   MAIL_PASSWORD     App Password de 16 dígitos (requer 2FA no Google)
-#   MAIL_TO           destinatário (pode ser o mesmo do MAIL_USERNAME)
-#   GA4_CREDENTIALS   conteúdo COMPLETO do ga-credentials.json (service account)
+# Required secrets (Settings > Secrets and variables > Actions):
+#   MAIL_USERNAME     your Gmail address (e.g. you@gmail.com)
+#   MAIL_PASSWORD     16-character App Password (requires Google 2FA)
+#   MAIL_TO           recipient (may be the same as MAIL_USERNAME)
+#   GA4_CREDENTIALS   FULL content of ga-credentials.json (service account)
 #
-# GA4_PROPERTY_ID e ACCESS_INSIGHTS_DAYS não são segredo → definidos em `env`.
-# O first-party não exige credencial (endpoint público da função insights).
-# Se GA4_CREDENTIALS faltar, o relatório ainda sai só com o first-party.
+# GA4_PROPERTY_ID and ACCESS_INSIGHTS_DAYS are not secrets -> set in `env`.
+# The first-party side needs no credential (public insights endpoint).
+# If GA4_CREDENTIALS is missing, the report still goes out first-party only.
 #
-# Escopo (AGENTS.md): mídia paga = só infectologia. Ads (custo/R$) NÃO entra
-# aqui porque a pasta ads/ é local-only (OAuth interativo); para isso rode
-# `npm run ads-report` na máquina.
+# Scope (AGENTS.md): paid media = infectologia only. Ads (cost/BRL) is NOT part of
+# this job because ads/ is local-only (interactive OAuth); for that run
+# `npm run ads-report` on your machine.
 
 name: Weekly Metrics Report
 
 on:
   schedule:
-    # 11:00 UTC = 08:00 America/Sao_Paulo (sábado). BRT não tem DST desde 2019.
+    # 11:00 UTC = 08:00 America/Sao_Paulo (Saturday). BRT has no DST since 2019.
     - cron: '0 11 * * 6'
   workflow_dispatch:
     inputs:
       days:
-        description: 'Janela em dias'
+        description: 'Window in days'
         required: false
         default: '7'
 
@@ -57,12 +57,12 @@ jobs:
         with:
           node-version: '20'
 
-      # As dependências (Netlify Blobs) não são necessárias para o relatório,
-      # mas o install explícito casa com o lockfile.
+      # The dependencies (Netlify Blobs) are not needed for the report, but the
+      # explicit install matches the lockfile.
       - name: Install dependencies
         run: npm ci --omit=dev
 
-      - name: Materializar credencial GA4
+      - name: Materialize GA4 credential
         env:
           GA4_CREDENTIALS: ${{ secrets.GA4_CREDENTIALS }}
         run: |
@@ -71,10 +71,10 @@ jobs:
             printf '%s' "$GA4_CREDENTIALS" > "$RUNNER_TEMP/ga-credentials.json"
             echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/ga-credentials.json" >> "$GITHUB_ENV"
           else
-            echo "::warning::GA4_CREDENTIALS ausente — relatório sairá só com first-party."
+            echo "::warning::GA4_CREDENTIALS missing - the report will be first-party only."
           fi
 
-      - name: Gerar relatório
+      - name: Generate report
         id: gen
         run: |
           set -euo pipefail
@@ -83,7 +83,7 @@ jobs:
           test -s "$WEEKLY_OUT_DIR/body.txt" || { echo "corpo de texto vazio"; exit 1; }
           echo "ok=1" >> "$GITHUB_OUTPUT"
 
-      - name: Enviar email
+      - name: Send email
         if: ${{ steps.gen.outputs.ok == '1' }}
         uses: dawidd6/action-send-mail@v3
         with:
@@ -92,17 +92,17 @@ jobs:
           secure: true
           username: ${{ secrets.MAIL_USERNAME }}
           password: ${{ secrets.MAIL_PASSWORD }}
-          from: Relatório Salustiano <${{ secrets.MAIL_USERNAME }}>
+          from: Relatório Salustiano <${{ secrets.MAIL_USERNAME }}>  # lang:allow (email sender)
           to: ${{ secrets.MAIL_TO }}
-          subject: "Métricas semanais — Consultório Salustiano"
+          subject: "Métricas semanais — Consultório Salustiano"  # lang:allow (email subject)
           html_body: file://${{ github.workspace }}/.weekly-report/body.html
           body: file://${{ github.workspace }}/.weekly-report/body.txt
 
-      # Sempre disponibiliza o relatório como artefato, mesmo se o email falhar.
-      # `include-hidden-files` é OBRIGATÓRIO: o diretório `.weekly-report` começa com
-      # ponto e o upload-artifact@v4 ignora arquivos/dirs ocultos por padrão — sem
-      # isso o step "passa" e não envia nada.
-      - name: Upload artefato
+      # Always publish the report as an artifact, even if the email step fails.
+      # `include-hidden-files` is REQUIRED: `.weekly-report` starts with a dot and
+      # upload-artifact@v4 skips hidden files/dirs by default - without it the step
+      # "passes" while uploading nothing.
+      - name: Upload artifact
         if: ${{ always() && steps.gen.outputs.ok == '1' }}
         uses: actions/upload-artifact@v4
         with:
@@ -111,10 +111,10 @@ jobs:
           include-hidden-files: true
           retention-days: 30
 
-      # Alerta de falha. Sem isso um job quebrado é SILENCIOSO: o relatório apenas
-      # não chega e ninguém sabe — foi exatamente o que aconteceu em 2026-10-24
-      # (insights 504 por timeout do Netlify). Usa os mesmos secrets do envio normal.
-      - name: Avisar falha por email
+      # Failure alert. Without it a broken job is SILENT: the report simply does not
+      # arrive and nobody knows - exactly what happened on 2026-10-24 (insights 504
+      # from a Netlify timeout). Uses the same secrets as the normal send.
+      - name: Notify failure by email
         if: ${{ failure() }}
         uses: dawidd6/action-send-mail@v3
         with:
@@ -123,13 +123,14 @@ jobs:
           secure: true
           username: ${{ secrets.MAIL_USERNAME }}
           password: ${{ secrets.MAIL_PASSWORD }}
-          from: Relatório Salustiano <${{ secrets.MAIL_USERNAME }}>
+          from: Relatório Salustiano <${{ secrets.MAIL_USERNAME }}>  # lang:allow (email sender)
           to: ${{ secrets.MAIL_TO }}
-          subject: "Atenção: o relatório de métricas desta semana não foi gerado"
+          subject: "Atenção: o relatório de métricas desta semana não foi gerado"  # lang:allow (email subject)
+          # lang:allow-block (failure email body)
           body: |
             O relatório automático de métricas desta semana NÃO foi gerado.
 
-            O que fazer: abrir o run abaixo e conferir o step "Gerar relatório".
+            O que fazer: abrir o run abaixo e conferir o step "Generate report".
             Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
             Nenhum número foi perdido: os eventos ficam guardados no Netlify Blobs e

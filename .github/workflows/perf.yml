@@ -1,12 +1,12 @@
-# Gate de Web Vitals — roda em todo push/PR e FALHA se o orçamento de
-# performance for estourado. Mede o estático de `public/` num servidor local
-# (mesmo código do push, antes do deploy), substituindo o RUM que ia para o GA4.
+# Web Vitals gate — runs on every push/PR and FAILS when the performance budget is
+# exceeded. Measures the static `public/` on a local server (the same code being
+# pushed, before deploy), replacing the RUM that used to go to GA4.
 #
-# Por que local e não a URL de produção: medir produção avalia o código
-# ANTERIOR ao push, não o novo. O estático local pega regressões de HTML/CSS/JS,
-# que são o risco real (ex.: gtag eager levou o TBT de ~20ms para 4-6s).
+# Why local instead of the production URL: measuring production evaluates the code
+# BEFORE the push, not the new code. The local static build catches HTML/CSS/JS
+# regressions, which is the real risk (e.g. eager gtag took TBT from ~20ms to 4-6s).
 #
-# A engine é scripts/lib/perf.js, a mesma do `npm run perf` — sem duplicação.
+# The engine is scripts/lib/perf.js, the same one used by `npm run perf` - no duplication.
 # Thresholds em scripts/perf-check.js.
 
 name: Perf Gate
@@ -38,10 +38,10 @@ jobs:
         with:
           node-version: '20'
 
-      # Lighthouse é baixado sob demanda pelo npx (--yes). Chrome já vem no
-      # runner em /usr/bin/google-chrome; o script lib/perf.js o exporta via
-      # CHROME_PATH. Sem npm ci: o gate não precisa das deps do projeto.
-      - name: Servir public/ em background
+      # Lighthouse is downloaded on demand by npx (--yes). Chrome ships with the
+      # runner at /usr/bin/google-chrome; scripts/lib/perf.js exports it through
+      # CHROME_PATH. No npm ci: the gate does not need the project dependencies.
+      - name: Serve public/ in the background
         run: |
           set -euo pipefail
           npx --yes serve public -l 4173 >/tmp/serve.log 2>&1 &
@@ -50,21 +50,21 @@ jobs:
             if curl -fsS http://localhost:4173/ >/dev/null; then echo "serve ok"; exit 0; fi
             sleep 1
           done
-          echo "serve não subiu"; cat /tmp/serve.log; exit 1
+          echo "serve did not start"; cat /tmp/serve.log; exit 1
 
-      - name: Rodar gate de Web Vitals
+      - name: Run the Web Vitals gate
         env:
           PERF_BASE_URL: http://localhost:4173
           CHROME_PATH: /usr/bin/google-chrome
         run: npm run perf:check
 
-      - name: Parar servidor
+      - name: Stop the server
         if: always()
         run: |
           if [ -f /tmp/serve.pid ]; then kill "$(cat /tmp/serve.pid)" 2>/dev/null || true; fi
 
-      # Guarda o relatório do Lighthouse para inspeção quando falhar.
-      - name: Upload artefatos de perf
+      # Keep the Lighthouse report for inspection when the gate fails.
+      - name: Upload perf artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:

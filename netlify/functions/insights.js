@@ -106,8 +106,8 @@ exports.handler = async function (event) {
       const bySpecialty = {};
       const bySource = {};
       const byLocation = {};
-      // PRODUCT INSIGHT (não conversão): quantos eventos de rolagem por
-      // profundidade (25/50/75/100). Alimenta o relatório mensal de produto.
+      // PRODUCT INSIGHT (not conversion): how many scroll events per depth
+      // (25/50/75/100). Feeds the monthly product report.
       const byScrollDepth = {};
       const byCampaign = { clicks: {}, leads: {} };
       eventsList.forEach(e => {

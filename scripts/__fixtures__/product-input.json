@@ -1,0 +1,17 @@
+{
+  "when": "25/10/2026, 10:00:00",
+  "product": {
+    "windowDays": 30,
+    "generatedAt": "2026-10-25T13:00:00.000Z",
+    "total": { "pageViews": 167, "whatsappClicks": 21 },
+    "scroll": {
+      "25": { "count": 140, "pct": 83.8 },
+      "50": { "count": 90, "pct": 53.9 },
+      "75": { "count": 40, "pct": 24 },
+      "100": { "count": 12, "pct": 7.2 }
+    },
+    "buttons": { "Hero Main": 7, "Floating_Sticky": 9, "Header": 5 },
+    "sources": { "Direct / Organic": 120, "Infectologia": 47 },
+    "specialties": { "Infectologia": 130, "Cardiologia": 37 }
+  }
+}

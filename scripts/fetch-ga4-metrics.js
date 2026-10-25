@@ -4,19 +4,19 @@ const crypto = require('crypto');
 const https = require('https');
 
 console.log('\x1b[36m%s\x1b[0m', '=======================================================');
-console.log('\x1b[36m%s\x1b[0m', ' 📊 RELATÓRIO DO GOOGLE ANALYTICS 4 (GA4 DATA API) ');
+console.log('\x1b[36m%s\x1b[0m', ' 📊 GOOGLE ANALYTICS 4 REPORT (GA4 DATA API) ');
 console.log('\x1b[36m%s\x1b[0m', '=======================================================\n');
 
-// 1. Localizar arquivo de credenciais da Service Account
+// 1. Locate the Service Account credentials file
 const credPath = process.env.GOOGLE_APPLICATION_CREDENTIALS || path.join(__dirname, '../ga-credentials.json');
 
 if (!fs.existsSync(credPath)) {
-  console.log('\x1b[33m%s\x1b[0m', '⚠️  Arquivo de credenciais (ga-credentials.json) não encontrado!');
-  console.log('\nPara conectar o terminal diretamente ao seu Google Analytics 4:');
-  console.log(' 1. Crie uma Service Account no Google Cloud Console.');
-  console.log(' 2. Baixe a chave JSON e salve como ga-credentials.json na raiz do projeto.');
-  console.log(' 3. No GA4 (Administração > Gestão de Acesso), adicione o e-mail da Service Account como Leitor.');
-  console.log(' 4. Configure o ID numérico da Propriedade no script ou na variável GA4_PROPERTY_ID.\n');
+  console.log('\x1b[33m%s\x1b[0m', '⚠️  Credentials file (ga-credentials.json) not found!');
+  console.log('\nTo connect the terminal directly to your Google Analytics 4:');
+  console.log(' 1. Create a Service Account in Google Cloud Console.');
+  console.log(' 2. Download the JSON key and save it as ga-credentials.json in the repo root.');
+  console.log(' 3. In GA4 (Admin > Access Management), add the Service Account e-mail as Viewer.');
+  console.log(' 4. Set the numeric Property ID in the environment or in GA4_PROPERTY_ID.\n');
   process.exit(0);
 }
 
@@ -24,21 +24,21 @@ let credentials;
 try {
   credentials = JSON.parse(fs.readFileSync(credPath, 'utf8'));
 } catch (err) {
-  console.error('\x1b[31m❌ Erro ao ler o arquivo ga-credentials.json:\x1b[0m', err.message);
+  console.error('\x1b[31m❌ Failed to read ga-credentials.json:\x1b[0m', err.message);
   process.exit(1);
 }
 
 const PROPERTY_ID = process.env.GA4_PROPERTY_ID;
 
 if (!PROPERTY_ID) {
-  console.log('\x1b[33m%s\x1b[0m', '⚠️  Variável GA4_PROPERTY_ID não definida!');
-  console.log('Defina o ID numérico da Propriedade do GA4 via variável de ambiente:');
+  console.log('\x1b[33m%s\x1b[0m', '⚠️  GA4_PROPERTY_ID is not set!');
+  console.log('Set the numeric GA4 Property ID through an environment variable:');
   console.log('  export GA4_PROPERTY_ID=123456789\n');
   process.exit(0);
 }
 
 /**
- * Função utilitária para assinar JWT e obter Access Token da Service Account
+ * Utility: signs the JWT and obtains a Service Account access token.
  */
 function getAccessToken(cred) {
   return new Promise((resolve, reject) => {
@@ -76,7 +76,7 @@ function getAccessToken(cred) {
         if (res.statusCode === 200) {
           resolve(JSON.parse(data).access_token);
         } else {
-          reject(new Error(`Falha na autenticação OAuth (${res.statusCode}): ${data}`));
+          reject(new Error(`OAuth authentication failed (${res.statusCode}): ${data}`));
         }
       });
     });
@@ -88,7 +88,7 @@ function getAccessToken(cred) {
 }
 
 /**
- * Consulta a Google Analytics Data API v1beta
+ * Queries the Google Analytics Data API v1beta.
  */
 function runGaReport(accessToken, propertyId, requestBody) {
   return new Promise((resolve, reject) => {
@@ -108,7 +108,7 @@ function runGaReport(accessToken, propertyId, requestBody) {
         if (res.statusCode === 200) {
           resolve(JSON.parse(data));
         } else {
-          reject(new Error(`Erro da API GA4 (${res.statusCode}): ${data}`));
+          reject(new Error(`GA4 API error (${res.statusCode}): ${data}`));
         }
       });
     });
@@ -121,13 +121,13 @@ function runGaReport(accessToken, propertyId, requestBody) {
 
 async function main() {
   try {
-    console.log(`🔑 Autenticando com Service Account: \x1b[32m${credentials.client_email}\x1b[0m...`);
+    console.log(`🔑 Authenticating with the Service Account: \x1b[32m${credentials.client_email}\x1b[0m...`);
     const token = await getAccessToken(credentials);
-    console.log('✅ Token OAuth obtido com sucesso!');
+    console.log('✅ OAuth token obtained.');
 
-    console.log(`\n📈 Extraindo métricas do GA4 (Propriedade: ${PROPERTY_ID})...\n`);
+    console.log(`\n📈 Pulling GA4 metrics (Property: ${PROPERTY_ID})...\n`);
 
-    // 1. Resumo Geral dos últimos 7 dias
+    // 1. Overall summary for the last 7 days
     const overviewReport = await runGaReport(token, PROPERTY_ID, {
       dateRanges: [{ startDate: '7daysAgo', endDate: 'today' }],
       metrics: [
@@ -141,15 +141,15 @@ async function main() {
 
     if (overviewReport.rows && overviewReport.rows[0]) {
       const vals = overviewReport.rows[0].metricValues;
-      console.log('\x1b[33m%s\x1b[0m', '📊 1. VISÃO GERAL (ÚLTIMOS 7 DIAS)');
-      console.log(` - Usuários Ativos   : \x1b[36m${vals[0].value}\x1b[0m`);
-      console.log(` - Novos Usuários    : \x1b[36m${vals[1].value}\x1b[0m`);
-      console.log(` - Sessões Totais    : \x1b[36m${vals[2].value}\x1b[0m`);
-      console.log(` - Páginas Vistas    : \x1b[32m${vals[3].value}\x1b[0m`);
-      console.log(` - Eventos Disparados: \x1b[35m${vals[4].value}\x1b[0m\n`);
+      console.log('\x1b[33m%s\x1b[0m', '📊 1. OVERVIEW (LAST 7 DAYS)');
+      console.log(` - Active users    : \x1b[36m${vals[0].value}\x1b[0m`);
+      console.log(` - New users       : \x1b[36m${vals[1].value}\x1b[0m`);
+      console.log(` - Total sessions  : \x1b[36m${vals[2].value}\x1b[0m`);
+      console.log(` - Page views      : \x1b[32m${vals[3].value}\x1b[0m`);
+      console.log(` - Events fired    : \x1b[35m${vals[4].value}\x1b[0m\n`);
     }
 
-    // 2. Acessos por Rota/Página (Últimos 7 dias)
+    // 2. Visits per page (last 7 days)
     const pagesReport = await runGaReport(token, PROPERTY_ID, {
       dateRanges: [{ startDate: '7daysAgo', endDate: 'today' }],
       dimensions: [{ name: 'pagePath' }],
@@ -160,19 +160,19 @@ async function main() {
       orderBys: [{ metric: { metricName: 'screenPageViews' }, desc: true }]
     });
 
-    console.log('\x1b[33m%s\x1b[0m', '📄 2. PÁGINAS MAIS VISITADAS');
+    console.log('\x1b[33m%s\x1b[0m', '📄 2. MOST-VISITED PAGES');
     if (pagesReport.rows && pagesReport.rows.length > 0) {
       pagesReport.rows.forEach(r => {
         const page = r.dimensionValues[0].value;
         const users = r.metricValues[0].value;
         const views = r.metricValues[1].value;
-        console.log(` - ${page.padEnd(35)}: \x1b[32m${views} visualização(ões)\x1b[0m (${users} usuário(s))`);
+        console.log(` - ${page.padEnd(35)}: \x1b[32m${views} view(s)\x1b[0m (${users} user(s))`);
       });
     } else {
-      console.log(' - Nenhum dado de página registrado nos últimos 7 dias.');
+      console.log(' - No page data recorded in the last 7 days.');
     }
 
-    // 3. Origem de Tráfego / Canais (Últimos 7 dias)
+    // 3. Traffic source / channels (last 7 days)
     const trafficReport = await runGaReport(token, PROPERTY_ID, {
       dateRanges: [{ startDate: '7daysAgo', endDate: 'today' }],
       dimensions: [{ name: 'sessionSourceMedium' }],
@@ -180,18 +180,18 @@ async function main() {
       orderBys: [{ metric: { metricName: 'sessions' }, desc: true }]
     });
 
-    console.log('\n\x1b[33m%s\x1b[0m', '🌐 3. ORIGEM DO TRÁFEGO (CANAL / MÍDIA)');
+    console.log('\n\x1b[33m%s\x1b[0m', '🌐 3. TRAFFIC SOURCE (CHANNEL / MEDIUM)');
     if (trafficReport.rows && trafficReport.rows.length > 0) {
       trafficReport.rows.forEach(r => {
         const source = r.dimensionValues[0].value;
         const sessions = r.metricValues[0].value;
-        console.log(` - ${source.padEnd(35)}: \x1b[36m${sessions} sessão(ões)\x1b[0m`);
+        console.log(` - ${source.padEnd(35)}: \x1b[36m${sessions} session(s)\x1b[0m`);
       });
     } else {
-      console.log(' - Nenhuma origem registrada.');
+      console.log(' - No source recorded.');
     }
 
-    // 4. Detalhamento por Evento (Últimos 7 dias)
+    // 4. Events breakdown (last 7 days)
     const eventsReport = await runGaReport(token, PROPERTY_ID, {
       dateRanges: [{ startDate: '7daysAgo', endDate: 'today' }],
       dimensions: [{ name: 'eventName' }],
@@ -199,25 +199,25 @@ async function main() {
       orderBys: [{ metric: { metricName: 'eventCount' }, desc: true }]
     });
 
-    console.log('\n\x1b[33m%s\x1b[0m', '🎯 4. EVENTOS E CONVERSÕES REGISTRADAS');
+    console.log('\n\x1b[33m%s\x1b[0m', '🎯 4. EVENTS AND RECORDED CONVERSIONS');
     if (eventsReport.rows && eventsReport.rows.length > 0) {
       eventsReport.rows.forEach(r => {
         const eventName = r.dimensionValues[0].value;
         const count = r.metricValues[0].value;
         const color = eventName === 'generate_lead' ? '\x1b[32m' : '\x1b[37m';
-        console.log(` - Evento [${color}${eventName.padEnd(20)}\x1b[0m]: ${count} disparo(s)`);
+        console.log(` - Event [${color}${eventName.padEnd(20)}\x1b[0m]: ${count} hit(s)`);
       });
     } else {
-      console.log(' - Nenhum evento registrado.');
+      console.log(' - No events recorded.');
     }
 
     console.log('\n\x1b[36m%s\x1b[0m', '-------------------------------------------------------');
-    console.log('\x1b[36m%s\x1b[0m', ' Dica: Para rodar este relatório a qualquer momento:');
+    console.log('\x1b[36m%s\x1b[0m', ' Tip: run this report again at any time with:');
     console.log('\x1b[33m%s\x1b[0m', ' npm run ga-metrics');
     console.log('\x1b[36m%s\x1b[0m', '-------------------------------------------------------\n');
 
   } catch (err) {
-    console.error('\x1b[31m❌ Erro durante a execução:\x1b[0m', err.message);
+    console.error('\x1b[31m❌ Error while running:\x1b[0m', err.message);
   }
 }
 
