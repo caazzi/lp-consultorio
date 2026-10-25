@@ -442,11 +442,262 @@ if (!fs.existsSync(accessStorePath)) {
   }
 }
 
-console.log('\n--------------------------------------------------');
-if (hasErrors) {
-  console.error('\x1b[31m❌ ALGUNS TESTES FALHARAM.\x1b[0m\n');
-  process.exit(1);
-} else {
-  console.log('\x1b[32m✅ TODOS OS TESTES PASSARAM COM SUCESSO!\x1b[0m\n');
-  process.exit(0);
+// 11. Coleta de eventos do store — o gargalo que derrubou o relatório semanal.
+// Regressão (2026-10): o leitor listava TODAS as chaves e fazia um `get` sequencial
+// por chave, custando O(histórico). Com ~718 blobs isso passou de 30 s e a função
+// `insights` começou a responder 504 (Netlify), matando o job do email. O contrato
+// agora tem dois invariantes testáveis: (a) chaves fora da janela NÃO são buscadas;
+// (b) as leituras acontecem em paralelo, mas com limite.
+async function checkCollectEvents() {
+  console.log('\n\x1b[33m%s\x1b[0m', '📦 11. VALIDAÇÃO DA COLETA DE EVENTOS (janela + concorrência limitada)');
+  const as = require(path.join(__dirname, '../netlify/access-store.js'));
+
+  if (typeof as.collectEvents !== 'function' || typeof as.keyTimestampMs !== 'function') {
+    console.error('  ❌ access-store não expõe collectEvents/keyTimestampMs');
+    hasErrors = true;
+    return;
+  }
+
+  const HOUR = 60 * 60 * 1000;
+  const DAY = 24 * HOUR;
+  const NOW = Date.parse('2026-10-25T12:00:00.000Z');
+  const DAYS = 7;
+  const sinceMs = NOW - DAYS * DAY;
+
+  // 300 eventos a cada 6h (~75 dias de histórico) + 1 chave de formato legado.
+  const keys = [];
+  for (let i = 0; i < 300; i += 1) {
+    const ts = new Date(NOW - i * 6 * HOUR).toISOString();
+    keys.push(`event/${ts}_${String(i).padStart(8, '0')}`);
+  }
+  const keyTs = (key) => {
+    const m = /^event\/(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z)/.exec(key);
+    return m ? Date.parse(m[1]) : null;
+  };
+  const expectedKeys = keys.filter((k) => keyTs(k) === null || keyTs(k) >= sinceMs);
+  // Chave sem timestamp reconhecível: precisa ser buscada (decisão é pelo corpo).
+  keys.push('event/legacy-import-0001');
+  expectedKeys.push('event/legacy-import-0001');
+  // Blob ilegível dentro da janela: conta como falha, não derruba a coleta.
+  const brokenKey = `event/${new Date(NOW - HOUR).toISOString()}_broken`;
+  keys.push(brokenKey);
+  expectedKeys.push(brokenKey);
+
+  const state = { gets: 0, inFlight: 0, maxInFlight: 0 };
+  const store = {
+    // `list` devolve fora de ordem de propósito: o coletor não pode depender disso.
+    async list() { return { blobs: keys.slice().reverse().map((key) => ({ key })) }; },
+    async get(key) {
+      state.gets += 1;
+      state.inFlight += 1;
+      state.maxInFlight = Math.max(state.maxInFlight, state.inFlight);
+      await new Promise((resolve) => setImmediate(resolve));
+      state.inFlight -= 1;
+      if (key === brokenKey) throw new Error('blob indisponível');
+      return {
+        timestamp: keyTs(key) === null ? new Date(NOW - 2 * HOUR).toISOString() : key.slice(6, 30),
+        event_type: 'page_view'
+      };
+    }
+  };
+
+  const res = await as.collectEvents(store, sinceMs);
+
+  // (a) só a janela é buscada — o histórico antigo custa zero `get`.
+  if (state.gets === expectedKeys.length) {
+    console.log(`  ✅ collectEvents busca apenas a janela: ${state.gets} gets para ${keys.length} chaves (7d)`);
+  } else {
+    console.error(`  ❌ collectEvents fez ${state.gets} gets; esperado ${expectedKeys.length} (chaves na janela)`);
+    hasErrors = true;
+  }
+
+  // (b) paralelismo limitado (nunca sequencial nem ilimitado).
+  if (state.maxInFlight > 1 && state.maxInFlight <= 32) {
+    console.log(`  ✅ leituras paralelas com limite: pico de ${state.maxInFlight} gets simultâneos (cap 32)`);
+  } else {
+    console.error(`  ❌ pico de concorrência fora do contrato: ${state.maxInFlight} (esperado 2..32)`);
+    hasErrors = true;
+  }
+
+  // (c) blob ilegível não derruba o relatório; é contabilizado.
+  if (res.failed === 1 && res.events.length === expectedKeys.length - 1) {
+    console.log('  ✅ blob ilegível é contabilizado (failed=1) sem perder os demais eventos');
+  } else {
+    console.error(`  ❌ falha de blob mascarada: failed=${res.failed}, eventos=${res.events.length} (esperado 1 e ${expectedKeys.length - 1})`);
+    hasErrors = true;
+  }
+
+  // (d) chave de formato legado não é descartada pelo filtro.
+  const legacyIncluded = res.events.some((e) => e && e.timestamp === new Date(NOW - 2 * HOUR).toISOString());
+  if (legacyIncluded) console.log('  ✅ chave com formato legado é buscada e decidida pelo corpo');
+  else { console.error('  ❌ chave com formato legado foi descartada pelo filtro de janela'); hasErrors = true; }
+
+  // (e) ordem cronológica preservada (o email compara semanas).
+  const times = res.events.map((e) => Date.parse(e.timestamp));
+  const sorted = times.every((t, i) => i === 0 || times[i - 1] <= t);
+  if (sorted) console.log('  ✅ eventos retornados em ordem cronológica');
+  else { console.error('  ❌ eventos fora de ordem cronológica'); hasErrors = true; }
+
+  // (f) janela menor custa menos leituras (o custo acompanha a janela, não o histórico).
+  const state1 = { gets: 0 };
+  const store1 = {
+    async list() { return { blobs: keys.map((key) => ({ key })) }; },
+    async get(key) {
+      state1.gets += 1;
+      return { timestamp: keyTs(key) === null ? new Date(NOW - 2 * HOUR).toISOString() : key.slice(6, 30) };
+    }
+  };
+  await as.collectEvents(store1, NOW - 1 * DAY);
+  if (state1.gets > 0 && state1.gets < state.gets) {
+    console.log(`  ✅ custo proporcional à janela: 1d = ${state1.gets} gets vs 7d = ${state.gets}`);
+  } else {
+    console.error(`  ❌ custo não acompanha a janela: 1d=${state1.gets}, 7d=${state.gets}`);
+    hasErrors = true;
+  }
+
+  // (g) chave malformada não vira timestamp válido (nunca inclui lixo na janela).
+  if (as.keyTimestampMs('event/legacy-import-0001') === null
+    && typeof as.keyTimestampMs(`event/${new Date(NOW).toISOString()}_x`) === 'number') {
+    console.log('  ✅ keyTimestampMs: ISO parseia, formato desconhecido => null');
+  } else {
+    console.error('  ❌ keyTimestampMs não distingue chave ISO de chave legada');
+    hasErrors = true;
+  }
+
+  // (h) guarda estática: insights.js NÃO pode voltar ao scan sequencial completo.
+  const insSrc = fs.readFileSync(path.join(__dirname, '../netlify/functions/insights.js'), 'utf8');
+  const usesCollector = insSrc.includes('collectEvents');
+  const noSequentialScan = !/for\s*\(\s*const\s*\{?\s*key\s*\}?\s*of\s+blobs/.test(insSrc);
+  if (usesCollector && noSequentialScan) {
+    console.log('  ✅ insights.js usa collectEvents (sem varredura sequencial de todos os blobs)');
+  } else {
+    console.error('  ❌ insights.js voltou a varrer o store sequencialmente (regressão de timeout)');
+    hasErrors = true;
+  }
+
+  // (i) paginação: `list()` SEM `paginate` devolve uma única página (1000 chaves) e
+  // truncaria o histórico em silêncio — o store já está em ~718 e cresce ~130/semana.
+  const pageKeys = [];
+  for (let i = 0; i < 5; i += 1) pageKeys.push(`event/${new Date(NOW - i * HOUR).toISOString()}_p${i}`);
+  const pageStore = {
+    list() {
+      const pages = [pageKeys.slice(0, 2), pageKeys.slice(2, 4), pageKeys.slice(4)];
+      return (async function* pages_() {
+        for (const page of pages) yield { blobs: page.map((key) => ({ key })) };
+      })();
+    },
+    async get(key) { return { timestamp: key.slice(6, 30), event_type: 'page_view' }; }
+  };
+  const paged = await as.collectEvents(pageStore, NOW - 1 * DAY);
+  if (paged.scanned === 5 && paged.events.length === 5) {
+    console.log('  ✅ listagem paginada: segue todas as páginas (nada truncado na 1ª página)');
+  } else {
+    console.error(`  ❌ paginação truncada: scanned=${paged.scanned}, eventos=${paged.events.length} (esperado 5/5)`);
+    hasErrors = true;
+  }
 }
+
+// 12. Política de retry do cliente `insights` (scripts/lib/insights-api.js).
+// Um 5xx transitório do provedor não pode custar a semana de relatório; um 4xx
+// é bug de chamada e deve falhar na hora (repetir só atrasa o diagnóstico).
+// Testado com um servidor local em loopback — a suíte continua offline.
+async function checkInsightsRetry() {
+  console.log('\n\x1b[33m%s\x1b[0m', '🔁 12. VALIDAÇÃO DO RETRY DO CLIENTE INSIGHTS (transitório vs 4xx)');
+  const http = require('http');
+  const { fetchInsights } = require(path.join(__dirname, 'lib/insights-api.js'));
+
+  async function withServer(handler, fn) {
+    const server = http.createServer(handler);
+    await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+    const { port } = server.address();
+    try {
+      return await fn(`http://127.0.0.1:${port}/insights`);
+    } finally {
+      await new Promise((resolve) => server.close(resolve));
+    }
+  }
+
+  // (a) 503 transitório → nova tentativa até dar certo.
+  const transient = { hits: 0 };
+  await withServer((req, res) => {
+    transient.hits += 1;
+    if (transient.hits === 1) {
+      res.writeHead(503, { 'Content-Type': 'text/html' });
+      res.end('<HTML><BODY>Service Unavailable</BODY></HTML>');
+      return;
+    }
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ summary: { events: 42 } }));
+  }, async (url) => {
+    const payload = await fetchInsights(7, { url, backoffMs: [10, 10], timeoutMs: 2000 });
+    if (payload.summary.events === 42 && transient.hits === 2) {
+      console.log('  ✅ 503 transitório é repetido e o payload é devolvido');
+    } else {
+      console.error(`  ❌ retry esperado: hits=${transient.hits}, events=${payload && payload.summary && payload.summary.events}`);
+      hasErrors = true;
+    }
+  });
+
+  // (b) 404 NÃO é repetido.
+  const notFound = { hits: 0 };
+  await withServer((req, res) => {
+    notFound.hits += 1;
+    res.writeHead(404, { 'Content-Type': 'text/plain' });
+    res.end('not found');
+  }, async (url) => {
+    let err = null;
+    try {
+      await fetchInsights(7, { url, backoffMs: [10, 10], timeoutMs: 2000 });
+    } catch (e) {
+      err = e;
+    }
+    if (err && err.status === 404 && notFound.hits === 1) {
+      console.log('  ✅ 404 falha de imediato (sem retry), com status preservado');
+    } else {
+      console.error(`  ❌ 404 deveria falhar na 1ª tentativa: hits=${notFound.hits}, err=${err && err.message}`);
+      hasErrors = true;
+    }
+  });
+
+  // (c) esgotar as tentativas devolve o erro com `.attempts` (o job imprime isso).
+  const always = { hits: 0 };
+  await withServer((req, res) => {
+    always.hits += 1;
+    res.writeHead(502, { 'Content-Type': 'text/plain' });
+    res.end('bad gateway');
+  }, async (url) => {
+    let err = null;
+    try {
+      await fetchInsights(7, { url, attempts: 3, backoffMs: [10, 10], timeoutMs: 2000 });
+    } catch (e) {
+      err = e;
+    }
+    if (err && err.status === 502 && always.hits === 3 && err.attempts === 3) {
+      console.log('  ✅ esgotou 3 tentativas e reportou status/attempts para o log do job');
+    } else {
+      console.error(`  ❌ retry não esgotou como esperado: hits=${always.hits}, ${err && err.message}`);
+      hasErrors = true;
+    }
+  });
+}
+
+(async () => {
+  for (const check of [checkCollectEvents, checkInsightsRetry]) {
+    try {
+      await check();
+    } catch (err) {
+      console.error(`\x1b[31m❌ ${check.name} falhou com exceção: ${err.message}\x1b[0m`);
+      hasErrors = true;
+    }
+  }
+
+  console.log('\n--------------------------------------------------');
+  if (hasErrors) {
+    console.error('\x1b[31m❌ ALGUNS TESTES FALHARAM.\x1b[0m\n');
+    process.exit(1);
+  } else {
+    console.log('\x1b[32m✅ TODOS OS TESTES PASSARAM COM SUCESSO!\x1b[0m\n');
+    process.exit(0);
+  }
+})();
+
