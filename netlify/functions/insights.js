@@ -13,20 +13,14 @@
 //    their own `test_traffic` bucket and excluded from the funnel/rates.
 const {
   STORE_NAME,
-  KEY_PREFIX,
   getStoreInstance,
+  collectEvents,
   resolveCampaignLabelFromEvent,
   canonicalSourceFromEvent,
   isPreviewEvent,
   isTestEvent,
   deriveVisitorGroupKey
 } = require('../access-store');
-
-function parseIso(dateStr) {
-  if (!dateStr) return null;
-  const d = new Date(dateStr);
-  return isNaN(d.getTime()) ? null : d.getTime();
-}
 
 exports.handler = async function (event) {
   const headers = {
@@ -49,15 +43,13 @@ exports.handler = async function (event) {
 
   try {
     const store = getStoreInstance(event);
-    const events = [];
 
-    // In the 90-day window the event count is small (an early-stage medical landing
-    // page), so listing all keys and filtering in-memory is simpler and sufficient.
-    const { blobs } = await store.list({ prefix: KEY_PREFIX });
-    for (const { key } of blobs) {
-      const data = await store.get(key, { type: 'json' });
-      if (data && parseIso(data.timestamp) >= sinceMs) events.push(data);
-    }
+    // Collection is windowed and parallel (see access-store.collectEvents): only
+    // blobs inside the window are fetched, in bounded concurrent batches. The old
+    // sequential full-history scan crossed Netlify's ~30 s timeout at ~700 events.
+    const { events, scanned, fetched, failed, elapsedMs } =
+      await collectEvents(store, sinceMs);
+    console.log(`[INSIGHTS] days=${days} scanned=${scanned} fetched=${fetched} failed=${failed} ms=${elapsedMs}`);
 
     // Split honest production traffic from non-production buckets. Manual smoke
     // tests (TESTGCLID) are checked FIRST so a test event is never double-counted;

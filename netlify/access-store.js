@@ -60,6 +60,118 @@ function makeKey(event) {
   return `${KEY_PREFIX}${ts}_${rand}`;
 }
 
+// ---------------------------------------------------------------------------
+// Read path: windowed + bounded-concurrency collection
+// ---------------------------------------------------------------------------
+
+// `makeKey` puts an ISO-8601 UTC timestamp right after the prefix, so keys sort
+// chronologically as plain strings. That lets a reader discard out-of-window keys
+// from the LISTING alone, before paying for a single blob body.
+const EVENT_KEY_TS_RE = /^event\/(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z)/;
+
+/**
+ * Extracts the timestamp embedded in an event key.
+ * @returns {number|null} epoch ms, or null when the key predates/diverges from
+ *   the `event/<ISO>_<rand>` shape (caller must then fall back to the body).
+ */
+function keyTimestampMs(key) {
+  const match = EVENT_KEY_TS_RE.exec(String(key || ''));
+  if (!match) return null;
+  const ms = Date.parse(match[1]);
+  return Number.isNaN(ms) ? null : ms;
+}
+
+/**
+ * Lists every event key, following pagination.
+ *
+ * `store.list()` without `paginate` returns a SINGLE page (1000 keys), so a
+ * long-lived store would silently drop history once it crossed that line. The
+ * SDK's `paginate: true` returns an async iterable of pages; a plain store (and
+ * the test fakes) may still return one page as a promise, so both shapes work.
+ *
+ * @param {object} store Netlify Blobs store (or compatible fake)
+ * @returns {Promise<string[]>} all keys under KEY_PREFIX
+ */
+async function listEventKeys(store) {
+  const result = store.list({ prefix: KEY_PREFIX, paginate: true });
+  const keys = [];
+  const collect = (page) => {
+    for (const { key } of (page && page.blobs) || []) keys.push(key);
+  };
+
+  if (result && typeof result[Symbol.asyncIterator] === 'function') {
+    for await (const page of result) collect(page);
+  } else {
+    collect(await result);
+  }
+  return keys;
+}
+
+/**
+ * Reads every event created at/after `sinceMs` from the store.
+ *
+ * WHY this exists (2026-10 regression): the naive reader listed all keys and then
+ * `await`ed one `store.get` per key, sequentially. Cost was O(history), not
+ * O(window) — ~31 s for ~718 blobs, which is past Netlify's ~30 s inactivity
+ * timeout, so `insights` started answering 504 to every caller (and the weekly
+ * email job died with it). Three invariants keep it honest:
+ *
+ *   1. Window first: keys already known to be older than `sinceMs` are skipped
+ *      without a fetch, so a 7-day report touches only the last ~130 blobs.
+ *   2. Bounded concurrency: blob reads happen in parallel batches, capped so a
+ *      large window cannot open hundreds of sockets at once.
+ *   3. Full pagination: the listing follows every page, so growth past 1000
+ *      events extends the cost linearly instead of silently truncating history.
+ *
+ * A single unreadable blob (deleted, transient error) is counted, not fatal.
+ *
+ * @param {object} store Netlify Blobs store (or a compatible fake in tests)
+ * @param {number} sinceMs epoch ms lower bound (inclusive)
+ * @param {{concurrency?: number}} [options] max in-flight blob reads (default 32)
+ * @returns {Promise<{events: object[], scanned: number, fetched: number,
+ *   failed: number, elapsedMs: number}>} `events` in chronological order
+ */
+async function collectEvents(store, sinceMs, options = {}) {
+  const concurrency = Math.max(1, Math.min(64, Number(options.concurrency) || 32));
+  const since = Number.isFinite(sinceMs) ? sinceMs : 0;
+  const startedAt = Date.now();
+
+  const allKeys = await listEventKeys(store);
+
+  // Unknown key shapes are kept (the event body decides); only keys that
+  // positively parse to an older timestamp are dropped.
+  const keys = [];
+  for (const key of allKeys) {
+    const ts = keyTimestampMs(key);
+    if (ts !== null && ts < since) continue;
+    keys.push(key);
+  }
+
+  const events = [];
+  let failed = 0;
+  for (let i = 0; i < keys.length; i += concurrency) {
+    const batch = keys.slice(i, i + concurrency);
+    const fetched = await Promise.all(batch.map((key) =>
+      store.get(key, { type: 'json' }).catch(() => {
+        failed += 1;
+        return null;
+      })
+    ));
+    // Batches run in key order, but the sort makes the contract explicit: callers
+    // (weekly report) compare consecutive weeks, so output is chronological even
+    // if the listing backend ever changes its ordering.
+    for (const data of fetched) {
+      const ts = eventTimeMs(data);
+      if (ts === null || ts < since) continue;
+      events.push(data);
+    }
+  }
+
+  events.sort((a, b) => eventTimeMs(a) - eventTimeMs(b));
+
+  return { events, scanned: allKeys.length, fetched: keys.length, failed, elapsedMs: Date.now() - startedAt };
+}
+
 /**
  * Returns true when a raw referer/host indicates Netlify deploy-preview (test/QA)
  * traffic that must be excluded from honest production funnel metrics.
@@ -290,6 +402,8 @@ module.exports = {
   connectBlobs,
   getStoreInstance,
   makeKey,
+  keyTimestampMs,
+  collectEvents,
   isPreviewReferer,
   isPreviewEvent,
   isTestEvent,
