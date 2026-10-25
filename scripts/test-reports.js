@@ -48,8 +48,9 @@ const results = [
 
 // Branch coverage that does not deserve a golden: when GA4 is unavailable the
 // email must still render and say so in the technical section.
-const gaDown = weeklyCopy.renderText(weekly.firstParty, { ok: false, reason: 'sem credencial' }, weekly.previousWeek, weekly.when);
-if (!gaDown.includes('GA4 indisponível')) {
+// The reason string is interpolated into the email, so it is email copy.
+const gaDown = weeklyCopy.renderText(weekly.firstParty, { ok: false, reason: 'sem credencial' }, weekly.previousWeek, weekly.when); // lang:allow (email copy)
+if (!gaDown.includes('GA4 indisponível')) { // lang:allow (email copy)
   results.push({ name: 'weekly-body.txt (GA4 down)', ok: false, reason: 'missing GA4 fallback line' });
 }
 
