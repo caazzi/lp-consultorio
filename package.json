@@ -45,7 +45,7 @@
   },
   "homepage": "https://github.com/caazzi/lp-consultorio#readme",
   "devDependencies": {
-    "tailwindcss": "^3.4.19"
+    "tailwindcss": "^4.3.3"
   },
   "dependencies": {
     "@netlify/blobs": "^10.7.12"
