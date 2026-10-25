@@ -1,24 +1,24 @@
-// scripts/lib/insights-api.js — cliente único da função `insights`.
+// scripts/lib/insights-api.js — single client for the `insights` function.
 //
-// Fonte ÚNICA para os relatórios que leem o funil first-party (`weekly-report`,
-// `product-report`). Centralizar aqui evita duas cópias do mesmo fetch e, mais
-// importante, dá aos dois a mesma política de resiliência.
+// Single source of truth for the reports that read the first-party funnel
+// (`weekly-report`, `product-report`). One fetch implementation and, more
+// importantly, one resilience policy for both.
 //
-// POR QUE retry (regressão 2026-10): a função `insights` passou a estourar o
-// timeout do Netlify (~30 s) e respondeu 504/502 para o job semanal, que morria
-// sem enviar o email. A causa foi corrigida em `netlify/access-store.js`
-// (coleta O(janela) + concorrência limitada), mas um 5xx transitório do provedor
-// — deploy no meio do job, cold start lento — não deve custar a semana inteira
-// de relatório. Erros 4xx (URL/param errado) NÃO são repetidos: repetir não
-// conserta bug de chamada, só atrasa o diagnóstico.
+// WHY retry (2026-10 regression): `insights` started hitting Netlify's timeout
+// (~30s) and answered 504/502 to the weekly job, which then died without sending
+// the email. The cause was fixed in `netlify/access-store.js` (O(window)
+// collection + bounded concurrency), but a transient 5xx from the provider — a
+// deploy mid-run, a slow cold start — must not cost a whole week of reporting.
+// 4xx errors (wrong URL/param) are NOT retried: retrying does not fix a call-site
+// bug, it only delays the diagnosis.
 //
-// O timeout por tentativa é menor que o timeout de borda do Netlify de propósito:
-// preferimos falhar rápido e tentar de novo a ficar 30 s pendurado por tentativa.
+// The per-attempt timeout is deliberately shorter than Netlify's edge timeout:
+// better to fail fast and try again than to hang for 30s per attempt.
 
 const DEFAULT_INSIGHTS_URL = process.env.ACCESS_INSIGHTS_URL
   || 'https://consultoriosalustiano.com.br/.netlify/functions/insights';
 
-// Retentáveis: transitórios do provedor + throttling explícito.
+// Retryable: transient provider failures + explicit throttling.
 const RETRYABLE_STATUS = new Set([408, 425, 429, 500, 502, 503, 504]);
 
 const DEFAULT_ATTEMPTS = 3;
@@ -30,16 +30,16 @@ function sleep(ms) {
 }
 
 /**
- * GET `${insights}?days=<days>` com retry exponencial em falhas transitórias.
+ * GET `${insights}?days=<days>` with exponential backoff on transient failures.
  *
- * @param {number} days janela em dias (validada no servidor: 1..90)
+ * @param {number} days window in days (server validates 1..90)
  * @param {object} [options]
- * @param {string} [options.url] endpoint alternativo (default: produção)
- * @param {number} [options.attempts] tentativas totais (default 3)
- * @param {number[]} [options.backoffMs] espera entre tentativas
- * @param {number} [options.timeoutMs] timeout por tentativa
- * @returns {Promise<object>} payload JSON da função
- * @throws {Error} quando todas as tentativas falham, com `.status` e `.attempts`
+ * @param {string} [options.url] alternative endpoint (default: production)
+ * @param {number} [options.attempts] total attempts (default 3)
+ * @param {number[]} [options.backoffMs] wait between attempts
+ * @param {number} [options.timeoutMs] timeout per attempt
+ * @returns {Promise<object>} JSON payload from the function
+ * @throws {Error} when every attempt fails, carrying `.status` and `.attempts`
  */
 async function fetchInsights(days, options = {}) {
   const url = options.url || DEFAULT_INSIGHTS_URL;
@@ -67,7 +67,7 @@ async function fetchInsights(days, options = {}) {
       lastError = err;
       if (!err.retryable || attempt === attempts) break;
       const wait = backoff[Math.min(attempt - 1, backoff.length - 1)];
-      console.warn(`[insights] tentativa ${attempt}/${attempts} falhou (${err.message}); nova tentativa em ${wait}ms`);
+      console.warn(`[insights] attempt ${attempt}/${attempts} failed (${err.message}); retrying in ${wait}ms`);
       await sleep(wait);
     }
   }

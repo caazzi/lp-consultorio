@@ -1,0 +1,37 @@
+RESUMO DA SEMANA | Consultório Salustiano
+Semana encerrada em 25/10/2026
+
+Nesta semana, 9 pessoas clicaram para falar no WhatsApp a partir do site.
+Ao todo, 8 pessoas abriram a conversa no WhatsApp.
+
+O QUE MAIS IMPORTA
+- Pessoas que chamaram no WhatsApp: 9 (+6 a mais que na semana passada)
+- Conversas abertas: 8 (+6 a mais que na semana passada)
+- Visitas à página: 55 (+37 a mais que na semana passada)
+
+DE ONDE VEIO O CONTATO
+- Quem já conhece o site (busca no Google ou digita o endereço): 75
+- Anúncios pagos no Google (Infectologia): 56
+
+O GOOGLE TAMBÉM REGISTROU
+- Contatos de WhatsApp para o Google: 9
+  (é só uma conferência. O número do site acima é o mais confiável.)
+
+DETALHES TÉCNICOS (pode ignorar esta parte)
+Visitantes estimados: 44
+Taxa de clique no WhatsApp: 16.4%
+Por campanha:
+  - Quem já conhece o site (busca no Google ou digita o endereço): 5 cliques, 4 conversas
+  - Anúncios pagos no Google (Infectologia): 4 cliques, 4 conversas
+Botões mais clicados:
+  - Botão principal do topo da página: 3
+  - Botão flutuante (fixo na tela): 4
+  - Botão no cabeçalho: 2
+GA4: sessões 110, usuários 90, páginas 140
+  - Anúncios do Google (pagos): 56 sessões
+  - Busca do Google (sem pagar): 30 sessões
+  - Acesso direto: 24 sessões
+Eventos de teste (ignorados): 2
+Acessos de teste e pré-visualização (ignorados): 3
+
+Relatório detalhado para o técnico: npm run access-logs

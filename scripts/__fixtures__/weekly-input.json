@@ -1,0 +1,38 @@
+{
+  "when": "25/10/2026, 10:00:00",
+  "firstParty": {
+    "summary": {
+      "events": 132,
+      "uniqueUsers": 101,
+      "estimatedVisitors": 44,
+      "pageViews": 55,
+      "whatsappClicks": 9,
+      "messagesSent": 8,
+      "engagementRate": 16.4,
+      "leadProxyRate": 14.5
+    },
+    "preview": { "events": 3 },
+    "test": { "events": 2 },
+    "sources": { "Direct / Organic": 75, "Infectologia": 56 },
+    "specialties": { "Infectologia": 100, "Cardiologia": 30 },
+    "buttons": { "Hero Main": 3, "Floating_Sticky": 4, "Header": 2 },
+    "perCampaign": [
+      { "campaign": "Direct / Organic", "specialty": "Infectologia", "clicks": 5, "leads": 4 },
+      { "campaign": "Infectologia", "specialty": "Infectologia", "clicks": 4, "leads": 4 }
+    ]
+  },
+  "previousWeek": { "pageViews": 18, "whatsappClicks": 3, "messagesSent": 2 },
+  "ga4": {
+    "ok": true,
+    "overview": { "activeUsers": "90", "newUsers": "80", "sessions": "110", "pageViews": "140", "eventCount": "500" },
+    "traffic": [
+      { "source": "google / cpc", "sessions": "56" },
+      { "source": "google / organic", "sessions": "30" },
+      { "source": "direct", "sessions": "24" }
+    ],
+    "events": [
+      { "name": "page_view", "count": "140" },
+      { "name": "generate_lead", "count": "9" }
+    ]
+  }
+}

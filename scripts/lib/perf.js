@@ -1,15 +1,15 @@
-// scripts/lib/perf.js — engine compartilhada de Lighthouse.
+// scripts/lib/perf.js — shared Lighthouse engine.
 //
-// Fonte ÚNICA para `npm run perf` (relatório local) e `npm run perf:check`
-// (gate do CI). Evita que os dois divirjam sobre o que é uma medição válida —
-// mesmo princípio de `ads/lib/report.js` para o funil.
+// Single source for `npm run perf` (local report) and `npm run perf:check` (CI
+// gate). Keeps the two from disagreeing about what a valid measurement is — same
+// principle as `ads/lib/report.js` for the funnel.
 //
-// Por que invocar o Lighthouse via shell: sob Node, forkar `npx lighthouse`
-// diretamente é não-confiável para descobrir o Chrome em contexto
-// não-interativo (WSL/CI). O shell encontra o binário de forma consistente.
+// Why invoke Lighthouse through the shell: under Node, forking `npx lighthouse`
+// directly is unreliable at discovering Chrome in a non-interactive context
+// (WSL/CI). The shell finds the binary consistently.
 //
-// Artefatos são gravados FORA do repo por padrão (evita sujar a árvore de
-// trabalho com pastas `undefined:`/`lighthouse.*` no Linux runner).
+// Artifacts are written OUTSIDE the repo by default (keeps the working tree free
+// of `undefined:` / `lighthouse.*` litter on the Linux runner).
 
 const { execSync } = require('child_process');
 const fs = require('fs');
@@ -18,8 +18,8 @@ const path = require('path');
 
 const DEFAULT_OUT_DIR = path.join(os.tmpdir(), 'lh-run');
 
-// Métricas extraídas. O `id` é o audit do Lighthouse; `unit` indica como
-// normalizar o valor numérico para comparação com thresholds.
+// Extracted metrics. `id` is the Lighthouse audit; the short key is how reports
+// and thresholds refer to it.
 const METRIC_KEYS = {
   FCP: 'first-contentful-paint',
   LCP: 'largest-contentful-paint',
@@ -39,8 +39,8 @@ function outDir() {
 }
 
 /**
- * Páginas medidas por padrão (mobile). `PERF_BASE_URL` troca a base para um
- * servidor local, permitindo medir o código do push sem deploy.
+ * Pages measured by default (mobile). `PERF_BASE_URL` swaps the base for a local
+ * server, so the pushed code can be measured before it is deployed.
  */
 function targets(baseOverride) {
   const base = (baseOverride || process.env.PERF_BASE_URL || 'https://consultoriosalustiano.com.br').replace(/\/$/, '');
@@ -66,9 +66,9 @@ function runLighthouse(url, name, dir) {
 }
 
 /**
- * Extrai score + métricas NORMALIZADAS (número + displayValue).
- * `numeric` é a base para comparação de threshold; `display` é para humanos.
- * CLS não tem unidade; LCP/TBT/FCP/SI vêm em ms.
+ * Extracts the score + NORMALIZED metrics (numeric value + displayValue).
+ * `numeric` is the basis for threshold comparison; `display` is for humans.
+ * CLS is unitless; LCP/TBT/FCP/SI come in ms.
  */
 function loadSummary(file) {
   const r = JSON.parse(fs.readFileSync(file, 'utf8'));
@@ -95,23 +95,23 @@ function loadSummary(file) {
 }
 
 /**
- * Roda o Lighthouse com uma retentativa: alguns runs não produzem os audits de
- * timing (flaky) e devolveriam `perf: null`. Repetir uma vez estabiliza.
- * Se ainda falhar, NÃO inventa número: devolve o resultado incompleto para o
- * chamador decidir (o gate de CI trata como erro, não como "aprovado").
+ * Runs Lighthouse with one retry: some runs produce no timing audits (flaky) and
+ * would return `perf: null`. Repeating once stabilizes it. If it still fails, do
+ * NOT invent a number: return the incomplete result so the caller decides (the CI
+ * gate treats it as an error, never as "passed").
  */
 function robustRun(url, name, dir) {
   let out = runLighthouse(url, name, dir);
   let summary = loadSummary(out);
   if (summary.perf == null) {
-    console.warn(`[perf] ${name}: timings incompletos, repetindo uma vez...`);
+    console.warn(`[perf] ${name}: incomplete timings, retrying once...`);
     out = runLighthouse(url, name, dir);
     summary = loadSummary(out);
   }
   return { file: out, summary };
 }
 
-/** `{ 'index/mobile': { file, summary } }` para todas as páginas base. */
+/** `{ 'index/mobile': { file, summary } }` for every base page. */
 function runAll(opts = {}) {
   const dir = opts.outDir || outDir();
   const list = opts.targets || targets(opts.base);
