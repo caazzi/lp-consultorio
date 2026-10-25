@@ -20,23 +20,13 @@
 
 const fs = require('fs');
 const path = require('path');
-
-const DEFAULT_INSIGHTS_URL = process.env.ACCESS_INSIGHTS_URL
-  || 'https://consultoriosalustiano.com.br/.netlify/functions/insights';
+const { fetchInsights } = require('./lib/insights-api');
 
 const DAYS = parseInt(process.env.PRODUCT_REPORT_DAYS || '30', 10);
 
 // ---------------------------------------------------------------------------
 // Coleta
 // ---------------------------------------------------------------------------
-
-async function fetchFirstParty(days) {
-  const res = await fetch(`${DEFAULT_INSIGHTS_URL}?days=${days}`, {
-    headers: { Accept: 'application/json' }
-  });
-  if (!res.ok) throw new Error(`insights ${res.status}: ${await res.text()}`);
-  return res.json();
-}
 
 function summarize(api) {
   const s = api.summary || {};
@@ -221,9 +211,9 @@ async function main() {
 
   let raw;
   try {
-    raw = await fetchFirstParty(DAYS);
+    raw = await fetchInsights(DAYS);
   } catch (err) {
-    console.error(`[product-report] first-party falhou: ${err.message}`);
+    console.error(`[product-report] first-party falhou após ${err.attempts || 1} tentativa(s): ${err.message}`);
     process.exit(1);
   }
   const p = summarize(raw);

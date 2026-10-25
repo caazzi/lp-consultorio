@@ -36,9 +36,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const https = require('https');
-
-const DEFAULT_INSIGHTS_URL = process.env.ACCESS_INSIGHTS_URL
-  || 'https://consultoriosalustiano.com.br/.netlify/functions/insights';
+const { fetchInsights } = require('./lib/insights-api');
 
 const DAYS = parseInt(process.env.ACCESS_INSIGHTS_DAYS || '7', 10);
 const PROPERTY_ID = process.env.GA4_PROPERTY_ID;
@@ -57,14 +55,6 @@ const NOTICE_ZERO = true;       // zerar uma métrica que existia também acende
 // ---------------------------------------------------------------------------
 // Coleta
 // ---------------------------------------------------------------------------
-
-async function fetchFirstParty(days) {
-  const res = await fetch(`${DEFAULT_INSIGHTS_URL}?days=${days}`, {
-    headers: { Accept: 'application/json' }
-  });
-  if (!res.ok) throw new Error(`insights ${res.status}: ${await res.text()}`);
-  return res.json();
-}
 
 function summarizeFirstParty(api) {
   const s = api.summary || {};
@@ -554,12 +544,13 @@ async function main() {
   let fpCurrentRaw, fpOlderRaw;
   try {
     // 2× a janela: a diferença (2× − atual) isola a semana anterior.
+    // Ambos passam pelo cliente com retry (scripts/lib/insights-api.js).
     [fpCurrentRaw, fpOlderRaw] = await Promise.all([
-      fetchFirstParty(DAYS),
-      fetchFirstParty(DAYS * 2)
+      fetchInsights(DAYS),
+      fetchInsights(DAYS * 2)
     ]);
   } catch (err) {
-    console.error(`[weekly-report] first-party falhou: ${err.message}`);
+    console.error(`[weekly-report] first-party falhou após ${err.attempts || 1} tentativa(s): ${err.message}`);
     process.exit(1);
   }
   const fp = summarizeFirstParty(fpCurrentRaw);
