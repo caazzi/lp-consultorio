@@ -63,6 +63,49 @@ requiredPages.forEach(page => {
   }
 });
 
+// 2c. Validate the structured data: one clinic entity, identical on both pages.
+// Duplicating the NAP by hand already produced a dead sameAs and a geo 590 m off,
+// so the MedicalClinic block must stay byte-identical across the two pages.
+// aggregateRating is deliberately absent: the Elfsight Google Reviews widget
+// (enableSchemaOrg) is the only source of review data.
+console.log('\n');
+console.log('\x1b[33m%s\x1b[0m', '🏥  2c. STRUCTURED DATA (MedicalClinic)');
+const readLdBlocks = (file) => Array.from(
+  fs.readFileSync(path.join(publicDir, file), 'utf8')
+    .matchAll(/<script[^>]+application\/ld\+json[^>]*>([\s\S]*?)<\/script>/g)
+).map(m => JSON.parse(m[1].trim()));
+const clinicOf = (blocks) => blocks.find(b => b['@type'] === 'MedicalClinic') || null;
+
+let clinicHome = null;
+let clinicCardio = null;
+let ldParsed = true;
+try {
+  clinicHome = clinicOf(readLdBlocks('index.html'));
+  clinicCardio = clinicOf(readLdBlocks('cardiologia/index.html'));
+} catch (err) {
+  console.error(`  ❌ JSON-LD does not parse: ${err.message}`);
+  ldParsed = false;
+  hasErrors = true;
+}
+
+if (!ldParsed) {
+  // already reported above
+} else if (!clinicHome || !clinicCardio) {
+  console.error('  ❌ one of the pages has no MedicalClinic block');
+  hasErrors = true;
+} else {
+  const clinicChecks = {
+    'both pages share the same clinic @id': clinicHome['@id'] === clinicCardio['@id'],
+    'the clinic block is identical on both pages': JSON.stringify(clinicHome) === JSON.stringify(clinicCardio),
+    'the clinic declares both physicians as employees': Array.isArray(clinicHome.employee) && clinicHome.employee.length === 2,
+    'no hard-coded aggregateRating (the Elfsight widget owns it)': !clinicHome.aggregateRating && !clinicCardio.aggregateRating
+  };
+  Object.keys(clinicChecks).forEach(k => {
+    if (clinicChecks[k]) console.log(`  ✅ ${k}`);
+    else { console.error(`  ❌ ${k}`); hasErrors = true; }
+  });
+}
+
 // 3. Validate tracking: data-track-location on every WhatsApp button
 console.log('\n');
 console.log('\x1b[33m%s\x1b[0m', '🎯 3. GTM / GA4 TRACKING VALIDATION');

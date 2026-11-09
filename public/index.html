@@ -140,15 +140,13 @@
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "Physician",
-      "name": "Dr. Gilberto Salustiano - Infectologista e Clínico Geral",
-      "image": "https://consultoriosalustiano.com.br/assets/images/dr-gilberto-salustiano-infectologista.jpg",
-      "@id": "https://consultoriosalustiano.com.br/",
+      "@type": "MedicalClinic",
+      "@id": "https://consultoriosalustiano.com.br/#clinica",
+      "name": "Consultório Salustiano",
       "url": "https://consultoriosalustiano.com.br/",
       "telephone": "+5582999900844",
-      "medicalSpecialty": ["InfectiousDisease", "PrimaryCare"],
-      "description": "Consultório médico especializado em Infectologia e Clínica Médica em Maceió, Alagoas. Dr. Gilberto Salustiano oferece atendimento humanizado e individualizado com mais de 40 anos de excelência médica.",
-      "isAcceptingNewPatients": true,
+      "medicalSpecialty": ["InfectiousDisease", "Cardiovascular"],
+      "description": "Consultório médico em Maceió, Alagoas, com Infectologia e Clínica Médica (Dr. Gilberto Salustiano) e Cardiologia (Dra. Anabel Lima).",
       "address": {
         "@type": "PostalAddress",
         "streetAddress": "Av. da Paz, 1388, Sala 107",
@@ -182,32 +180,50 @@
         "closes": "18:00"
       },
       "sameAs": [
-        "https://www.instagram.com/consultoriomedicosalustiano/",
-        "https://www.doctoralia.com.br/perfil/gilberto-salustiano-de-lima"
+        "https://www.instagram.com/consultoriomedicosalustiano/"
       ],
-      "availableService": [
+      "employee": [
         {
-          "@type": "MedicalProcedure",
-          "name": "Consulta de Infectologia"
+          "@type": "Physician",
+          "@id": "https://consultoriosalustiano.com.br/#gilberto-salustiano",
+          "name": "Dr. Gilberto Salustiano",
+          "url": "https://consultoriosalustiano.com.br/",
+          "image": "https://consultoriosalustiano.com.br/assets/images/dr-gilberto-salustiano-infectologista.jpg",
+          "telephone": "+5582999900844",
+          "medicalSpecialty": ["InfectiousDisease", "PrimaryCare"],
+          "description": "Infectologista e clínico geral em Maceió, Alagoas, com mais de 40 anos de experiência. Atendimento humanizado e individualizado em Infectologia e Clínica Médica.",
+          "isAcceptingNewPatients": true,
+          "sameAs": [
+            "https://www.instagram.com/consultoriomedicosalustiano/",
+            "https://www.doctoralia.com.br/perfil/gilberto-salustiano-de-lima"
+          ],
+          "worksFor": { "@id": "https://consultoriosalustiano.com.br/#clinica" },
+          "availableService": [
+            { "@type": "MedicalProcedure", "name": "Consulta de Infectologia" },
+            { "@type": "MedicalProcedure", "name": "Acompanhamento de HIV/AIDS" },
+            { "@type": "MedicalProcedure", "name": "Tratamento de ISTs e HPV" },
+            { "@type": "MedicalProcedure", "name": "Consulta de Clínica Médica" }
+          ]
         },
         {
-          "@type": "MedicalProcedure",
-          "name": "Acompanhamento de HIV/AIDS"
-        },
-        {
-          "@type": "MedicalProcedure",
-          "name": "Tratamento de ISTs e HPV"
-        },
-        {
-          "@type": "MedicalProcedure",
-          "name": "Consulta de Clínica Médica"
+          "@type": "Physician",
+          "@id": "https://consultoriosalustiano.com.br/#anabel-lima",
+          "name": "Dra. Anabel Lima",
+          "url": "https://consultoriosalustiano.com.br/cardiologia/",
+          "image": "https://consultoriosalustiano.com.br/assets/images/cardiologia.jpeg",
+          "telephone": "+5582999900844",
+          "medicalSpecialty": "Cardiovascular",
+          "description": "Cardiologista em Maceió, Alagoas, com mais de 40 anos de experiência. Atendimento em cardiologia clínica, preventiva, risco cirúrgico e hipertensão.",
+          "isAcceptingNewPatients": true,
+          "worksFor": { "@id": "https://consultoriosalustiano.com.br/#clinica" },
+          "availableService": [
+            { "@type": "MedicalProcedure", "name": "Consulta de Cardiologia Clínica" },
+            { "@type": "MedicalProcedure", "name": "Avaliação Cardiovascular Preventiva" },
+            { "@type": "MedicalProcedure", "name": "Avaliação de Risco Cirúrgico" },
+            { "@type": "MedicalProcedure", "name": "Tratamento de Hipertensão Arterial" }
+          ]
         }
-      ],
-      "aggregateRating": {
-        "@type": "AggregateRating",
-        "ratingValue": "5.0",
-        "reviewCount": "54"
-      }
+      ]
     }
     </script>
     <script type="application/ld+json">
