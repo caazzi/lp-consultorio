@@ -1,0 +1,9 @@
+# Legacy Google Business Profile URL. It is still indexed and still sends a few
+# organic sessions, but the page no longer exists: recover them on the homepage
+# instead of answering 404.
+/view/consultorio-salustiano/  /  301
+/view/consultorio-salustiano   /  301
+
+# Keep a single URL for the homepage. The ! (force) flag is required: without it
+# Netlify serves the static file and shadows the rule.
+/index.html  /  301!

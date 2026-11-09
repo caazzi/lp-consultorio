@@ -63,6 +63,30 @@ requiredPages.forEach(page => {
   }
 });
 
+// 2b. Validate the redirects in public/_redirects
+// /view/consultorio-salustiano/ is a legacy Google Business Profile URL that is
+// still indexed but no longer exists: it must 301 to the homepage instead of 404.
+// /index.html is a duplicate of / and needs the ! flag, otherwise Netlify serves
+// the static file and shadows the rule.
+console.log('\n');
+console.log('\x1b[33m%s\x1b[0m', '↪️  2b. REDIRECTS IN public/_redirects');
+const redirectsPath = path.join(publicDir, '_redirects');
+const redirectLines = fs.existsSync(redirectsPath)
+  ? fs.readFileSync(redirectsPath, 'utf8')
+    .split('\n')
+    .map(line => line.trim())
+    .filter(line => line && !line.startsWith('#'))
+  : [];
+const redirectChecks = {
+  'legacy GBP URL (trailing slash) -> / 301': redirectLines.some(line => /^\/view\/consultorio-salustiano\/\s+\/\s+301$/.test(line)),
+  'legacy GBP URL (no trailing slash) -> / 301': redirectLines.some(line => /^\/view\/consultorio-salustiano\s+\/\s+301$/.test(line)),
+  '/index.html -> / 301! (forced)': redirectLines.some(line => /^\/index\.html\s+\/\s+301!$/.test(line))
+};
+Object.keys(redirectChecks).forEach(k => {
+  if (redirectChecks[k]) console.log(`  ✅ ${k}`);
+  else { console.error(`  ❌ ${k}`); hasErrors = true; }
+});
+
 // 3. Validate tracking: data-track-location on every WhatsApp button
 console.log('\n');
 console.log('\x1b[33m%s\x1b[0m', '🎯 3. GTM / GA4 TRACKING VALIDATION');
