@@ -16,7 +16,7 @@ const { execFileSync } = require('child_process');
 
 const ROOT = path.resolve(__dirname, '..');
 const SITEMAP_PATH = path.join(ROOT, 'public', 'sitemap.xml');
-const ORIGIN = 'https://consultoriosalustiano.com.br';
+const SITE_HOST = 'consultoriosalustiano.com.br';
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 /**
@@ -24,15 +24,26 @@ const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
  *   https://host/               -> public/index.html
  *   https://host/cardiologia/   -> public/cardiologia/index.html
  *   https://host/foo.html       -> public/foo.html
+ *
+ * The path comes from the parsed URL, never from stripping a prefix off the
+ * string: a prefix check would also accept https://host.evil.example/ and
+ * resolve a file outside this site. Returns null for a foreign host so the
+ * caller leaves that entry's date alone.
  */
 function locToRepoFile(loc) {
-  let pathname = loc.trim();
-  if (pathname.startsWith(ORIGIN)) pathname = pathname.slice(ORIGIN.length);
+  const raw = loc.trim();
+  let pathname;
+  try {
+    const url = new URL(raw);
+    if (url.hostname !== SITE_HOST) return null;
+    pathname = url.pathname;
+  } catch (err) {
+    pathname = raw.split(/[?#]/)[0];
+  }
   if (!pathname.startsWith('/')) pathname = `/${pathname}`;
-  const withoutQuery = pathname.split(/[?#]/)[0];
-  return withoutQuery.endsWith('/')
-    ? `public${withoutQuery}index.html`
-    : `public${withoutQuery}`;
+  return pathname.endsWith('/')
+    ? `public${pathname}index.html`
+    : `public${pathname}`;
 }
 
 /** Returns the last commit date (YYYY-MM-DD) for a tracked file, or null. */
@@ -77,6 +88,13 @@ function main() {
     const loc = locMatch[1].trim();
     const displayed = displayPath(loc);
     const repoFile = locToRepoFile(loc);
+
+    if (!repoFile) {
+      skipped += 1;
+      console.log(` \x1b[33m⚠️ \x1b[0m ${displayed} -> not a ${SITE_HOST} URL, left untouched`);
+      return block;
+    }
+
     const date = gitLastModified(repoFile);
 
     const lastmodMatch = block.match(/<lastmod>([\s\S]*?)<\/lastmod>/);
