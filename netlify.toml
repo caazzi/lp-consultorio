@@ -2,7 +2,7 @@
 
 [build]
   publish = "public"
-  command = "npm install && npm run build:css"
+  command = "npm install && npm run build:css && npm run build:sitemap"
 
 # HTTP header settings
 [[headers]]

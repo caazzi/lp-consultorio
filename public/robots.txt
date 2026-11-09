@@ -1,3 +1,34 @@
+# AI crawlers are allowed on purpose. They already are, through the wildcard
+# below, but stating each one explicitly means a future CDN, WAF or bot-
+# management toggle cannot silently opt the site out of ChatGPT, Gemini or
+# Perplexity without the change showing up in this file.
+#
+# OAI-SearchBot: surfaces the site in ChatGPT search answers.
+# GPTBot:        may use the content for OpenAI model training.
+# ChatGPT-User:  fetches a page when a user asks ChatGPT to visit it.
+# Google-Extended: allows Gemini grounding on Google Search content. It does
+#                  not affect inclusion or ranking in Google Search.
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Claude-SearchBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
 User-agent: *
 Allow: /
 
