@@ -32,6 +32,15 @@
 html {
     font-family: 'Inter', 'Inter Fallback', system-ui, -apple-system, sans-serif;
     scroll-behavior: smooth;
+    /* iOS inflates body text in landscape (and on rotation) unless this is set. */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+}
+
+/* Safari's 300ms tap delay and double-tap zoom on controls. */
+a,
+button {
+    touch-action: manipulation;
 }
 
 /* Premium custom design */
@@ -43,29 +52,20 @@ html {
     box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.4);
 }
 
-@keyframes pulse-soft {
-    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(31, 122, 51, 0.4); }
-    70% { transform: scale(1.05); box-shadow: 0 0 0 15px rgba(31, 122, 51, 0); }
-    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(31, 122, 51, 0); }
-}
-
-.animate-pulse-premium {
-    animation: pulse-soft 2s infinite;
-}
-
 .gradient-bg {
     background: radial-gradient(circle at top right, rgba(0, 90, 156, 0.05), transparent),
                 radial-gradient(circle at bottom left, rgba(31, 122, 51, 0.05), transparent);
 }
 
-/* Scroll reveal effect */
-.reveal {
+/* Scroll reveal effect. Scoped to .js so a page whose JS never runs (blocked,
+   failed download, very old browser) still shows every section. */
+.js .reveal {
     opacity: 0;
     transform: translateY(30px);
     transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.reveal.active {
+.js .reveal.active {
     opacity: 1;
     transform: translateY(0);
 }
@@ -85,5 +85,19 @@ html {
     .elfsight-wrapper {
         min-height: 400px;
         contain-intrinsic-size: 400px;
+    }
+}
+
+/* iOS "Reduce Motion": keep the page still. Without this, a user who explicitly
+   asked the system for less motion still gets scroll reveals and smooth scrolling. */
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+
+    .js .reveal {
+        opacity: 1;
+        transform: none;
+        transition: none;
     }
 }

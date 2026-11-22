@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" class="no-js">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#ffffff">
     <!-- Lets Google use the full page text as a snippet, which is what AI
          Overviews and AI Mode quote from. -->
     <meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large,max-video-preview:-1">
@@ -53,10 +54,22 @@
     <meta name="geo.position" content="-9.6644;-35.7333">
     <meta name="ICBM" content="-9.6644, -35.7333">
 
-    <!-- Compiled Tailwind + custom CSS. Served immutable, so the URL carries a content hash. -->
-    <link rel="stylesheet" href="/assets/css/style.css?v=a45d24259f">
+    <!-- Reveal-on-scroll must never hide content without JS. `no-js` is swapped
+         before paint; main.js clears the timer once the observer is running, so the
+         timeout only fires when main.js never initializes. -->
+    <script>
+        document.documentElement.classList.replace('no-js', 'js');
+        window.__revealFallback = setTimeout(function () {
+            document.querySelectorAll('.reveal:not(.active)').forEach(function (el) {
+                el.classList.add('active');
+            });
+        }, 4000);
+    </script>
 
-    <script src="/assets/js/tracking.js?v=61fc827deb" defer></script>
+    <!-- Compiled Tailwind + custom CSS. Served immutable, so the URL carries a content hash. -->
+    <link rel="stylesheet" href="/assets/css/style.css?v=f31e1ab777">
+
+    <script src="/assets/js/tracking.js?v=4a90991ee3" defer></script>
 
     <!-- JSON-LD Structured Data -->
     <script type="application/ld+json">
@@ -191,7 +204,7 @@
     <!-- Header -->
     <header class="bg-white shadow-md md:sticky md:top-0 z-50">
         <div class="container mx-auto max-w-4xl px-5 py-3 md:py-4 flex justify-between items-center gap-3">
-            <a href="/" class="min-w-0 hover:opacity-80 transition-opacity">
+            <a href="/" class="min-w-0 min-h-[44px] flex flex-col justify-center hover:opacity-80 transition-opacity">
                 <h1 class="text-lg md:text-xl font-bold text-gray-800 leading-tight">
                     Dr. Gilberto Salustiano<span class="hidden md:inline"> - Infectologista em Maceió</span>
                 </h1>
@@ -576,7 +589,7 @@
     </footer>
 
     <!-- Script de UI centralizado -->
-    <script src="/assets/js/main.js?v=87e9b75b29" defer></script>
+    <script src="/assets/js/main.js?v=3f37254201" defer></script>
 
 </body>
 
