@@ -29,7 +29,8 @@ const compiledClasses = new Set(
     .map((match) => match[1].replace(/\\(.)/g, '$1'))
 );
 // Third-party mount points are injected by their own loader, not by Tailwind.
-const classAllowlist = [/^elfsight-app-/];
+// `no-js`/`js` are state classes set on <html> before paint, not utilities.
+const classAllowlist = [/^elfsight-app-/, /^no-js$/, /^js$/];
 
 moneyPages.forEach((page) => {
   const html = fs.readFileSync(path.join(publicDir, page), 'utf8');
@@ -143,6 +144,95 @@ if (hoverFlag && hoverBlocks.length > 0 && !bareHover) {
       : 'some :hover rules are outside @media (hover:hover)';
   console.error(`  ❌ ${reason}; sticky :hover breaks touch devices`);
   hasErrors = true;
+}
+
+// 5. Reveal animations must never be the only reason content is visible. The
+// hiding rule is scoped to .js, the page sets it before paint, main.js clears the
+// 4s safety net, and a missing IntersectionObserver reveals everything.
+console.log('\n');
+console.log('\x1b[33m%s\x1b[0m', '👁️  5. REVEAL CONTENT SURVIVES MISSING JS');
+const mainJs = fs.readFileSync(path.join(publicDir, 'assets/js/main.js'), 'utf8');
+if (/\.js\s+\.reveal\s*\{/.test(css)) {
+  console.log('  ✅ .reveal is hidden only under .js');
+} else {
+  console.error('  ❌ .reveal is not scoped to .js; content stays invisible with JS disabled');
+  hasErrors = true;
+}
+moneyPages.forEach((page) => {
+  const html = fs.readFileSync(path.join(publicDir, page), 'utf8');
+  const htmlTag = (html.match(/<html[^>]*>/) || [''])[0];
+  const problems = [];
+  if (!/class="[^"]*\bno-js\b/.test(htmlTag)) problems.push('no no-js class on <html>');
+  if (!html.includes("classList.replace('no-js', 'js')")) problems.push('no no-js -> js swap');
+  if (!html.includes('__revealFallback')) problems.push('no reveal safety net');
+  if (problems.length) {
+    console.error(`  ❌ ${page}: ${problems.join('; ')}`);
+    hasErrors = true;
+  } else {
+    console.log(`  ✅ ${page}: swaps no-js before paint and arms the fallback`);
+  }
+});
+const mainProblems = [];
+if (!/'IntersectionObserver' in window/.test(mainJs)) mainProblems.push('no IntersectionObserver guard');
+if (!/revealAll/.test(mainJs)) mainProblems.push('no revealAll fallback');
+if (!/clearTimeout\(window\.__revealFallback\)/.test(mainJs)) mainProblems.push('fallback timer is not cleared');
+if (mainProblems.length) {
+  console.error(`  ❌ main.js: ${mainProblems.join('; ')}`);
+  hasErrors = true;
+} else {
+  console.log('  ✅ main.js: guards IntersectionObserver and clears the fallback');
+}
+
+// 6. iOS text inflation and Reduce Motion.
+console.log('\n');
+console.log('\x1b[33m%s\x1b[0m', '🧘 6. TEXT SCALING AND REDUCE MOTION');
+const trackingJs = fs.readFileSync(path.join(publicDir, 'assets/js/tracking.js'), 'utf8');
+if (/text-size-adjust\s*:\s*100%/.test(css)) {
+  console.log('  ✅ html disables iOS landscape text inflation');
+} else {
+  console.error('  ❌ text-size-adjust: 100% is missing; iOS inflates text in landscape');
+  hasErrors = true;
+}
+const reducedMotionInCss = /@media\s*\(\s*prefers-reduced-motion\s*:\s*reduce\s*\)/.test(css);
+const reducedMotionInJs = /@media\s*\(\s*prefers-reduced-motion\s*:\s*reduce\s*\)/.test(trackingJs);
+if (reducedMotionInCss && reducedMotionInJs) {
+  console.log('  ✅ reduce-motion is honoured by the page and by the sticky pill');
+} else {
+  console.error(`  ❌ reduce-motion missing (page: ${reducedMotionInCss}, sticky pill: ${reducedMotionInJs})`);
+  hasErrors = true;
+}
+
+// 7. The cardiologia hero is the LCP element. It used to point at a single
+// 338x450 WebP, which a DPR-3 phone upscales to ~1000px: visibly soft. A width
+// srcset must exist, every candidate must be on disk, and the <head> preload must
+// mirror the <source> exactly or the browser downloads two files for one image.
+console.log('\n');
+console.log('\x1b[33m%s\x1b[0m', '🖼️  7. RESPONSIVE LCP IMAGE');
+const cardioHtml = fs.readFileSync(path.join(publicDir, 'cardiologia/index.html'), 'utf8');
+const sourceTag = (cardioHtml.match(/<source[^>]*type="image\/webp"[^>]*>/) || [''])[0];
+const sourceSrcset = (sourceTag.match(/srcset="([^"]+)"/) || [])[1] || '';
+const sourceSizes = (sourceTag.match(/sizes="([^"]+)"/) || [])[1] || '';
+const candidates = sourceSrcset.split(',').map((entry) => entry.trim()).filter(Boolean);
+const preloadTag = (cardioHtml.match(/<link[^>]*rel="preload"[^>]*as="image"[^>]*>/) || [''])[0];
+const preloadSrcset = (preloadTag.match(/imagesrcset="([^"]+)"/) || [])[1] || '';
+const preloadSizes = (preloadTag.match(/imagesizes="([^"]+)"/) || [])[1] || '';
+const heroProblems = [];
+if (candidates.length < 2) heroProblems.push(`srcset has ${candidates.length} candidate(s)`);
+for (const candidate of candidates) {
+  const file = path.join(publicDir, candidate.split(/\s+/)[0]);
+  if (!fs.existsSync(file)) heroProblems.push(`${candidate.split(/\s+/)[0]} is missing`);
+}
+if (!sourceSizes) heroProblems.push('source has no sizes');
+if (preloadSrcset !== sourceSrcset) heroProblems.push('preload imagesrcset does not mirror the source');
+if (preloadSizes !== sourceSizes) heroProblems.push('preload imagesizes does not mirror the source');
+if (!/<img[^>]*loading="eager"[^>]*fetchpriority="high"|<img[^>]*fetchpriority="high"[^>]*loading="eager"/.test(cardioHtml)) {
+  heroProblems.push('hero img is not eager + fetchpriority=high');
+}
+if (heroProblems.length) {
+  console.error(`  ❌ cardiologia hero: ${heroProblems.join('; ')}`);
+  hasErrors = true;
+} else {
+  console.log(`  ✅ cardiologia hero: ${candidates.length} WebP widths, preload mirrors the source`);
 }
 
 console.log('\n--------------------------------------------------');
