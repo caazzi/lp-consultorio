@@ -202,6 +202,39 @@ if (reducedMotionInCss && reducedMotionInJs) {
   hasErrors = true;
 }
 
+// 7. The cardiologia hero is the LCP element. It used to point at a single
+// 338x450 WebP, which a DPR-3 phone upscales to ~1000px: visibly soft. A width
+// srcset must exist, every candidate must be on disk, and the <head> preload must
+// mirror the <source> exactly or the browser downloads two files for one image.
+console.log('\n');
+console.log('\x1b[33m%s\x1b[0m', '🖼️  7. RESPONSIVE LCP IMAGE');
+const cardioHtml = fs.readFileSync(path.join(publicDir, 'cardiologia/index.html'), 'utf8');
+const sourceTag = (cardioHtml.match(/<source[^>]*type="image\/webp"[^>]*>/) || [''])[0];
+const sourceSrcset = (sourceTag.match(/srcset="([^"]+)"/) || [])[1] || '';
+const sourceSizes = (sourceTag.match(/sizes="([^"]+)"/) || [])[1] || '';
+const candidates = sourceSrcset.split(',').map((entry) => entry.trim()).filter(Boolean);
+const preloadTag = (cardioHtml.match(/<link[^>]*rel="preload"[^>]*as="image"[^>]*>/) || [''])[0];
+const preloadSrcset = (preloadTag.match(/imagesrcset="([^"]+)"/) || [])[1] || '';
+const preloadSizes = (preloadTag.match(/imagesizes="([^"]+)"/) || [])[1] || '';
+const heroProblems = [];
+if (candidates.length < 2) heroProblems.push(`srcset has ${candidates.length} candidate(s)`);
+for (const candidate of candidates) {
+  const file = path.join(publicDir, candidate.split(/\s+/)[0]);
+  if (!fs.existsSync(file)) heroProblems.push(`${candidate.split(/\s+/)[0]} is missing`);
+}
+if (!sourceSizes) heroProblems.push('source has no sizes');
+if (preloadSrcset !== sourceSrcset) heroProblems.push('preload imagesrcset does not mirror the source');
+if (preloadSizes !== sourceSizes) heroProblems.push('preload imagesizes does not mirror the source');
+if (!/<img[^>]*loading="eager"[^>]*fetchpriority="high"|<img[^>]*fetchpriority="high"[^>]*loading="eager"/.test(cardioHtml)) {
+  heroProblems.push('hero img is not eager + fetchpriority=high');
+}
+if (heroProblems.length) {
+  console.error(`  ❌ cardiologia hero: ${heroProblems.join('; ')}`);
+  hasErrors = true;
+} else {
+  console.log(`  ✅ cardiologia hero: ${candidates.length} WebP widths, preload mirrors the source`);
+}
+
 console.log('\n--------------------------------------------------');
 if (hasErrors) {
   console.error('\x1b[31m❌ IOS/CSS INVARIANT TESTS FAILED\x1b[0m');

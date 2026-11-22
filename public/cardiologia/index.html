@@ -25,7 +25,10 @@
     <link rel="preload" href="/assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
 
     <!-- LCP Preload -->
-    <link rel="preload" href="/assets/images/cardiologia.webp" as="image" type="image/webp" fetchpriority="high">
+    <!-- Mirrors the hero <source> below; a mismatch makes the browser download two files. -->
+    <link rel="preload" href="/assets/images/cardiologia-768.webp" as="image" type="image/webp" fetchpriority="high"
+        imagesrcset="/assets/images/cardiologia-480.webp 480w, /assets/images/cardiologia-768.webp 768w, /assets/images/cardiologia-1000.webp 1000w"
+        imagesizes="(min-width: 896px) 428px, (min-width: 768px) calc(50vw - 20px), calc(100vw - 40px)">
 
     <!-- Open Graph / Redes Sociais -->
     <meta property="og:type" content="website">
@@ -36,8 +39,8 @@
         content="Referência em Cardiologia em Maceió com 40 anos de dedicação. Cuidado integral com o seu coração através de uma análise médica criteriosa.">
     <meta property="og:url" content="https://consultoriosalustiano.com.br/cardiologia/">
     <meta property="og:image" content="https://consultoriosalustiano.com.br/assets/images/cardiologia.jpeg">
-    <meta property="og:image:width" content="600">
-    <meta property="og:image:height" content="450">
+    <meta property="og:image:width" content="1000">
+    <meta property="og:image:height" content="1333">
     <meta property="og:image:type" content="image/jpeg">
 
     <!-- Twitter Card -->
@@ -227,12 +230,15 @@
             <div class="md:flex items-stretch">
                 <div class="md:w-1/2 relative bg-gray-100 min-h-[300px] flex items-center justify-center">
                     <picture class="block w-full h-auto md:h-full">
-                        <!-- New doctor image -->
-                        <source srcset="/assets/images/cardiologia.webp" type="image/webp">
+                        <!-- 1000x1333 master. Phones at DPR 3 need ~1000px for the 4:3
+                             crop, so serve width variants instead of the old 338px WebP. -->
+                        <source type="image/webp"
+                            srcset="/assets/images/cardiologia-480.webp 480w, /assets/images/cardiologia-768.webp 768w, /assets/images/cardiologia-1000.webp 1000w"
+                            sizes="(min-width: 896px) 428px, (min-width: 768px) calc(50vw - 20px), calc(100vw - 40px)">
                         <img src="/assets/images/cardiologia.jpeg"
                             alt="Dra. Anabel Lima - Médica Cardiologista em Maceió"
-                            class="w-full h-auto aspect-[4/3] md:h-full md:aspect-auto object-cover object-center" loading="eager" decoding="async" width="600"
-                            height="450" fetchpriority="high">
+                            class="w-full h-auto aspect-[4/3] md:h-full md:aspect-auto object-cover object-center" loading="eager" decoding="async" width="1000"
+                            height="1333" fetchpriority="high">
                     </picture>
 
                 </div>
