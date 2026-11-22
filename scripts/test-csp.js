@@ -169,6 +169,31 @@ if (!fs.existsSync(trackingJsPath)) {
   }
 }
 
+// 4b. Exactly one sticky WhatsApp CTA: it is owned by tracking.js.
+console.log('\n');
+console.log('\x1b[33m%s\x1b[0m', '📌 4b. SINGLE STICKY WHATSAPP CTA');
+const trackingJs = fs.readFileSync(trackingJsPath, 'utf8');
+trackingPages.forEach(page => {
+  const pageContent = fs.readFileSync(path.join(publicDir, page), 'utf8');
+  const authoredFixed = (pageContent.match(/<a\b[^>]*>/g) || []).filter(tag =>
+    /href="https?:\/\/(api\.whatsapp\.com|wa\.me)/.test(tag) &&
+    /class="[^"]*\bfixed\b/.test(tag)
+  );
+  if (authoredFixed.length === 0) {
+    console.log(`  ✅ ${page}: no authored fixed WhatsApp CTA`);
+  } else {
+    console.error(`  ❌ ${page}: ${authoredFixed.length} authored fixed WhatsApp CTA(s); the sticky button is owned by tracking.js (#wa-sticky-btn)`);
+    hasErrors = true;
+  }
+});
+const injectedSticky = (trackingJs.match(/id = 'wa-sticky-btn'/g) || []).length;
+if (injectedSticky === 1) {
+  console.log('  ✅ tracking.js injects exactly one #wa-sticky-btn');
+} else {
+  console.error(`  ❌ tracking.js injects ${injectedSticky} #wa-sticky-btn (expected exactly 1)`);
+  hasErrors = true;
+}
+
 // 5. Validate the message_sent conversion-proxy event in tracking.js
 console.log('\n');
 console.log('\x1b[33m%s\x1b[0m', '✉️  5. message_sent PROXY EVENT VALIDATION');
@@ -294,6 +319,85 @@ trackingPages.forEach(page => {
     hasErrors = true;
   }
 });
+
+// 6b. Every fixed bottom element must reserve the iPhone safe area.
+console.log('\n');
+console.log('\x1b[33m%s\x1b[0m', '📱 6b. SAFE-AREA ON FIXED BOTTOM ELEMENTS');
+function collectFixedBottomCss(label, css) {
+  if (!css) return;
+  const offenders = [];
+  const ruleRe = /([^{}]+)\{([^{}]*)\}/g;
+  let match;
+  while ((match = ruleRe.exec(css)) !== null) {
+    const selector = match[1].trim();
+    const body = match[2];
+    if (selector.startsWith('@')) continue;
+    const isFixedBottom = /position:\s*fixed/.test(body) &&
+      /(^|;)\s*bottom\s*:\s*(?!auto)/.test(body);
+    if (isFixedBottom && !/env\(\s*safe-area-inset-bottom\s*\)/.test(body)) {
+      offenders.push(selector.split('\n').pop().trim());
+    }
+  }
+  if (offenders.length === 0) {
+    console.log(`  ✅ ${label}: fixed bottom rules reserve the safe area`);
+  } else {
+    console.error(`  ❌ ${label}: fixed bottom rule(s) without env(safe-area-inset-bottom): ${offenders.join(', ')}`);
+    hasErrors = true;
+  }
+}
+trackingPages.forEach(page => {
+  const pageContent = fs.readFileSync(path.join(publicDir, page), 'utf8');
+  const styles = pageContent.match(/<style[^>]*>([\s\S]*?)<\/style>/g) || [];
+  collectFixedBottomCss(`${page} inline`, styles.join('\n'));
+});
+collectFixedBottomCss('style.css', fs.readFileSync(path.join(publicDir, 'assets/css/style.css'), 'utf8'));
+collectFixedBottomCss('tracking.js', (trackingJs.match(/style\.textContent = `([\s\S]*?)`/) || [, ''])[1]);
+
+// 6c. Conversions must not be gated behind a timer.
+console.log('\n');
+console.log('\x1b[33m%s\x1b[0m', '⏱️  6c. NO TIMER-GATED CONVERSIONS');
+const jsNoComments = trackingJs.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+const intervalCount = (jsNoComments.match(/\bsetInterval\s*\(/g) || []).length;
+if (intervalCount === 0 && trackingJs.includes('function ensureGtagLoaded(')) {
+  console.log('  ✅ conversions are not gated on a timer (no setInterval; ensureGtagLoaded present)');
+} else {
+  console.error(`  ❌ tracking.js has ${intervalCount} setInterval() call(s); call onReady synchronously instead`);
+  hasErrors = true;
+}
+
+// 6d. gtag config must be queued synchronously, before any event and before the
+// script tag is appended. gtag.js replays the dataLayer in order, so an event
+// queued ahead of config has no destination and is dropped.
+console.log('\n');
+console.log('\x1b[33m%s\x1b[0m', '🔀 6d. GTAG CONFIG ORDERING');
+const injectSlice = (() => {
+  const start = trackingJs.indexOf('function injectGtagAndConfigure(');
+  const end = trackingJs.indexOf('function ensureGtagLoaded(');
+  return start === -1 || end === -1 ? '' : trackingJs.slice(start, end);
+})();
+const configureCallAt = injectSlice.indexOf('configureGtag();');
+const appendAt = injectSlice.indexOf('appendChild(');
+const configInOnload = /onload\s*=\s*function[\s\S]*?gtag\(\s*'config'/.test(injectSlice);
+if (configureCallAt !== -1 && appendAt !== -1 && configureCallAt < appendAt && !configInOnload) {
+  console.log('  ✅ gtag config is queued synchronously before appendChild(g)');
+} else {
+  console.error("  ❌ injectGtagAndConfigure must queue gtag('config') before appendChild(g); a config inside g.onload drops an immediate WhatsApp click on iOS");
+  hasErrors = true;
+}
+// The click handler must not put anything in the queue before config either.
+const clickSlice = (() => {
+  const start = trackingJs.indexOf('function trackWhatsAppClick(');
+  const end = trackingJs.indexOf('function initAccessLogging(');
+  return start === -1 || end === -1 ? '' : trackingJs.slice(start, end);
+})();
+const sendConversionAt = clickSlice.indexOf('sendGtagConversion(');
+const gtmPushAt = clickSlice.indexOf("'event': 'generate_lead'");
+if (sendConversionAt !== -1 && gtmPushAt !== -1 && sendConversionAt < gtmPushAt) {
+  console.log('  ✅ trackWhatsAppClick sends the gtag event before the GTM-style push');
+} else {
+  console.error('  ❌ trackWhatsAppClick must call sendGtagConversion (which queues config) before pushing the GTM-style generate_lead object');
+  hasErrors = true;
+}
 
 // 7. Validate the durable log pipeline (Netlify Blobs) and the insights endpoint
 console.log('\n');
