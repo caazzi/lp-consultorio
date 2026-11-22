@@ -29,7 +29,8 @@ const compiledClasses = new Set(
     .map((match) => match[1].replace(/\\(.)/g, '$1'))
 );
 // Third-party mount points are injected by their own loader, not by Tailwind.
-const classAllowlist = [/^elfsight-app-/];
+// `no-js`/`js` are state classes set on <html> before paint, not utilities.
+const classAllowlist = [/^elfsight-app-/, /^no-js$/, /^js$/];
 
 moneyPages.forEach((page) => {
   const html = fs.readFileSync(path.join(publicDir, page), 'utf8');
@@ -142,6 +143,62 @@ if (hoverFlag && hoverBlocks.length > 0 && !bareHover) {
       ? 'the compiled CSS has no @media (hover:hover) block'
       : 'some :hover rules are outside @media (hover:hover)';
   console.error(`  ❌ ${reason}; sticky :hover breaks touch devices`);
+  hasErrors = true;
+}
+
+// 5. Reveal animations must never be the only reason content is visible. The
+// hiding rule is scoped to .js, the page sets it before paint, main.js clears the
+// 4s safety net, and a missing IntersectionObserver reveals everything.
+console.log('\n');
+console.log('\x1b[33m%s\x1b[0m', '👁️  5. REVEAL CONTENT SURVIVES MISSING JS');
+const mainJs = fs.readFileSync(path.join(publicDir, 'assets/js/main.js'), 'utf8');
+if (/\.js\s+\.reveal\s*\{/.test(css)) {
+  console.log('  ✅ .reveal is hidden only under .js');
+} else {
+  console.error('  ❌ .reveal is not scoped to .js; content stays invisible with JS disabled');
+  hasErrors = true;
+}
+moneyPages.forEach((page) => {
+  const html = fs.readFileSync(path.join(publicDir, page), 'utf8');
+  const htmlTag = (html.match(/<html[^>]*>/) || [''])[0];
+  const problems = [];
+  if (!/class="[^"]*\bno-js\b/.test(htmlTag)) problems.push('no no-js class on <html>');
+  if (!html.includes("classList.replace('no-js', 'js')")) problems.push('no no-js -> js swap');
+  if (!html.includes('__revealFallback')) problems.push('no reveal safety net');
+  if (problems.length) {
+    console.error(`  ❌ ${page}: ${problems.join('; ')}`);
+    hasErrors = true;
+  } else {
+    console.log(`  ✅ ${page}: swaps no-js before paint and arms the fallback`);
+  }
+});
+const mainProblems = [];
+if (!/'IntersectionObserver' in window/.test(mainJs)) mainProblems.push('no IntersectionObserver guard');
+if (!/revealAll/.test(mainJs)) mainProblems.push('no revealAll fallback');
+if (!/clearTimeout\(window\.__revealFallback\)/.test(mainJs)) mainProblems.push('fallback timer is not cleared');
+if (mainProblems.length) {
+  console.error(`  ❌ main.js: ${mainProblems.join('; ')}`);
+  hasErrors = true;
+} else {
+  console.log('  ✅ main.js: guards IntersectionObserver and clears the fallback');
+}
+
+// 6. iOS text inflation and Reduce Motion.
+console.log('\n');
+console.log('\x1b[33m%s\x1b[0m', '🧘 6. TEXT SCALING AND REDUCE MOTION');
+const trackingJs = fs.readFileSync(path.join(publicDir, 'assets/js/tracking.js'), 'utf8');
+if (/text-size-adjust\s*:\s*100%/.test(css)) {
+  console.log('  ✅ html disables iOS landscape text inflation');
+} else {
+  console.error('  ❌ text-size-adjust: 100% is missing; iOS inflates text in landscape');
+  hasErrors = true;
+}
+const reducedMotionInCss = /@media\s*\(\s*prefers-reduced-motion\s*:\s*reduce\s*\)/.test(css);
+const reducedMotionInJs = /@media\s*\(\s*prefers-reduced-motion\s*:\s*reduce\s*\)/.test(trackingJs);
+if (reducedMotionInCss && reducedMotionInJs) {
+  console.log('  ✅ reduce-motion is honoured by the page and by the sticky pill');
+} else {
+  console.error(`  ❌ reduce-motion missing (page: ${reducedMotionInCss}, sticky pill: ${reducedMotionInJs})`);
   hasErrors = true;
 }
 

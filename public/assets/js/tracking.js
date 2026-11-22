@@ -501,6 +501,10 @@ document.addEventListener('DOMContentLoaded', () => {
             70% { box-shadow: 0 0 0 7px rgba(134,239,172,0); }
             100% { box-shadow: 0 0 0 0 rgba(134,239,172,0); }
         }
+        @media (prefers-reduced-motion: reduce) {
+            #wa-sticky-btn { transition: none; }
+            .wa-sticky-dot { animation: none; }
+        }
     `;
     document.head.appendChild(style);
 
