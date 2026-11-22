@@ -4,7 +4,7 @@
   "description": "High-performance medical landing page optimized for conversion and security. Built with Tailwind CSS and hosted on Netlify for Dr. Gilberto Salustiano and Dra. Anabel Lima.",
   "main": "index.js",
   "scripts": {
-    "build:css": "tailwindcss -i ./src/css/input.css -o ./public/assets/css/style.css --minify && node scripts/stamp-css.js",
+    "build:css": "tailwindcss -i ./src/css/input.css -o ./public/assets/css/style.css --minify && node scripts/stamp-assets.js",
     "build:sitemap": "node scripts/build-sitemap.js",
     "analyze": "node scripts/analyze-performance.js",
     "access-logs": "node scripts/fetch-access-insights.js",

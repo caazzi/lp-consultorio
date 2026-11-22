@@ -50,22 +50,36 @@ moneyPages.forEach((page) => {
   }
 });
 
-// 2. The stylesheet URL must carry a hash matching the current bytes.
-// /assets/** is immutable for a year, so a stale stamp freezes the CSS.
+// 2. Every immutable /assets URL must carry a hash matching the current bytes.
+// /assets/** is cached for a year, so a stale stamp freezes the old file.
 console.log('\n');
-console.log('\x1b[33m%s\x1b[0m', '🏷️  2. STYLESHEET CONTENT STAMP');
-const cssHash = crypto.createHash('sha256').update(fs.readFileSync(stylePath)).digest('hex').slice(0, 10);
+console.log('\x1b[33m%s\x1b[0m', '🏷️  2. IMMUTABLE ASSET STAMPS');
+const hashOf = (file) => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex').slice(0, 10);
+const stampedAssets = [
+  { url: '/assets/css/style.css', file: path.join(publicDir, 'assets/css/style.css') },
+  { url: '/assets/js/tracking.js', file: path.join(publicDir, 'assets/js/tracking.js') },
+  { url: '/assets/js/main.js', file: path.join(publicDir, 'assets/js/main.js') }
+];
 styledPages.forEach((page) => {
   const html = fs.readFileSync(path.join(publicDir, page), 'utf8');
-  const match = html.match(/\/assets\/css\/style\.css\?v=([0-9a-f]+)/);
-  if (!match) {
-    console.error(`  ❌ ${page}: stylesheet link has no ?v= content hash`);
+  const referenced = stampedAssets.filter((asset) => html.includes(asset.url));
+  if (referenced.length === 0) {
+    console.error(`  ❌ ${page}: references no stamped asset`);
     hasErrors = true;
-  } else if (match[1] !== cssHash) {
-    console.error(`  ❌ ${page}: stylesheet stamp ${match[1]} does not match style.css ${cssHash}`);
+    return;
+  }
+  const failures = [];
+  for (const asset of referenced) {
+    const expected = hashOf(asset.file);
+    const match = html.match(new RegExp(`${asset.url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\?v=([0-9a-f]+)`));
+    if (!match) failures.push(`${asset.url} has no ?v= hash`);
+    else if (match[1] !== expected) failures.push(`${asset.url} stamp ${match[1]} != ${expected}`);
+  }
+  if (failures.length) {
+    console.error(`  ❌ ${page}: ${failures.join('; ')}`);
     hasErrors = true;
   } else {
-    console.log(`  ✅ ${page}: style.css?v=${cssHash}`);
+    console.log(`  ✅ ${page}: ${referenced.map((asset) => asset.url.replace('/assets/', '') + '?v=' + hashOf(asset.file)).join(', ')}`);
   }
 });
 
