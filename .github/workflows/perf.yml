@@ -36,7 +36,10 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          # Lighthouse is fetched by `npx --yes lighthouse` (no pinned version).
+          # Current Lighthouse requires Node >= 22.19, so Node 20 fails to even
+          # load it ("Unexpected token 'with'").
+          node-version: '22'
 
       # Lighthouse is downloaded on demand by npx (--yes). Chrome ships with the
       # runner at /usr/bin/google-chrome; scripts/lib/perf.js exports it through
