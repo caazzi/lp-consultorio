@@ -31,17 +31,19 @@ function resolveCampaignLabel(utms) {
 }
 
 // =============================================================================
-// GA4 / Google Ads (gtag.js) — CARREGAMENTO DEFERRED (somente por gesto)
+// GA4 / Google Ads (gtag.js): DEFERRED LOAD (gesture only)
 // -----------------------------------------------------------------------------
-// Goal: keep ~3.5s of main-thread work (gtag config/GA4 + Google Ads integration)
-// off the page's critical path. The real gtag is injected only on the user's first
-// gesture (pointerdown/keydown/scroll/touchstart). There is NO idle fallback: on a
-// busy page the old timeout fired inside the TBT window (see below).
-// do TBT (long task de ~1.2s), derrubando o gate de Web Vitals. O placeholder
+// Goal: keep the ~3.5s of main-thread work (gtag config/GA4 + Google Ads
+// integration) off the critical path. The real gtag is injected only on the user's
+// first gesture (pointerdown/keydown/scroll/touchstart). There is NO idle fallback:
+// on a busy page the old idle timeout fired inside the TBT window and dropped the
+// perf gate.
 // The synchronous placeholder below guarantees conversion commands are never lost
 // before the real gtag exists: Googletagmanager processes the dataLayer as soon as
-// it initializes. Conversion safety is preserved: a WhatsApp click FORCES the gtag
-// injection immediately (see ensureGtagLoaded below).
+// it initializes. Order matters: gtag.js replays the queue in insertion order, so
+// `config` MUST be queued before any `event` command (see configureGtag). Conversion
+// safety is preserved: a WhatsApp click FORCES the gtag injection immediately (see
+// ensureGtagLoaded below).
 // =============================================================================
 const GA4_MEASUREMENT_ID = 'G-1Q50PEEMVX';
 
@@ -52,9 +54,30 @@ if ('function' !== typeof window.gtag) {
     window.gtag = function () { window.dataLayer.push(arguments); };
 }
 
-// Creates the real gtag script and fires the config. Idempotent: runs at most once.
+// Queues js/set/config exactly once, synchronously. This MUST run before any event
+// command: gtag.js replays the dataLayer in order, and an event queued ahead of
+// `config` has no destination yet and is dropped. The guard prevents a second
+// `page_view` if the script fails and is injected again.
+function configureGtag() {
+    if (window.__gtagConfigured) return;
+    window.__gtagConfigured = true;
+    try {
+        window.gtag('js', new Date());
+        window.gtag('set', { campaign_id: '' });
+        window.gtag('config', GA4_MEASUREMENT_ID, {
+            'send_page_view': true,
+            'linker': { 'domains': ['api.whatsapp.com'] }
+        });
+    } catch (e) {
+        window.__gtagConfigured = false;
+    }
+}
+
+// Creates the real gtag script and queues the config. Idempotent: runs at most once.
 function injectGtagAndConfigure() {
     if (window.__gtagInjected) return;
+    // Queue the config before the early return below and before any event command.
+    configureGtag();
     if (document.querySelector('script[src*="googletagmanager.com/gtag/js"]')) {
         // A gtag <script> already exists in the document (e.g. injected earlier).
         window.__gtagInjected = true;
@@ -64,18 +87,15 @@ function injectGtagAndConfigure() {
     var g = document.createElement('script');
     g.async = true;
     g.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA4_MEASUREMENT_ID;
-    g.onload = function () {
-        try {
-            window.gtag('js', new Date());
-            window.gtag('set', { campaign_id: '' });
-            window.gtag('config', GA4_MEASUREMENT_ID, {
-                'send_page_view': true,
-                'linker': { 'domains': ['api.whatsapp.com'] }
-            });
-        } catch (e) {}
-        window.__gtagReady = true;
+    // Kept for console diagnostics only: no code path gates the conversion on it
+    // anymore (a timer waiting for it dropped clicks on iOS).
+    g.onload = function () { window.__gtagReady = true; };
+    g.onerror = function () {
+        // Drop the dead tag. Without this, the retry would take the querySelector
+        // branch, mark itself as injected and never load gtag at all.
+        try { g.remove(); } catch (e) {}
+        window.__gtagInjected = false;
     };
-    g.onerror = function () { window.__gtagInjected = false; };
     document.head.appendChild(g);
 }
 
@@ -109,20 +129,13 @@ function injectGtagAndConfigure() {
     });
 })();
 
-// Ensures the REAL gtag is ready before firing a conversion event. If it has not
-// loaded yet (no gesture), inject it NOW — so a direct WhatsApp click with no prior
-// interaction never loses generate_lead.
+// Injects gtag if needed, then runs onReady synchronously. No polling: on iOS a
+// WhatsApp tap backgrounds Safari, where setInterval is throttled or frozen, so the
+// conversion was silently dropped. configureGtag() has already queued the config
+// ahead of any event, which is what actually guarantees delivery.
 function ensureGtagLoaded(onReady) {
-    if (window.__gtagReady) { onReady(); return; }
-    // Force the injection now (covers a direct click with no prior gesture).
     injectGtagAndConfigure();
-    var tries = 0;
-    var timer = setInterval(function () {
-        if (window.__gtagReady || tries++ > 30) {
-            clearInterval(timer);
-            onReady();
-        }
-    }, 100);
+    if (typeof onReady === 'function') onReady();
 }
 
 // Sends a conversion event to GA4 reliably (placeholder or real gtag).
@@ -256,18 +269,6 @@ function trackWhatsAppClick(location, element) {
         element.href = buildWhatsAppUrlWithUtm(element.href, location);
     }
 
-    // Push to the dataLayer
-    window.dataLayer.push({
-        'event': 'generate_lead',
-        'button_location': location,
-        'specialty': specialty,
-        'time_on_page_sec': timeOnPageSec,
-        'utm_campaign': utms.campaign,
-        'utm_source': utms.source,
-        'utm_medium': utms.medium,
-        'gclid': utms.gclid
-    });
-
     // Direct gtag.js event with custom dimensions for per-campaign CVR. Ensures the
     // real gtag is loaded before sending (avoids a race with the lazy load and lost
     // conversions on fast navigations to WhatsApp). Full attribution: besides
@@ -286,6 +287,19 @@ function trackWhatsAppClick(location, element) {
         'button_location': location,
         'specialty': specialty,
         'time_on_page_sec': timeOnPageSec
+    });
+
+    // GTM-style push. Kept after sendGtagConversion on purpose: gtag.js replays the
+    // dataLayer in order, so nothing may be queued before `config`.
+    window.dataLayer.push({
+        'event': 'generate_lead',
+        'button_location': location,
+        'specialty': specialty,
+        'time_on_page_sec': timeOnPageSec,
+        'utm_campaign': utms.campaign,
+        'utm_source': utms.source,
+        'utm_medium': utms.medium,
+        'gclid': utms.gclid
     });
 
     // Record the conversion in the Netlify function log
@@ -429,8 +443,9 @@ document.addEventListener('DOMContentLoaded', () => {
     style.textContent = `
         #wa-sticky-btn {
             position: fixed;
-            bottom: 24px;
-            right: 20px;
+            /* Clear the iPhone home indicator and the landscape notch. */
+            bottom: calc(24px + env(safe-area-inset-bottom));
+            right: max(20px, env(safe-area-inset-right));
             z-index: 9999;
             display: flex;
             align-items: center;
@@ -455,8 +470,12 @@ document.addEventListener('DOMContentLoaded', () => {
             transform: translateY(0);
             pointer-events: auto;
         }
-        #wa-sticky-btn:hover {
-            background: #155d27;
+        /* Gate hover behind a real pointer: on iOS a tap applies :hover and it
+           sticks until the next tap elsewhere. */
+        @media (hover: hover) and (pointer: fine) {
+            #wa-sticky-btn:hover {
+                background: #155d27;
+            }
         }
         #wa-sticky-btn svg {
             flex-shrink: 0;
