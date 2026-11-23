@@ -500,7 +500,11 @@ if (!fs.existsSync(accessStorePath)) {
       { d: 'own-domain referer with an unknown campaign => Direct', e: { utms: {}, referer: 'https://consultoriosalustiano.com.br/?gad_source=1&gad_campaignid=999999999&gclid=CjwKCAjwwL_UBhAjEqFhuT5MqFmyQ0u7ftGnzKhgG5SglndoDMQpN8jYH8sqE8Jf6gJXPvmPGLSEb1BBnQBh1NIBOPf_3' }, want: 'Direct / Organic' },
       { d: 'external referer (google) => canonical host', e: { utms: {}, referer: 'https://www.google.com/url?q=x' }, want: 'google.com' },
       { d: 'no source and no referer => Direct', e: { utms: {} }, want: 'Direct / Organic' },
-      { d: 'deploy-preview referer => __preview__', e: { utms: {}, referer: 'https://6a9c6783f3e5a60008061801--consultorio-salustiano.netlify.app/' }, want: '__preview__' },
+      { d: 'deploy-preview referer (commit hash) => __preview__', e: { utms: {}, referer: 'https://6a9c6783f3e5a60008061801--consultorio-salustiano.netlify.app/' }, want: '__preview__' },
+      { d: 'deploy-preview referer (PR number) => __preview__', e: { utms: {}, referer: 'https://deploy-preview-31--consultorio-salustiano.netlify.app/' }, want: '__preview__' },
+      { d: 'branch deploy referer => __preview__', e: { utms: {}, referer: 'https://seo-ai-referral-and-gbp-sameas--consultorio-salustiano.netlify.app/' }, want: '__preview__' },
+      { d: 'production netlify alias is not preview', e: { utms: {}, referer: 'https://consultorio-salustiano.netlify.app/' }, want: 'consultorio-salustiano.netlify.app' },
+      { d: 'double hyphen outside netlify.app is not preview', e: { utms: {}, referer: 'https://example--site.com/' }, want: 'example--site.com' },
       // Answer engines: UTM sources (ChatGPT appends utm_source=chatgpt.com) and
       // referer hosts must collapse to one stable acquisition label.
       { d: 'utm_source=chatgpt.com => AI / ChatGPT', e: { utms: { source: 'chatgpt.com' } }, want: 'AI / ChatGPT' },
@@ -542,10 +546,27 @@ if (!fs.existsSync(accessStorePath)) {
       else { console.error(`  ❌ resolveCampaignLabelFromEvent (ref unknown) → '${unknownRef}'`); hasErrors = true; }
     }
     if (typeof access_store.isPreviewReferer === 'function') {
-      const isPrev = access_store.isPreviewReferer('https://6a9c5b87a4aefe0009462a09--consultorio-salustiano.netlify.app/');
-      const notPrev = !access_store.isPreviewReferer('https://consultoriosalustiano.com.br/');
-      if (isPrev && notPrev) console.log('  ✅ isPreviewReferer separates deploy preview from production');
-      else { console.error('  ❌ isPreviewReferer failed on the host'); hasErrors = true; }
+      const previewHosts = [
+        'https://6a9c5b87a4aefe0009462a09--consultorio-salustiano.netlify.app/',
+        'https://deploy-preview-31--consultorio-salustiano.netlify.app/',
+        'https://seo-ai-referral-and-gbp-sameas--consultorio-salustiano.netlify.app/'
+      ];
+      const allPreview = previewHosts.every((url) => access_store.isPreviewReferer(url));
+      const productionAliasIsNotPreview = !access_store.isPreviewReferer('https://consultorio-salustiano.netlify.app/');
+      const customDomainIsNotPreview = !access_store.isPreviewReferer('https://consultoriosalustiano.com.br/');
+      if (allPreview && productionAliasIsNotPreview && customDomainIsNotPreview) {
+        console.log('  ✅ isPreviewReferer catches hash, PR-number and branch hosts, and keeps production');
+      } else {
+        console.error('  ❌ isPreviewReferer misclassifies a preview or production host');
+        hasErrors = true;
+      }
+      if (typeof access_store.isPreviewEvent === 'function') {
+        const pathPreview = access_store.isPreviewEvent({ path: 'https://deploy-preview-31--consultorio-salustiano.netlify.app/' });
+        if (pathPreview) console.log('  ✅ isPreviewEvent catches a preview URL in the path');
+        else { console.error('  ❌ isPreviewEvent missed a preview URL in the path'); hasErrors = true; }
+      } else {
+        console.error('  ❌ isPreviewEvent is missing'); hasErrors = true;
+      }
     } else {
       console.error('  ❌ isPreviewReferer is missing'); hasErrors = true;
     }

@@ -214,15 +214,20 @@ async function collectEvents(store, sinceMs, options = {}) {
 }
 
 /**
- * Returns true when a raw referer/host indicates Netlify deploy-preview (test/QA)
- * traffic that must be excluded from honest production funnel metrics.
+ * Returns true when a raw referer/host indicates a Netlify non-production URL
+ * (deploy preview or branch deploy) that must be excluded from honest production
+ * funnel metrics.
+ *
+ * Netlify serves those as `<label>--<site>.netlify.app`, where the label is a
+ * commit hash on older previews, `deploy-preview-<PR>` on current ones, or the
+ * branch name on branch deploys. The production alias is `<site>.netlify.app`
+ * (no `--`), so it must keep counting as real traffic.
  */
 function isPreviewReferer(referer) {
   if (!referer) return false;
   try {
-    const host = new URL(referer).hostname;
-    // Preview URLs look like `<commit-hash>--<project-name>.netlify.app`.
-    return /[0-9a-f]{7}--/.test(host) && host.endsWith('.netlify.app');
+    const host = new URL(referer).hostname.toLowerCase();
+    return host.endsWith('.netlify.app') && host.includes('--');
   } catch {
     return false;
   }
@@ -333,15 +338,14 @@ function canonicalSourceFromEvent(e) {
 
 /**
  * Classifies whether an event belongs to non-production (preview/test) traffic,
- * based on its referer host (deploy previews share a `<sha>--…`.netlify.app
- * pattern), regardless of the UTM fields the client may have attached.
+ * based on its referer or absolute path host (`<label>--<site>.netlify.app`),
+ * regardless of the UTM fields the client may have attached.
  */
 function isPreviewEvent(e) {
   const referer = (e && e.referer) || '';
   if (isPreviewReferer(referer)) return true;
   const path = (e && typeof e.path === 'string' && e.path) || '';
-  if (/^https?:\/\/[0-9a-f]{7}--/.test(path)) return true;
-  return false;
+  return isPreviewReferer(path);
 }
 
 /**
