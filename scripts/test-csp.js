@@ -49,6 +49,36 @@ if (!fs.existsSync(netlifyTomlPath)) {
   }
 }
 
+// 1b. Deploy-preview indexing guard.
+// Netlify already sends `X-Robots-Tag: noindex` on Deploy Previews (verified
+// against a live preview), and headers declared in netlify.toml are GLOBAL:
+// context-scoped `[context.*.headers]` tables are silently ignored. A "fix" for
+// previews would therefore risk noindexing production. Guard both mistakes.
+console.log('\n');
+console.log('\x1b[33m%s\x1b[0m', '🤖  1b. DEPLOY-PREVIEW INDEXING GUARD');
+const netlifyConfig = fs.existsSync(netlifyTomlPath)
+  ? fs.readFileSync(netlifyTomlPath, 'utf8')
+  : '';
+if (/\[context\.[\w-]+\.headers?\]/.test(netlifyConfig)) {
+  console.error('  ❌ netlify.toml declares context-scoped headers; Netlify ignores them and applies headers globally.');
+  console.error('     Rely on the platform noindex for Deploy Previews or use a copied _headers file.');
+  hasErrors = true;
+} else {
+  console.log('  ✅ no dead [context.*.headers] blocks in netlify.toml');
+}
+const publicHeadersPath = path.join(__dirname, '../public/_headers');
+if (fs.existsSync(publicHeadersPath)) {
+  const headersContent = fs.readFileSync(publicHeadersPath, 'utf8');
+  if (/x-robots-tag\s*:[^\n]*noindex/i.test(headersContent)) {
+    console.error('  ❌ public/_headers sets X-Robots-Tag: noindex and is served in PRODUCTION.');
+    hasErrors = true;
+  } else {
+    console.log('  ✅ public/_headers does not deindex production');
+  }
+} else {
+  console.log('  ✅ no global public/_headers file (production remains indexable)');
+}
+
 // 2. Validate the main HTML files
 const publicDir = path.join(__dirname, '../public');
 const requiredPages = ['index.html', 'cardiologia/index.html', '404.html'];
@@ -470,7 +500,18 @@ if (!fs.existsSync(accessStorePath)) {
       { d: 'own-domain referer with an unknown campaign => Direct', e: { utms: {}, referer: 'https://consultoriosalustiano.com.br/?gad_source=1&gad_campaignid=999999999&gclid=CjwKCAjwwL_UBhAjEqFhuT5MqFmyQ0u7ftGnzKhgG5SglndoDMQpN8jYH8sqE8Jf6gJXPvmPGLSEb1BBnQBh1NIBOPf_3' }, want: 'Direct / Organic' },
       { d: 'external referer (google) => canonical host', e: { utms: {}, referer: 'https://www.google.com/url?q=x' }, want: 'google.com' },
       { d: 'no source and no referer => Direct', e: { utms: {} }, want: 'Direct / Organic' },
-      { d: 'deploy-preview referer => __preview__', e: { utms: {}, referer: 'https://6a9c6783f3e5a60008061801--consultorio-salustiano.netlify.app/' }, want: '__preview__' }
+      { d: 'deploy-preview referer => __preview__', e: { utms: {}, referer: 'https://6a9c6783f3e5a60008061801--consultorio-salustiano.netlify.app/' }, want: '__preview__' },
+      // Answer engines: UTM sources (ChatGPT appends utm_source=chatgpt.com) and
+      // referer hosts must collapse to one stable acquisition label.
+      { d: 'utm_source=chatgpt.com => AI / ChatGPT', e: { utms: { source: 'chatgpt.com' } }, want: 'AI / ChatGPT' },
+      { d: 'utm_source=ChatGPT (case) => AI / ChatGPT', e: { utms: { source: 'ChatGPT' } }, want: 'AI / ChatGPT' },
+      { d: 'referer chatgpt.com => AI / ChatGPT', e: { utms: {}, referer: 'https://chatgpt.com/c/abc' }, want: 'AI / ChatGPT' },
+      { d: 'referer chat.openai.com => AI / ChatGPT', e: { utms: {}, referer: 'https://chat.openai.com/c/abc' }, want: 'AI / ChatGPT' },
+      { d: 'referer perplexity.ai => AI / Perplexity', e: { utms: {}, referer: 'https://www.perplexity.ai/search/x' }, want: 'AI / Perplexity' },
+      { d: 'referer gemini.google.com => AI / Gemini', e: { utms: {}, referer: 'https://gemini.google.com/app/x' }, want: 'AI / Gemini' },
+      { d: 'referer copilot.microsoft.com => AI / Copilot', e: { utms: {}, referer: 'https://copilot.microsoft.com/chats/x' }, want: 'AI / Copilot' },
+      { d: 'referer claude.ai => AI / Claude', e: { utms: {}, referer: 'https://claude.ai/chat/x' }, want: 'AI / Claude' },
+      { d: 'plain google referer stays google.com', e: { utms: {}, referer: 'https://www.google.com/search?q=x' }, want: 'google.com' }
     ];
     cases.forEach((c) => {
       const got = access_store.canonicalSourceFromEvent(c.e);

@@ -54,6 +54,18 @@ if (!gaDown.includes('GA4 indisponível')) { // lang:allow (email copy)
   results.push({ name: 'weekly-body.txt (GA4 down)', ok: false, reason: 'missing GA4 fallback line' });
 }
 
+// AI acquisition labels must stay human-readable in both owner emails. The
+// fixtures carry no AI traffic, so this guards the mapping itself, not a golden.
+const aiEngines = ['ChatGPT', 'Perplexity', 'Gemini', 'Copilot', 'Claude'];
+const aiLabelsOk = aiEngines.every((engine) => {
+  const expected = `Respostas do ${engine}`; // lang:allow (email copy)
+  return weeklyCopy.friendlySource(`AI / ${engine}`) === expected
+    && productCopy.friendlySource(`AI / ${engine}`) === expected;
+});
+if (!aiLabelsOk) {
+  results.push({ name: 'AI source labels', ok: false, reason: 'friendlySource does not map AI / <engine> in both emails' });
+}
+
 console.log('[test-reports] golden checks');
 let failed = 0;
 for (const r of results) {
