@@ -5,8 +5,8 @@
 // ALSO the SERVER-SIDE source of truth for joining attribution metadata:
 //  - CAMPAIGN_LABELS (known Google Ads campaign IDs -> human-readable names)
 //  - canonical helpers that turn raw referer/UTM payloads into clean, predicate
-//    buckets (source / preview classification) so reports are deterministic and
-//    independent of what the loosely-typed client beacon happened to send.
+//    buckets (source / preview / answer-engine classification) so reports are
+//    deterministic and independent of what the loosely-typed client beacon sent.
 
 const crypto = require('crypto');
 const { connectLambda, getStore } = require('@netlify/blobs');
@@ -39,6 +39,47 @@ const CAMPAIGN_LABELS = {
   '23071806673': 'Infectologia',
   '23747859815': 'Cardiologia'
 };
+
+// Acquisition sources that are generative answer engines. A patient who lands from
+// a citation is not "direct": browsers and in-app viewers often strip the referer,
+// while ChatGPT appends `utm_source=chatgpt.com`. Both signals collapse to one
+// stable label so the source breakdown stops hiding AI traffic under Direct.
+// Read-side only (same pattern as preview/test): raw events stay untouched and the
+// classification is retroactive. The `AI / <Engine>` shape is rendered by the PT-BR
+// display maps in scripts/lib/{weekly,product}-report-copy.pt.js, so keep it stable.
+const AI_SOURCE_LABELS = {
+  'chatgpt.com': 'AI / ChatGPT',
+  'chat.openai.com': 'AI / ChatGPT',
+  'chatgpt': 'AI / ChatGPT',
+  'perplexity.ai': 'AI / Perplexity',
+  'perplexity': 'AI / Perplexity',
+  'gemini.google.com': 'AI / Gemini',
+  'gemini': 'AI / Gemini',
+  'copilot.microsoft.com': 'AI / Copilot',
+  'copilot': 'AI / Copilot',
+  'claude.ai': 'AI / Claude',
+  'claude': 'AI / Claude'
+};
+
+/**
+ * Normalizes a UTM source or referer host to a stable answer-engine label.
+ * Accepts `chatgpt.com`, `ChatGPT`, `https://chatgpt.com/c/...`, or a bare host.
+ * Returns '' for anything that is not a known answer engine.
+ *
+ * @param {string} value raw utm_source or referer host
+ * @returns {string} canonical AI label, or '' when unknown
+ */
+function aiSourceLabel(value) {
+  const raw = String(value || '').trim().toLowerCase();
+  if (!raw) return '';
+  let host = raw;
+  if (raw.includes('://')) {
+    try { host = new URL(raw).hostname; } catch { return ''; }
+  } else {
+    host = raw.split(/[/?#]/)[0];
+  }
+  return AI_SOURCE_LABELS[host.replace(/^www\./, '')] || '';
+}
 
 // Netlify Functions inject the Blobs context in `event.blobs` + headers.
 // `connectLambda` wires that into the SDK environment so getStore can auto-configure.
@@ -248,6 +289,8 @@ function resolveCampaignLabelFromEvent(e) {
  * UTM source and otherwise falling back to a cleaned referer rather than the raw
  * full URL (which is polluted with gclid/gad_campaignid and must never be bucketed
  * verbatim). Preview/test referers collapse to a single `Preview / Teste` bucket.
+ * Known answer engines collapse to `AI / <Engine>` so AI referrals are measured as
+ * their own acquisition source instead of being folded into `Direct / Organic`.
  *
  * Paid-click nuance: an explicit Google Ads first-landing arrives with the page's own
  * URL as referer (`consultoriosalustiano.com.br/?gad_source=1&gad_campaignid=<id>&gclid=...`).
@@ -260,7 +303,7 @@ function resolveCampaignLabelFromEvent(e) {
 function canonicalSourceFromEvent(e) {
   const utms = e.utms || {};
   const rawSource = (utms.source || '').trim();
-  if (rawSource) return rawSource;
+  if (rawSource) return aiSourceLabel(rawSource) || rawSource;
 
   const referer = e.referer || '';
   if (isPreviewReferer(referer)) return '__preview__';
@@ -269,6 +312,8 @@ function canonicalSourceFromEvent(e) {
 
   try {
     const host = new URL(referer).hostname.replace(/^www\./, '');
+    const aiLabel = aiSourceLabel(host);
+    if (aiLabel) return aiLabel;
     // Own domain or empty host = direct navigation, NOT an external referrer —
     // unless the referer is a paid first-landing carrying a known campaign id.
     if (!host || host === 'consultoriosalustiano.com.br') {

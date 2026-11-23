@@ -34,6 +34,10 @@ function plural(n, singular, pluralForm) {
  */
 function friendlySource(name) {
   const n = String(name || '').trim();
+  // Answer engines arrive as 'AI / ChatGPT', 'AI / Perplexity', ... (see the
+  // AI_SOURCE_LABELS map in netlify/access-store.js).
+  const ai = n.match(/^ai\s*\/\s*(.+)$/i);
+  if (ai) return `Respostas do ${ai[1].trim()}`;
   // Matches the current label ('Direct / Organic') and the legacy PT-BR one, so
   // historical payloads and older CLI output still map to the same sentence.
   if (/direct|organic|direto|org[âa]nico/i.test(n)) return 'Quem já conhece o site (busca no Google ou digita o endereço)';

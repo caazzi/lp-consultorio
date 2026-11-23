@@ -35,6 +35,7 @@ const ALLOWED_FILES = new Set([
   'docs/passo-a-passo-anabel.md',
   'docs/google-ads-cardiologia.md',
   'docs/SETUP_CONVERSAO.md',
+  'docs/MEDICAO_IA.md',
   'scripts/lang-check.js' // contains the Portuguese stopword list itself
 ]);
 
